@@ -1,0 +1,24 @@
+name: Backend CI
+on:
+  push:
+    paths: ["backend/**", ".github/workflows/backend-ci.yml"]
+  pull_request:
+    paths: ["backend/**"]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/scanpdf
+      - run: npm run lint -w backend
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/scanpdf
+          JWT_SECRET: ci-secret-at-least-16-characters
+      - run: npm run test -w backend

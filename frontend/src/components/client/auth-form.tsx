@@ -1,0 +1,85 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { api } from "@/services/api";
+import { useAuthStore } from "@/stores/auth.store";
+import { API_BASE_URL } from "@/services/api";
+import { Github } from "lucide-react";
+
+const schema = z.object({
+  fullName: z.string().optional(),
+  email: z.email("Email không hợp lệ"),
+  password: z.string().min(8, "Mật khẩu cần ít nhất 8 ký tự"),
+});
+type FormValues = z.infer<typeof schema>;
+
+export function AuthForm({ mode }: { mode: "login" | "register" }) {
+  const router = useRouter();
+  const setSession = useAuthStore((state) => state.setSession);
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  });
+
+  async function submit(values: FormValues) {
+    try {
+      const { data } = await api.post(`/auth/${mode}`, values);
+      setSession(data.token, data.user);
+      router.push("/dashboard");
+    } catch (error) {
+      setError("root", {
+        message: axios.isAxiosError(error) ? error.response?.data?.message : "Không thể kết nối máy chủ",
+      });
+    }
+  }
+
+  const isRegister = mode === "register";
+  return (
+    <section className="container-page flex min-h-[75vh] items-center justify-center py-16">
+      <form onSubmit={handleSubmit(submit)} className="card w-full max-w-md p-8">
+        <h1 className="text-3xl font-black">{isRegister ? "Tạo tài khoản" : "Chào mừng trở lại"}</h1>
+        <p className="mt-2 text-slate-500">
+          {isRegister ? "Bắt đầu chuyển đổi tài liệu miễn phí." : "Đăng nhập để xem lịch sử chuyển đổi."}
+        </p>
+        <div className="mt-7 grid grid-cols-2 gap-3">
+          <a href={`${API_BASE_URL}/auth/google`} className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold hover:border-indigo-400">
+            <span className="text-lg font-black text-blue-600">G</span> Google
+          </a>
+          <a href={`${API_BASE_URL}/auth/github`} className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold hover:border-indigo-400">
+            <Github size={19} /> GitHub
+          </a>
+        </div>
+        <div className="my-6 flex items-center gap-3 text-xs text-slate-400"><span className="h-px flex-1 bg-slate-200" />hoặc dùng email<span className="h-px flex-1 bg-slate-200" /></div>
+        <div className="space-y-4">
+          {isRegister && (
+            <label className="block text-sm font-semibold">Họ và tên
+              <input {...register("fullName")} className="field mt-2" placeholder="Nguyễn Văn A" />
+            </label>
+          )}
+          <label className="block text-sm font-semibold">Email
+            <input {...register("email")} type="email" className="field mt-2" placeholder="you@example.com" />
+            {errors.email && <small className="text-red-600">{errors.email.message}</small>}
+          </label>
+          <label className="block text-sm font-semibold">Mật khẩu
+            <input {...register("password")} type="password" className="field mt-2" placeholder="Tối thiểu 8 ký tự" />
+            {errors.password && <small className="text-red-600">{errors.password.message}</small>}
+          </label>
+          {errors.root && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{errors.root.message}</p>}
+          <button disabled={isSubmitting} className="btn-primary w-full">
+            {isSubmitting ? "Đang xử lý..." : isRegister ? "Đăng ký" : "Đăng nhập"}
+          </button>
+        </div>
+        <p className="mt-6 text-center text-sm text-slate-500">
+          {isRegister ? "Đã có tài khoản?" : "Chưa có tài khoản?"}{" "}
+          <Link className="font-bold text-indigo-600" href={isRegister ? "/login" : "/register"}>
+            {isRegister ? "Đăng nhập" : "Đăng ký"}
+          </Link>
+        </p>
+      </form>
+    </section>
+  );
+}

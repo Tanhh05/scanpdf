@@ -1,0 +1,239 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum ConversionStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ConversionTool {
+  WORD_TO_PDF
+  PDF_TO_WORD
+  MERGE_PDF
+  COMPRESS_PDF
+  JPG_TO_PDF
+  PDF_TO_JPG
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum OAuthProvider {
+  GOOGLE
+  GITHUB
+}
+
+model User {
+  id            String         @id @default(uuid()) @db.Uuid
+  email         String         @unique
+  passwordHash  String?        @map("password_hash")
+  fullName      String         @map("full_name")
+  role          UserRole       @default(USER)
+  status        UserStatus     @default(ACTIVE)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  subscriptions Subscription[]
+  files         File[]
+  conversions   Conversion[]
+  usageLogs     UsageLog[]
+  payments      Payment[]
+  adminLogs     AdminLog[]     @relation("AdminActions")
+  oauthAccounts OAuthAccount[]
+
+  @@map("users")
+}
+
+model OAuthAccount {
+  id                String        @id @default(uuid()) @db.Uuid
+  userId            String        @map("user_id") @db.Uuid
+  provider          OAuthProvider
+  providerAccountId String        @map("provider_account_id")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+model Plan {
+  id            String         @id @default(uuid()) @db.Uuid
+  name          String         @unique
+  price         Int
+  dailyLimit    Int            @map("daily_limit")
+  maxFileSizeMb Int            @map("max_file_size_mb")
+  storageDays   Int            @map("storage_days")
+  subscriptions Subscription[]
+  payments      Payment[]
+  features      PlanFeature[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id        String             @id @default(uuid()) @db.Uuid
+  userId    String             @map("user_id") @db.Uuid
+  planId    String             @map("plan_id") @db.Uuid
+  status    SubscriptionStatus @default(ACTIVE)
+  startDate DateTime           @default(now()) @map("start_date")
+  endDate   DateTime?          @map("end_date")
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      Plan               @relation(fields: [planId], references: [id])
+
+  @@index([userId, status])
+  @@map("subscriptions")
+}
+
+model File {
+  id           String       @id @default(uuid()) @db.Uuid
+  userId       String       @map("user_id") @db.Uuid
+  originalName String       @map("original_name")
+  storageKey   String       @unique @map("storage_key")
+  fileUrl      String?      @map("file_url")
+  fileType     String       @map("file_type")
+  fileSize     Int          @map("file_size")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  expiredAt    DateTime     @map("expired_at")
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inputFor     Conversion[] @relation("InputFile")
+  outputFor    Conversion[] @relation("OutputFile")
+
+  @@index([userId, createdAt])
+  @@map("files")
+}
+
+model Conversion {
+  id           String           @id @default(uuid()) @db.Uuid
+  userId       String           @map("user_id") @db.Uuid
+  inputFileId  String           @map("input_file_id") @db.Uuid
+  outputFileId String?          @map("output_file_id") @db.Uuid
+  tool         ConversionTool
+  status       ConversionStatus @default(QUEUED)
+  errorMessage String?          @map("error_message")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  startedAt    DateTime?        @map("started_at")
+  finishedAt   DateTime?        @map("finished_at")
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inputFile    File             @relation("InputFile", fields: [inputFileId], references: [id])
+  outputFile   File?            @relation("OutputFile", fields: [outputFileId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("conversions")
+}
+
+model UsageLog {
+  id        String         @id @default(uuid()) @db.Uuid
+  userId    String         @map("user_id") @db.Uuid
+  tool      ConversionTool
+  createdAt DateTime       @default(now()) @map("created_at")
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("usage_logs")
+}
+
+model Payment {
+  id              String               @id @default(uuid()) @db.Uuid
+  userId          String               @map("user_id") @db.Uuid
+  planId          String               @map("plan_id") @db.Uuid
+  amount          Int
+  paymentMethod   String               @map("payment_method")
+  status          PaymentStatus        @default(PENDING)
+  transactionCode String               @unique @map("transaction_code")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  user            User                 @relation(fields: [userId], references: [id])
+  plan            Plan                 @relation(fields: [planId], references: [id])
+  transactions    PaymentTransaction[]
+
+  @@index([userId, createdAt])
+  @@map("payments")
+}
+
+model PaymentTransaction {
+  id                   String  @id @default(uuid()) @db.Uuid
+  paymentId            String  @map("payment_id") @db.Uuid
+  gateway              String
+  gatewayTransactionId String? @map("gateway_transaction_id")
+  rawResponse          Json    @map("raw_response")
+  createdAt            DateTime @default(now()) @map("created_at")
+  payment              Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("payment_transactions")
+}
+
+model PlanFeature {
+  id           String @id @default(uuid()) @db.Uuid
+  planId       String @map("plan_id") @db.Uuid
+  featureKey   String @map("feature_key")
+  featureValue String @map("feature_value")
+  plan         Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, featureKey])
+  @@map("plan_features")
+}
+
+model DailyStatistic {
+  id                 String   @id @default(uuid()) @db.Uuid
+  statDate           DateTime @unique @db.Date @map("stat_date")
+  totalUsers         Int      @default(0) @map("total_users")
+  newUsers           Int      @default(0) @map("new_users")
+  totalConversions   Int      @default(0) @map("total_conversions")
+  successConversions Int      @default(0) @map("success_conversions")
+  failedConversions  Int      @default(0) @map("failed_conversions")
+  totalRevenue       Int      @default(0) @map("total_revenue")
+
+  @@map("daily_statistics")
+}
+
+model ToolStatistic {
+  id           String         @id @default(uuid()) @db.Uuid
+  statDate     DateTime       @db.Date @map("stat_date")
+  tool         ConversionTool
+  totalUsage   Int            @default(0) @map("total_usage")
+  successCount Int            @default(0) @map("success_count")
+  failedCount  Int            @default(0) @map("failed_count")
+
+  @@unique([statDate, tool])
+  @@map("tool_statistics")
+}
+
+model AdminLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  adminId    String   @map("admin_id") @db.Uuid
+  action     String
+  targetType String   @map("target_type")
+  targetId   String?  @map("target_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  admin      User     @relation("AdminActions", fields: [adminId], references: [id])
+
+  @@index([adminId, createdAt])
+  @@map("admin_logs")
+}
