@@ -16,17 +16,27 @@ type Conversion = {
   outputFile?: { originalName: string };
 };
 
-export function ToolUploader({ tool, accept }: { tool: string; accept: string }) {
+export function ToolUploader({
+  tool,
+  accept,
+  multiple = false,
+  minimumFiles = 1,
+}: {
+  tool: string;
+  accept: string;
+  multiple?: boolean;
+  minimumFiles?: number;
+}) {
   const router = useRouter();
   const token = useAuthStore((state) => state.token);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [conversionId, setConversionId] = useState<string | null>(null);
 
   const upload = useMutation({
     mutationFn: async () => {
-      if (!file) throw new Error("Vui lòng chọn file");
+      if (files.length < minimumFiles) throw new Error(`Vui lòng chọn ít nhất ${minimumFiles} file`);
       const body = new FormData();
-      body.append("file", file);
+      files.forEach((file) => body.append(multiple ? "files" : "file", file));
       return (await api.post<Conversion>(`/convert/${tool}`, body)).data;
     },
     onSuccess: (data) => setConversionId(data.id),
@@ -70,12 +80,14 @@ export function ToolUploader({ tool, accept }: { tool: string; accept: string })
         <CloudUpload size={62} strokeWidth={1.5} className="text-[#06245d]" />
         <span className="mt-5 inline-flex overflow-hidden rounded-md bg-[#075bff] text-white shadow-md">
           <strong className="flex items-center gap-2 px-6 py-3 text-base">
-            <FileUp size={18} /> {file ? file.name : "Chọn file"}
+            <FileUp size={18} /> {files.length ? `${files.length} file đã chọn` : "Chọn file"}
           </strong>
           <span className="flex items-center border-l border-white/30 px-3"><ChevronDown size={18} /></span>
         </span>
         <strong className="mt-5 text-base text-slate-800">
-          {file ? "File đã sẵn sàng để chuyển đổi" : "Kéo thả file vào đây hoặc chọn từ thiết bị"}
+          {files.length
+            ? files.map((file) => file.name).join(", ")
+            : `Kéo thả ${multiple ? "các file" : "file"} vào đây hoặc chọn từ thiết bị`}
         </strong>
         <span className="mt-3 text-sm text-slate-600">File được mã hóa và tự động xóa theo thời hạn gói của bạn</span>
         <div className="mt-4 flex flex-wrap justify-center gap-2 text-[11px] font-bold">
@@ -85,12 +97,18 @@ export function ToolUploader({ tool, accept }: { tool: string; accept: string })
             </span>
           ))}
         </div>
-        <input type="file" accept={accept} className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        <input
+          type="file"
+          accept={accept}
+          multiple={multiple}
+          className="hidden"
+          onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+        />
       </label>
 
       {!status && (
         <div className="-mt-24 flex justify-center pb-8">
-          <button disabled={!file || upload.isPending} onClick={() => upload.mutate()} className="btn-primary relative z-10 min-w-56 !rounded-md !bg-[#075bff]">
+          <button disabled={files.length < minimumFiles || upload.isPending} onClick={() => upload.mutate()} className="btn-primary relative z-10 min-w-56 !rounded-md !bg-[#075bff]">
           {upload.isPending ? "Đang tải lên..." : "Bắt đầu chuyển đổi"}
           </button>
         </div>

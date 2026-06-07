@@ -26,10 +26,11 @@ const tools = [
 
 const conversionTools = [
   { label: "PDF ↔ Word", icon: FileText, color: "bg-blue-500", href: "/tools/pdf-to-word" },
-  { label: "PDF ↔ Excel", icon: Grid2X2, color: "bg-emerald-500", href: "#" },
-  { label: "PDF ↔ PowerPoint", icon: Files, color: "bg-orange-500", href: "#" },
-  { label: "PDF ↔ Hình ảnh", icon: FileImage, color: "bg-amber-500", href: "#" },
-  { label: "PDF OCR", icon: ScanText, color: "bg-red-500", href: "#" },
+  { label: "Ghép PDF", icon: Files, color: "bg-indigo-500", href: "/tools/merge-pdf" },
+  { label: "Nén PDF", icon: Archive, color: "bg-violet-500", href: "/tools/compress-pdf" },
+  { label: "JPG → PDF", icon: FileImage, color: "bg-amber-500", href: "/tools/jpg-to-pdf" },
+  { label: "PDF → JPG", icon: FileImage, color: "bg-orange-500", href: "/tools/pdf-to-jpg" },
+  { label: "PDF OCR", icon: ScanText, color: "bg-red-500", href: "/tools/ocr-pdf" },
 ];
 
 export function ToolWorkspace({

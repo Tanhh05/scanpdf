@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { ArrowRight, FileOutput, Files, Image, Lock, Sparkles, Zap } from "lucide-react";
+import { ArrowRight, FileOutput, Files, Image, Lock, ScanText, Zap } from "lucide-react";
 
 const tools = [
   { name: "Word sang PDF", href: "/tools/word-to-pdf", icon: FileOutput, ready: true },
   { name: "PDF sang Word", href: "/tools/pdf-to-word", icon: FileOutput, ready: true },
-  { name: "Ghép PDF", href: "#", icon: Files, ready: false },
-  { name: "Nén PDF", href: "#", icon: Zap, ready: false },
-  { name: "JPG sang PDF", href: "#", icon: Image, ready: false },
-  { name: "Chat PDF AI", href: "#", icon: Sparkles, ready: false },
+  { name: "Ghép PDF", href: "/tools/merge-pdf", icon: Files, ready: true },
+  { name: "Nén PDF", href: "/tools/compress-pdf", icon: Zap, ready: true },
+  { name: "JPG sang PDF", href: "/tools/jpg-to-pdf", icon: Image, ready: true },
+  { name: "PDF sang JPG", href: "/tools/pdf-to-jpg", icon: Image, ready: true },
+  { name: "PDF OCR", href: "/tools/ocr-pdf", icon: ScanText, ready: true },
 ];
 
 export default function HomePage() {

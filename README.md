@@ -8,7 +8,9 @@ Nền tảng SaaS chuyển đổi tài liệu dùng Next.js, Express, PostgreSQL
 - Đăng nhập Google OpenID Connect và GitHub OAuth, tự liên kết tài khoản bằng email đã xác minh.
 - Gói Free/Pro/Business, quota theo ngày và giới hạn dung lượng.
 - Word/DOCX/ODT sang PDF bằng LibreOffice.
-- PDF sang DOCX theo hướng text-first bằng `pdftotext` (PDF scan cần OCR ở phiên bản sau).
+- PDF sang DOCX theo hướng text-first bằng `pdftotext`.
+- Ghép PDF, nén PDF, JPG/PNG sang PDF và PDF sang bộ ảnh JPG đóng ZIP.
+- OCR PDF tiếng Việt/Anh, tạo PDF có thể tìm kiếm nội dung.
 - Upload local hoặc Supabase Storage, lịch sử, polling trạng thái và download có kiểm tra quyền.
 - Queue BullMQ, worker riêng, retry và priority cho gói trả phí.
 - Dashboard người dùng, gói Free/Pro và VietQR từ PayOS với webhook tự động.
@@ -22,7 +24,7 @@ Yêu cầu: Node.js 20+, PostgreSQL, Redis, LibreOffice và Poppler.
 Trên macOS:
 
 ```bash
-brew install postgresql@17 redis poppler
+brew install postgresql@17 redis poppler ghostscript tesseract-lang
 brew install --cask libreoffice
 brew services start postgresql@17
 brew services start redis
@@ -43,7 +45,7 @@ Frontend: `http://localhost:3000`
 API: `http://localhost:4000`  
 Health check: `http://localhost:4000/health`
 
-Worker dùng lệnh `soffice` và `pdftotext` được cài từ LibreOffice/Poppler.
+Worker dùng `soffice`, Poppler, Ghostscript và Tesseract để xử lý tài liệu.
 
 ## Supabase
 
@@ -96,4 +98,4 @@ https://api.scanpdf.vn/api/auth/github/callback
 
 ## Phần còn lại theo roadmap
 
-Email reset password, merge/compress/image tools, OCR và cleanup file hết hạn vẫn là phần roadmap sau MVP.
+Email reset password, Chat PDF AI, ký điện tử và cleanup file hết hạn vẫn là phần roadmap sau MVP.

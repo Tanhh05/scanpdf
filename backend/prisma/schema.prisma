@@ -37,6 +37,7 @@ enum ConversionTool {
   COMPRESS_PDF
   JPG_TO_PDF
   PDF_TO_JPG
+  OCR_PDF
 }
 
 enum PaymentStatus {

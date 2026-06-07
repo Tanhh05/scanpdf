@@ -5,6 +5,7 @@ import { Header } from "@/components/common/header";
 import { Footer } from "@/components/common/footer";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: "ScanPDF - Chuyển đổi tài liệu trực tuyến",
   description: "Chuyển Word, Excel, PowerPoint và PDF nhanh chóng, an toàn.",
   icons: {
