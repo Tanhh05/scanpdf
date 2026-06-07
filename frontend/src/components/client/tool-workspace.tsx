@@ -11,7 +11,6 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { useAuthStore } from "@/stores/auth.store";
 
 const tools = [
   { label: "Chuyển đổi", icon: Files, href: "/tools/word-to-pdf" },
@@ -26,15 +25,6 @@ const conversionTools = [
   { label: "PDF OCR", icon: ScanText, color: "bg-red-500", href: "/tools/ocr-pdf" },
 ];
 
-function getInitials(fullName?: string, email?: string) {
-  const words = fullName?.trim().split(/\s+/).filter(Boolean) ?? [];
-  if (words.length === 1) return words[0]!.slice(0, 2).toLocaleUpperCase("vi");
-  if (words.length > 1) {
-    return `${words[0]![0]}${words.at(-1)![0]}`.toLocaleUpperCase("vi");
-  }
-  return email?.slice(0, 2).toLocaleUpperCase("vi") ?? "TK";
-}
-
 export function ToolWorkspace({
   title,
   children,
@@ -43,15 +33,13 @@ export function ToolWorkspace({
   children: React.ReactNode;
 }) {
   const [conversionMenuOpen, setConversionMenuOpen] = useState(false);
-  const user = useAuthStore((state) => state.user);
-  const initials = getInitials(user?.fullName, user?.email);
 
   return (
-    <section className="min-h-screen bg-[#f2f6ff]">
+    <section className="min-h-screen bg-[#f5f7fc]">
       <div className="flex min-h-screen">
-        <aside className="hidden w-[76px] shrink-0 flex-col bg-[#06245d] text-white md:flex">
+        <aside className="hidden w-[82px] shrink-0 flex-col bg-[#08275f] text-white shadow-xl md:flex">
           <nav className="flex flex-1 flex-col items-center gap-1 py-3">
-            <Link href="/" className="mb-2 flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-white/10">
+            <Link href="/" className="mb-3 flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-white/10 transition hover:bg-white/15">
               <Image src="/scanpdf-icon.png" alt="ScanPDF" width={48} height={48} className="h-12 w-12 object-contain" priority />
             </Link>
             {tools.map((item) => (
@@ -59,35 +47,30 @@ export function ToolWorkspace({
                 key={item.label}
                 type="button"
                 onClick={() => setConversionMenuOpen((open) => !open)}
-                className={`flex w-full cursor-pointer flex-col items-center gap-1 py-3 text-[10px] transition hover:bg-white/10 ${conversionMenuOpen ? "bg-white/10" : ""}`}
+                className={`flex w-full cursor-pointer flex-col items-center gap-1.5 border-l-2 py-4 font-normal transition hover:bg-white/10 ${
+                  conversionMenuOpen ? "border-white bg-white/10" : "border-transparent"
+                }`}
               >
-                <item.icon size={21} strokeWidth={1.7} />
-                <span>{item.label}</span>
+                <item.icon size={19} strokeWidth={1.7} />
+                <span className="w-full px-1 text-center text-[9px] font-normal leading-none">{item.label}</span>
               </button>
             ))}
           </nav>
-          <Link href="/dashboard" className="flex flex-col items-center gap-1 border-t border-white/20 py-4 text-[10px] hover:bg-white/10">
+          <Link href="/dashboard" className="flex flex-col items-center gap-1.5 border-t border-white/15 py-5 text-[11px] transition hover:bg-white/10">
             <UserRound size={21} />
             Tài khoản
           </Link>
         </aside>
 
         <div className="min-w-0 flex-1">
-          <div className="flex min-h-14 items-center justify-between border-b border-slate-200 bg-white px-5 shadow-sm">
-            <h1 className="text-xl font-bold text-slate-900">{title}</h1>
-            <div className="flex items-center gap-2">
-              <Link href="/pricing" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50">
-                Nâng cấp
-              </Link>
-              <Link
-                href="/dashboard"
-                title={user?.fullName ?? "Tài khoản"}
-                aria-label={user?.fullName ? `Tài khoản của ${user.fullName}` : "Tài khoản"}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white"
-              >
-                {initials}
-              </Link>
+          <div className="flex min-h-16 items-center justify-between border-b border-slate-200 bg-white px-5 sm:px-7">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-500">Công cụ PDF</p>
+              <h1 className="mt-0.5 text-xl font-black text-slate-950">{title}</h1>
             </div>
+            <Link href="/pricing" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700">
+              Nâng cấp
+            </Link>
           </div>
 
           <div className="flex overflow-x-auto bg-[#06245d] text-white md:hidden">
@@ -99,8 +82,8 @@ export function ToolWorkspace({
             ))}
           </div>
 
-          <div className="relative p-4 sm:p-7 lg:p-10">
-            {conversionMenuOpen && <div className="absolute left-5 top-16 z-10 hidden w-52 rounded-md bg-[#06245d] p-3 text-white shadow-xl lg:block">
+          <div className="relative px-4 py-6 sm:px-7 sm:py-8 lg:px-10">
+            {conversionMenuOpen && <div className="absolute left-5 top-16 z-20 hidden w-56 rounded-xl bg-[#08275f] p-3 text-white shadow-2xl lg:block">
               <div className="mb-3 flex items-center gap-2 border-b border-white/15 pb-3 text-sm font-bold">
                 <span className="rounded bg-red-500 p-1"><Archive size={16} /></span>
                 Công cụ chuyển đổi

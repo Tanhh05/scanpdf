@@ -6,16 +6,19 @@
   --primary: #5b5cf0;
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+  font-family: inherit;
+}
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-source-sans), "Segoe UI", Arial, sans-serif;
 }
-button, input { font: inherit; }
-.container-page { width: min(1120px, calc(100% - 32px)); margin-inline: auto; }
+button, input, select, textarea { font: inherit; }
+.container-page { width: min(1180px, calc(100% - 32px)); margin-inline: auto; }
 .card { border: 1px solid #e2e8f0; background: white; border-radius: 20px; box-shadow: 0 12px 40px rgb(15 23 42 / 5%); }
 .btn-primary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -25,3 +28,46 @@ button, input { font: inherit; }
 .btn-primary:disabled { opacity: .55; cursor: not-allowed; }
 .field { width: 100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 14px; outline: none; }
 .field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgb(91 92 240 / 12%); }
+
+.section-kicker {
+  color: #5b5cf0;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tool-card {
+  display: flex;
+  min-height: 148px;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+.tool-card:hover {
+  background: #fafaff;
+  transform: translateY(-1px);
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(4px);
+  pointer-events: none;
+}
+.hero-orb-left {
+  width: 340px;
+  height: 340px;
+  left: -210px;
+  top: 70px;
+  background: radial-gradient(circle, rgb(91 92 240 / 16%), transparent 68%);
+}
+.hero-orb-right {
+  width: 420px;
+  height: 420px;
+  right: -250px;
+  top: -60px;
+  background: radial-gradient(circle, rgb(244 114 182 / 13%), transparent 68%);
+}
