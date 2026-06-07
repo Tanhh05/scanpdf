@@ -14,6 +14,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useAuthStore } from "@/stores/auth.store";
 
 const tools = [
   { label: "Chuyển đổi", icon: Files, href: "/tools/word-to-pdf" },
@@ -33,6 +34,15 @@ const conversionTools = [
   { label: "PDF OCR", icon: ScanText, color: "bg-red-500", href: "/tools/ocr-pdf" },
 ];
 
+function getInitials(fullName?: string, email?: string) {
+  const words = fullName?.trim().split(/\s+/).filter(Boolean) ?? [];
+  if (words.length === 1) return words[0]!.slice(0, 2).toLocaleUpperCase("vi");
+  if (words.length > 1) {
+    return `${words[0]![0]}${words.at(-1)![0]}`.toLocaleUpperCase("vi");
+  }
+  return email?.slice(0, 2).toLocaleUpperCase("vi") ?? "TK";
+}
+
 export function ToolWorkspace({
   title,
   children,
@@ -41,6 +51,8 @@ export function ToolWorkspace({
   children: React.ReactNode;
 }) {
   const [conversionMenuOpen, setConversionMenuOpen] = useState(false);
+  const user = useAuthStore((state) => state.user);
+  const initials = getInitials(user?.fullName, user?.email);
 
   return (
     <section className="min-h-screen bg-[#f2f6ff]">
@@ -86,8 +98,13 @@ export function ToolWorkspace({
               <Link href="/pricing" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold hover:bg-slate-50">
                 Nâng cấp
               </Link>
-              <Link href="/dashboard" className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
-                TK
+              <Link
+                href="/dashboard"
+                title={user?.fullName ?? "Tài khoản"}
+                aria-label={user?.fullName ? `Tài khoản của ${user.fullName}` : "Tài khoản"}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white"
+              >
+                {initials}
               </Link>
             </div>
           </div>
