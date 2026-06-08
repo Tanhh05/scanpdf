@@ -5,7 +5,14 @@ const DEFAULT_API_BASE_URL =
     ? "https://scanpdf-backend.onrender.com/api"
     : "http://localhost:4000/api";
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? DEFAULT_API_BASE_URL;
+const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+const shouldIgnoreConfiguredApiUrl =
+  process.env.NODE_ENV === "production" &&
+  (!configuredApiBaseUrl || configuredApiBaseUrl.includes("localhost"));
+
+export const API_BASE_URL = shouldIgnoreConfiguredApiUrl
+  ? DEFAULT_API_BASE_URL
+  : configuredApiBaseUrl ?? DEFAULT_API_BASE_URL;
 
 export const api = axios.create({ baseURL: API_BASE_URL });
 export const adminApi = axios.create({ baseURL: API_BASE_URL });
