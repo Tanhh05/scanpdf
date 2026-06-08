@@ -6,7 +6,6 @@ services:
     region: singapore
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
-    dockerCommand: /bin/sh -c "npm run db:deploy && (node dist/src/workers/conversion.worker.js &) && exec node dist/src/server.js"
     healthCheckPath: /health/ready
     envVars:
       - key: NODE_ENV

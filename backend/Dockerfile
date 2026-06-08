@@ -10,6 +10,7 @@ COPY prisma ./prisma
 RUN npx prisma generate
 COPY tsconfig.json ./
 COPY src ./src
+COPY scripts ./scripts
 RUN npm run build
 
-CMD ["node", "dist/src/server.js"]
+CMD ["sh", "scripts/render-start.sh"]
