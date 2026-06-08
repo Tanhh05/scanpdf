@@ -1,6 +1,7 @@
 import type { PaymentStatus, Prisma } from "@prisma/client";
 import { prisma } from "../config/prisma.js";
 import { addDays } from "../utils/date.js";
+import { sendPaymentSuccessEmail } from "./mail.service.js";
 
 type PaymentWithPlan = Prisma.PaymentGetPayload<{ include: { plan: true } }>;
 
@@ -32,6 +33,15 @@ export async function activatePaidPayment(payment: PaymentWithPlan, rawResponse:
       },
     });
   });
+  const user = await prisma.user.findUnique({ where: { id: payment.userId }, select: { email: true } });
+  if (user) {
+    await sendPaymentSuccessEmail(
+      user.email,
+      payment.plan.name,
+      payment.amount,
+      payment.transactionCode,
+    ).catch((error) => console.error("Payment email failed", error));
+  }
 }
 
 export function mapPayOSStatus(status: string): PaymentStatus | null {

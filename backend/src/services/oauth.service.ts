@@ -133,13 +133,20 @@ export async function findOrCreateOAuthUser(profile: OAuthProfile): Promise<User
     },
     include: { user: true },
   });
-  if (account) return account.user;
+  if (account) {
+    if (account.user.emailVerifiedAt) return account.user;
+    return prisma.user.update({
+      where: { id: account.user.id },
+      data: { emailVerifiedAt: new Date() },
+    });
+  }
 
   const existingUser = await prisma.user.findUnique({ where: { email: profile.email } });
   if (existingUser) {
     return prisma.user.update({
       where: { id: existingUser.id },
       data: {
+        emailVerifiedAt: new Date(),
         oauthAccounts: {
           create: { provider: profile.provider, providerAccountId: profile.providerAccountId },
         },
@@ -153,6 +160,7 @@ export async function findOrCreateOAuthUser(profile: OAuthProfile): Promise<User
     data: {
       email: profile.email,
       fullName: profile.fullName,
+      emailVerifiedAt: new Date(),
       oauthAccounts: {
         create: { provider: profile.provider, providerAccountId: profile.providerAccountId },
       },

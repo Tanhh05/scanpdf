@@ -1,12 +1,12 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/services/api";
+import { adminApi } from "@/services/api";
 import { AdminNav } from "@/components/admin/admin-nav";
 
 type Metrics = { totalUsers: number; newUsers: number; proUsers: number; totalConversions: number; successRate: number; totalRevenue: number };
 export default function AdminDashboardPage() {
-  const { data, error } = useQuery<Metrics>({ queryKey: ["admin-dashboard"], queryFn: async () => (await api.get("/admin/dashboard")).data });
+  const { data, error } = useQuery<Metrics>({ queryKey: ["admin-dashboard"], queryFn: async () => (await adminApi.get("/admin/dashboard")).data });
   if (error) return <div className="container-page py-16 text-red-700">Không thể truy cập. Tài khoản cần quyền ADMIN.</div>;
   const cards = [
     ["Tổng người dùng", data?.totalUsers],

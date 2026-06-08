@@ -1,9 +1,12 @@
 "use client";
 
-import { ArrowRight, CreditCard, History, LayoutDashboard, UserRound } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowRight, Braces, CreditCard, History, LayoutDashboard, Users, UserRound } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import type { ConversionList, Profile } from "@/lib/account";
+import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth.store";
 
 const navigation = [
@@ -11,12 +14,37 @@ const navigation = [
   { label: "Hồ sơ", href: "/dashboard/profile", icon: UserRound },
   { label: "Lịch sử", href: "/dashboard/history", icon: History },
   { label: "Thanh toán", href: "/dashboard/payments", icon: CreditCard },
+  { label: "Team", href: "/dashboard/teams", icon: Users },
+  { label: "Public API", href: "/dashboard/api-keys", icon: Braces },
 ];
 
 export function AccountLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
+
+  function prefetchDashboardItem(href: string) {
+    router.prefetch(href);
+    if (!token) return;
+    if (href === "/dashboard" || href === "/dashboard/profile") {
+      void queryClient.prefetchQuery<Profile>({
+        queryKey: ["profile"],
+        queryFn: async () => (await api.get("/profile")).data,
+        staleTime: 300_000,
+      });
+    }
+    if (href === "/dashboard/history") {
+      void queryClient.prefetchQuery<ConversionList>({
+        queryKey: ["conversions", 1, "", ""],
+        queryFn: async () => (await api.get("/conversions", {
+          params: { page: 1, limit: 20 },
+        })).data,
+        staleTime: 120_000,
+      });
+    }
+  }
 
   if (!token) {
     return (
@@ -43,6 +71,8 @@ export function AccountLayout({ children }: { children: ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onMouseEnter={() => prefetchDashboardItem(item.href)}
+                  onFocus={() => prefetchDashboardItem(item.href)}
                   className={`flex items-center gap-3 rounded-xl px-3 py-3 transition ${
                     active ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-50"
                   }`}

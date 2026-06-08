@@ -1,0 +1,3 @@
+-- AlterEnum
+ALTER TYPE "ConversionTool" ADD VALUE 'REORDER_PDF';
+ALTER TYPE "ConversionTool" ADD VALUE 'ADD_PAGE_NUMBERS';

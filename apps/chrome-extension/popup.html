@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScanPDF</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon-48.png" alt="ScanPDF">
+      <div>
+        <strong>ScanPDF</strong>
+        <span id="account-label">Chưa đăng nhập</span>
+      </div>
+      <button id="settings-button" class="icon-button" title="Cấu hình API">⚙</button>
+    </header>
+
+    <main>
+      <section id="settings-view" class="view hidden">
+        <h1>Kết nối máy chủ</h1>
+        <label>API URL
+          <input id="api-url" type="url" placeholder="http://localhost:4000/api">
+        </label>
+        <button id="save-settings" class="primary">Lưu cấu hình</button>
+      </section>
+
+      <section id="login-view" class="view">
+        <h1>Đăng nhập</h1>
+        <p>Dùng tài khoản ScanPDF để chuyển đổi và xem lịch sử.</p>
+        <form id="login-form">
+          <label>Email
+            <input id="email" type="email" autocomplete="email" required>
+          </label>
+          <label>Mật khẩu
+            <input id="password" type="password" autocomplete="current-password" minlength="8" required>
+          </label>
+          <label id="otp-label" class="hidden">Mã 2FA
+            <input id="otp" inputmode="numeric" maxlength="6">
+          </label>
+          <button class="primary" type="submit">Đăng nhập</button>
+        </form>
+      </section>
+
+      <section id="app-view" class="view hidden">
+        <div class="tabs">
+          <button class="tab active" data-tab="convert">Chuyển đổi</button>
+          <button class="tab" data-tab="history">Lịch sử</button>
+        </div>
+
+        <div id="convert-tab">
+          <label>Công cụ
+            <select id="tool"></select>
+          </label>
+          <label>Chọn file
+            <input id="files" type="file">
+          </label>
+          <div id="tool-options"></div>
+          <button id="convert-button" class="primary">Bắt đầu xử lý</button>
+          <div id="progress" class="status hidden"></div>
+        </div>
+
+        <div id="history-tab" class="hidden">
+          <button id="refresh-history" class="secondary">Làm mới</button>
+          <div id="history-list" class="history"></div>
+        </div>
+
+        <button id="logout-button" class="link-button">Đăng xuất</button>
+      </section>
+
+      <p id="message" class="message hidden"></p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "name": "@scanpdf/mobile",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "export:android": "expo export --platform android --output-dir dist-android",
+    "export:ios": "expo export --platform ios --output-dir dist-ios"
+  },
+  "dependencies": {
+    "expo": "~56.0.9",
+    "expo-document-picker": "~56.0.4",
+    "expo-file-system": "~56.0.7",
+    "expo-secure-store": "~56.0.4",
+    "expo-sharing": "~56.0.16",
+    "expo-status-bar": "~56.0.4",
+    "react": "19.2.3",
+    "react-native": "0.85.3"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  }
+}

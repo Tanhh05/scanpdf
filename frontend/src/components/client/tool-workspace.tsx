@@ -2,27 +2,47 @@
 
 import {
   Archive,
+  Boxes,
+  Droplet,
   FileImage,
   Files,
   FileText,
+  Hash,
+  ListOrdered,
+  LockKeyhole,
+  LockKeyholeOpen,
+  RotateCw,
   ScanText,
+  Signature,
+  Scissors,
   UserRound,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/common/theme-toggle";
 
 const tools = [
   { label: "Chuyển đổi", icon: Files, href: "/tools/word-to-pdf" },
 ];
 
 const conversionTools = [
+  { label: "Batch convert", icon: Boxes, color: "bg-purple-600", href: "/tools/batch-convert" },
   { label: "PDF ↔ Word", icon: FileText, color: "bg-blue-500", href: "/tools/pdf-to-word" },
   { label: "Ghép PDF", icon: Files, color: "bg-indigo-500", href: "/tools/merge-pdf" },
   { label: "Nén PDF", icon: Archive, color: "bg-violet-500", href: "/tools/compress-pdf" },
   { label: "JPG → PDF", icon: FileImage, color: "bg-amber-500", href: "/tools/jpg-to-pdf" },
   { label: "PDF → JPG", icon: FileImage, color: "bg-orange-500", href: "/tools/pdf-to-jpg" },
   { label: "PDF OCR", icon: ScanText, color: "bg-red-500", href: "/tools/ocr-pdf" },
+  { label: "Tách PDF", icon: Scissors, color: "bg-cyan-500", href: "/tools/split-pdf" },
+  { label: "Xoay PDF", icon: RotateCw, color: "bg-emerald-500", href: "/tools/rotate-pdf" },
+  { label: "Xóa trang", icon: Files, color: "bg-rose-500", href: "/tools/delete-pdf-pages" },
+  { label: "Watermark", icon: Droplet, color: "bg-sky-500", href: "/tools/watermark-pdf" },
+  { label: "Sắp xếp trang", icon: ListOrdered, color: "bg-fuchsia-500", href: "/tools/reorder-pdf" },
+  { label: "Đánh số trang", icon: Hash, color: "bg-teal-500", href: "/tools/add-page-numbers" },
+  { label: "Khóa PDF", icon: LockKeyhole, color: "bg-slate-600", href: "/tools/protect-pdf" },
+  { label: "Mở khóa PDF", icon: LockKeyholeOpen, color: "bg-lime-600", href: "/tools/unlock-pdf" },
+  { label: "Ký PDF", icon: Signature, color: "bg-blue-700", href: "/tools/sign-pdf" },
 ];
 
 export function ToolWorkspace({
@@ -68,9 +88,12 @@ export function ToolWorkspace({
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-500">Công cụ PDF</p>
               <h1 className="mt-0.5 text-xl font-black text-slate-950">{title}</h1>
             </div>
-            <Link href="/pricing" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700">
-              Nâng cấp
-            </Link>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <Link href="/pricing" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700">
+                Nâng cấp
+              </Link>
+            </div>
           </div>
 
           <div className="flex overflow-x-auto bg-[#06245d] text-white md:hidden">

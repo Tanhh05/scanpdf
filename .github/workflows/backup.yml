@@ -1,0 +1,48 @@
+name: Scheduled Backup
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 19 * * *"
+
+jobs:
+  backup:
+    if: ${{ vars.ENABLE_BACKUP == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        if: ${{ vars.ENABLE_SUPABASE_STORAGE_BACKUP == 'true' }}
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Backup PostgreSQL
+        run: bash scripts/backup-postgres.sh
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BACKUP_DIR: backups/postgres
+      - name: Upload backup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: postgres-backup
+          path: backups/postgres/*.gz
+          retention-days: 14
+      - name: Install Node dependencies
+        if: ${{ vars.ENABLE_SUPABASE_STORAGE_BACKUP == 'true' }}
+        run: npm ci --ignore-scripts
+      - name: Backup Supabase Storage
+        if: ${{ vars.ENABLE_SUPABASE_STORAGE_BACKUP == 'true' }}
+        run: npm run backup:supabase-storage
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_BUCKET: ${{ vars.SUPABASE_BUCKET }}
+          BACKUP_DIR: backups/storage
+      - name: Upload storage backup artifact
+        if: ${{ vars.ENABLE_SUPABASE_STORAGE_BACKUP == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-storage-backup
+          path: backups/storage/*.tar.gz
+          retention-days: 14

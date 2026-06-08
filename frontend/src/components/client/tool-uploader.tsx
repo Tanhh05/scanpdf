@@ -21,22 +21,43 @@ export function ToolUploader({
   accept,
   multiple = false,
   minimumFiles = 1,
+  fields = [],
 }: {
   tool: string;
   accept: string;
   multiple?: boolean;
   minimumFiles?: number;
+  fields?: Array<{
+    name: string;
+    label: string;
+    placeholder?: string;
+    defaultValue?: string;
+    type?: "text" | "password" | "select";
+    options?: Array<{ label: string; value: string }>;
+    help?: string;
+  }>;
 }) {
   const router = useRouter();
   const token = useAuthStore((state) => state.token);
   const [files, setFiles] = useState<File[]>([]);
+  const [teamId, setTeamId] = useState("");
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>(() => Object.fromEntries(
+    fields.map((field) => [field.name, field.defaultValue ?? ""]),
+  ));
   const [conversionId, setConversionId] = useState<string | null>(null);
+  const teams = useQuery<Array<{ id: string; name: string }>>({
+    queryKey: ["teams-lite"],
+    queryFn: async () => (await api.get("/teams")).data,
+    enabled: Boolean(token),
+  });
 
   const upload = useMutation({
     mutationFn: async () => {
       if (files.length < minimumFiles) throw new Error(`Vui lòng chọn ít nhất ${minimumFiles} file`);
       const body = new FormData();
       files.forEach((file) => body.append(multiple ? "files" : "file", file));
+      for (const [key, value] of Object.entries(fieldValues)) body.append(key, value);
+      if (teamId) body.append("teamId", teamId);
       return (await api.post<Conversion>(`/convert/${tool}`, body)).data;
     },
     onSuccess: (data) => setConversionId(data.id),
@@ -110,6 +131,46 @@ export function ToolUploader({
         <p className="mt-5 text-xs text-slate-500">File được bảo vệ và tự động xóa theo thời hạn gói của bạn</p>
         <input type="file" accept={accept} multiple={multiple} className="hidden" onChange={(e) => setFiles(Array.from(e.target.files ?? []))} />
       </label>
+
+      {(fields.length > 0 || Boolean(teams.data?.length)) && !status && (
+        <div className="grid gap-4 border-t border-slate-100 bg-white px-6 py-5 sm:grid-cols-2">
+          {Boolean(teams.data?.length) && (
+            <label className="block text-sm font-bold text-slate-800">
+              Workspace
+              <select value={teamId} onChange={(event) => setTeamId(event.target.value)} className="field mt-2">
+                <option value="">Tài khoản cá nhân</option>
+                {teams.data?.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
+              </select>
+              <span className="mt-1 block text-xs font-normal text-slate-500">Chọn team để dùng quota Business của team.</span>
+            </label>
+          )}
+          {fields.map((field) => (
+            <label key={field.name} className="block text-sm font-bold text-slate-800">
+              {field.label}
+              {field.type === "select" ? (
+                <select
+                  value={fieldValues[field.name] ?? ""}
+                  onChange={(event) => setFieldValues((current) => ({ ...current, [field.name]: event.target.value }))}
+                  className="field mt-2"
+                >
+                  {(field.options ?? []).map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={field.type === "password" ? "password" : "text"}
+                  value={fieldValues[field.name] ?? ""}
+                  onChange={(event) => setFieldValues((current) => ({ ...current, [field.name]: event.target.value }))}
+                  className="field mt-2"
+                  placeholder={field.placeholder}
+                />
+              )}
+              {field.help && <span className="mt-1 block text-xs font-normal text-slate-500">{field.help}</span>}
+            </label>
+          ))}
+        </div>
+      )}
 
       {!status && (
         <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 bg-white px-6 py-5 sm:flex-row">

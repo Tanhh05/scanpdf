@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/common/providers";
-import { Header } from "@/components/common/header";
-import { Footer } from "@/components/common/footer";
 
 const sourceSans = Source_Sans_3({
   subsets: ["latin", "vietnamese"],
@@ -29,12 +27,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="vi">
-      <body className={sourceSans.variable}>
+    <html lang="vi" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("scanpdf-theme");var d=t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);document.documentElement.style.colorScheme=d?"dark":"light"}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className={sourceSans.variable} suppressHydrationWarning>
         <Providers>
-          <Header />
-          <main className="min-h-[calc(100vh-140px)]">{children}</main>
-          <Footer />
+          {children}
         </Providers>
       </body>
     </html>

@@ -8,6 +8,7 @@ type StorageService = {
   get(key: string): Promise<Buffer>;
   remove(key: string): Promise<void>;
   getDownloadUrl(key: string): Promise<string>;
+  healthCheck(): Promise<void>;
 };
 
 class LocalStorageService implements StorageService {
@@ -29,6 +30,10 @@ class LocalStorageService implements StorageService {
 
   async getDownloadUrl(key: string) {
     return `/api/files/download?key=${encodeURIComponent(key)}`;
+  }
+
+  async healthCheck() {
+    await mkdir(this.root, { recursive: true });
   }
 }
 
@@ -66,6 +71,11 @@ class SupabaseStorageService implements StorageService {
       .createSignedUrl(key, 60 * 10);
     if (error) throw error;
     return data.signedUrl;
+  }
+
+  async healthCheck() {
+    const { error } = await this.client.storage.from(env.SUPABASE_BUCKET).list("", { limit: 1 });
+    if (error) throw error;
   }
 }
 

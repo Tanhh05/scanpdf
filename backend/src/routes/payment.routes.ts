@@ -7,6 +7,7 @@ import { requireAdmin, requireAuth } from "../middleware/auth.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { HttpError } from "../utils/http-error.js";
 import { activatePaidPayment, mapPayOSStatus } from "../services/payment.service.js";
+import { createPaymentInvoice } from "../services/invoice.service.js";
 
 const router = Router();
 
@@ -103,6 +104,22 @@ router.get("/mine", requireAuth, asyncHandler(async (req, res) => {
     orderBy: { createdAt: "desc" },
     take: 20,
   }));
+}));
+
+router.get("/:id/invoice", requireAuth, asyncHandler(async (req, res) => {
+  const value = req.params.id;
+  const id = Array.isArray(value) ? value[0] : value;
+  if (!id) throw new HttpError(400, "ID không hợp lệ");
+  const payment = await prisma.payment.findFirst({
+    where: { id, userId: req.user!.id, status: "PAID" },
+    include: { user: true, plan: true },
+  });
+  if (!payment) throw new HttpError(404, "Không tìm thấy hóa đơn");
+  const bytes = await createPaymentInvoice(payment);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="scanpdf-invoice-${payment.transactionCode}.pdf"`);
+  res.setHeader("Content-Length", String(bytes.length));
+  res.send(bytes);
 }));
 
 router.get("/status/:orderCode", requireAuth, asyncHandler(async (req, res) => {

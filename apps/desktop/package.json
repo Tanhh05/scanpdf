@@ -1,0 +1,44 @@
+{
+  "name": "@scanpdf/desktop",
+  "version": "1.0.0",
+  "description": "Ứng dụng ScanPDF cho máy tính",
+  "author": "ScanPDF",
+  "private": true,
+  "main": "src/main.cjs",
+  "scripts": {
+    "dev": "electron .",
+    "lint": "node --check src/main.cjs && node --check src/preload.cjs && node --check src/renderer.js",
+    "build": "electron-builder --dir --config.mac.identity=null",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "electron": "42.3.3",
+    "electron-builder": "^26.15.2"
+  },
+  "build": {
+    "appId": "vn.scanpdf.desktop",
+    "productName": "ScanPDF",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": ["dmg", "zip"],
+      "icon": "assets/icon.png"
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "assets/icon.png"
+    },
+    "linux": {
+      "category": "Office",
+      "target": ["AppImage", "deb"],
+      "icon": "assets/icon.png"
+    }
+  }
+}

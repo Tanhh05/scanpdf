@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { Document, Packer, Paragraph } from "docx";
 import JSZip from "jszip";
-import { PDFDocument } from "pdf-lib";
+import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { execFile } from "node:child_process";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -11,12 +11,17 @@ import { nanoid } from "nanoid";
 import { prisma } from "../config/prisma.js";
 import { redisConnection } from "../config/queue.js";
 import { storage } from "../services/storage.service.js";
+import { sendConversionResultEmail } from "../services/mail.service.js";
+import { captureError, initMonitoring } from "../config/monitoring.js";
+
+initMonitoring();
 
 const run = promisify(execFile);
 
 type JobData = {
   conversionId: string;
   inputFileIds?: string[];
+  options?: Record<string, unknown>;
 };
 
 type Output = {
@@ -163,11 +168,212 @@ async function ocrPdf(input: string, outputDir: string, baseName: string): Promi
   return { path: finalPath, name: `${baseName}-ocr.pdf`, contentType: "application/pdf" };
 }
 
+async function splitPdf(input: string, outputDir: string, baseName: string): Promise<Output> {
+  const source = await PDFDocument.load(await readFile(input));
+  const pageFiles = [];
+  for (const pageIndex of source.getPageIndices()) {
+    const document = await PDFDocument.create();
+    const [page] = await document.copyPages(source, [pageIndex]);
+    if (!page) throw new Error("Không thể tách trang PDF");
+    document.addPage(page);
+    const output = path.join(outputDir, `${baseName}-page-${String(pageIndex + 1).padStart(3, "0")}.pdf`);
+    await writeFile(output, await document.save());
+    pageFiles.push(output);
+  }
+  const zipPath = path.join(outputDir, `${baseName}-split.zip`);
+  await createZip(pageFiles, zipPath);
+  return { path: zipPath, name: `${baseName}-split.zip`, contentType: "application/zip" };
+}
+
+async function rotatePdf(input: string, outputDir: string, baseName: string, angle: number): Promise<Output> {
+  const document = await PDFDocument.load(await readFile(input));
+  for (const page of document.getPages()) {
+    const current = page.getRotation().angle;
+    page.setRotation(degrees((current + angle) % 360));
+  }
+  const output = path.join(outputDir, `${baseName}-rotated.pdf`);
+  await writeFile(output, await document.save());
+  return { path: output, name: `${baseName}-rotated.pdf`, contentType: "application/pdf" };
+}
+
+function parsePageSet(value: unknown, pageCount: number) {
+  if (typeof value !== "string") throw new Error("Danh sách trang không hợp lệ");
+  const pages = new Set<number>();
+  for (const part of value.split(",")) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const range = trimmed.match(/^(\d+)-(\d+)$/);
+    if (range) {
+      const start = Number(range[1]);
+      const end = Number(range[2]);
+      if (start < 1 || end < start || end > pageCount) throw new Error("Khoảng trang không hợp lệ");
+      for (let page = start; page <= end; page += 1) pages.add(page - 1);
+      continue;
+    }
+    const page = Number(trimmed);
+    if (!Number.isInteger(page) || page < 1 || page > pageCount) throw new Error("Số trang không hợp lệ");
+    pages.add(page - 1);
+  }
+  return pages;
+}
+
+async function deletePdfPages(input: string, outputDir: string, baseName: string, pagesOption: unknown): Promise<Output> {
+  const source = await PDFDocument.load(await readFile(input));
+  const deletePages = parsePageSet(pagesOption, source.getPageCount());
+  const keepPages = source.getPageIndices().filter((index) => !deletePages.has(index));
+  if (!keepPages.length) throw new Error("Không thể xóa toàn bộ trang PDF");
+  const document = await PDFDocument.create();
+  const pages = await document.copyPages(source, keepPages);
+  pages.forEach((page) => document.addPage(page));
+  const output = path.join(outputDir, `${baseName}-pages-deleted.pdf`);
+  await writeFile(output, await document.save());
+  return { path: output, name: `${baseName}-pages-deleted.pdf`, contentType: "application/pdf" };
+}
+
+async function watermarkPdf(input: string, outputDir: string, baseName: string, textOption: unknown): Promise<Output> {
+  const text = typeof textOption === "string" && textOption.trim() ? textOption.trim() : "ScanPDF";
+  const document = await PDFDocument.load(await readFile(input));
+  const font = await document.embedFont(StandardFonts.HelveticaBold);
+  for (const page of document.getPages()) {
+    const { width, height } = page.getSize();
+    const fontSize = Math.max(18, Math.min(width, height) / 18);
+    const textWidth = font.widthOfTextAtSize(text, fontSize);
+    const horizontalStep = Math.max(textWidth + 90, width / 2.6);
+    const verticalStep = Math.max(fontSize * 4.5, height / 5);
+    for (let y = -height * 0.15; y < height * 1.2; y += verticalStep) {
+      for (let x = -width * 0.25; x < width * 1.2; x += horizontalStep) {
+        page.drawText(text, {
+          x,
+          y,
+          size: fontSize,
+          font,
+          color: rgb(0.38, 0.38, 0.38),
+          opacity: 0.16,
+          rotate: degrees(-35),
+        });
+      }
+    }
+  }
+  const output = path.join(outputDir, `${baseName}-watermark.pdf`);
+  await writeFile(output, await document.save());
+  return { path: output, name: `${baseName}-watermark.pdf`, contentType: "application/pdf" };
+}
+
+function parsePageOrder(value: unknown, pageCount: number) {
+  if (typeof value !== "string") throw new Error("Thứ tự trang không hợp lệ");
+  const pages = value.split(",").map((part) => Number(part.trim()));
+  if (
+    pages.length !== pageCount
+    || pages.some((page) => !Number.isInteger(page) || page < 1 || page > pageCount)
+    || new Set(pages).size !== pageCount
+  ) {
+    throw new Error(`Vui lòng nhập đủ ${pageCount} trang, mỗi trang xuất hiện đúng một lần`);
+  }
+  return pages.map((page) => page - 1);
+}
+
+async function reorderPdf(input: string, outputDir: string, baseName: string, pagesOption: unknown): Promise<Output> {
+  const source = await PDFDocument.load(await readFile(input));
+  const order = parsePageOrder(pagesOption, source.getPageCount());
+  const document = await PDFDocument.create();
+  const pages = await document.copyPages(source, order);
+  pages.forEach((page) => document.addPage(page));
+  const output = path.join(outputDir, `${baseName}-reordered.pdf`);
+  await writeFile(output, await document.save());
+  return { path: output, name: `${baseName}-reordered.pdf`, contentType: "application/pdf" };
+}
+
+async function addPageNumbers(
+  input: string,
+  outputDir: string,
+  baseName: string,
+  positionOption: unknown,
+): Promise<Output> {
+  const position = typeof positionOption === "string" ? positionOption : "bottom-center";
+  const document = await PDFDocument.load(await readFile(input));
+  const font = await document.embedFont(StandardFonts.Helvetica);
+  const pages = document.getPages();
+
+  pages.forEach((page, index) => {
+    const text = `${index + 1} / ${pages.length}`;
+    const size = 10;
+    const margin = 24;
+    const { width, height } = page.getSize();
+    const textWidth = font.widthOfTextAtSize(text, size);
+    const x = position.endsWith("right") ? width - textWidth - margin : (width - textWidth) / 2;
+    const y = position.startsWith("top") ? height - margin : margin;
+    page.drawText(text, { x, y, size, font, color: rgb(0.25, 0.25, 0.25) });
+  });
+
+  const output = path.join(outputDir, `${baseName}-numbered.pdf`);
+  await writeFile(output, await document.save());
+  return { path: output, name: `${baseName}-numbered.pdf`, contentType: "application/pdf" };
+}
+
+function getPdfPassword(value: unknown) {
+  if (typeof value !== "string" || value.length < 4 || value.length > 64) {
+    throw new Error("Mật khẩu PDF phải có từ 4 đến 64 ký tự");
+  }
+  return value;
+}
+
+async function protectPdf(input: string, outputDir: string, baseName: string, passwordOption: unknown): Promise<Output> {
+  const password = getPdfPassword(passwordOption);
+  const output = path.join(outputDir, `${baseName}-protected.pdf`);
+  await run("qpdf", ["--encrypt", password, password, "256", "--", input, output], { timeout: 120_000 });
+  return { path: output, name: `${baseName}-protected.pdf`, contentType: "application/pdf" };
+}
+
+async function unlockPdf(input: string, outputDir: string, baseName: string, passwordOption: unknown): Promise<Output> {
+  const password = getPdfPassword(passwordOption);
+  const output = path.join(outputDir, `${baseName}-unlocked.pdf`);
+  try {
+    await run("qpdf", [`--password=${password}`, "--decrypt", input, output], { timeout: 120_000 });
+  } catch {
+    throw new Error("Không thể mở khóa PDF. Vui lòng kiểm tra lại mật khẩu");
+  }
+  return { path: output, name: `${baseName}-unlocked.pdf`, contentType: "application/pdf" };
+}
+
+async function signPdf(
+  input: string,
+  outputDir: string,
+  baseName: string,
+  signerOption: unknown,
+  positionOption: unknown,
+): Promise<Output> {
+  const signer = typeof signerOption === "string" ? signerOption.trim() : "";
+  if (signer.length < 2 || signer.length > 80) throw new Error("Tên người ký không hợp lệ");
+  const position = positionOption === "bottom-left" ? "bottom-left" : "bottom-right";
+  const document = await PDFDocument.load(await readFile(input));
+  const font = await document.embedFont(StandardFonts.HelveticaOblique);
+  const regular = await document.embedFont(StandardFonts.Helvetica);
+  const page = document.getPages().at(-1);
+  if (!page) throw new Error("PDF không có trang");
+  const { width } = page.getSize();
+  const signature = `Signed by ${signer}`;
+  const date = new Date().toISOString().slice(0, 10);
+  const signatureWidth = font.widthOfTextAtSize(signature, 18);
+  const x = position === "bottom-left" ? 36 : width - signatureWidth - 36;
+  page.drawText(signature, { x, y: 52, size: 18, font, color: rgb(0.08, 0.2, 0.55) });
+  page.drawText(`ScanPDF visual signature - ${date}`, {
+    x,
+    y: 36,
+    size: 8,
+    font: regular,
+    color: rgb(0.35, 0.35, 0.35),
+  });
+  const output = path.join(outputDir, `${baseName}-signed.pdf`);
+  await writeFile(output, await document.save());
+  return { path: output, name: `${baseName}-signed.pdf`, contentType: "application/pdf" };
+}
+
 async function processConversion(
   tool: string,
   inputs: string[],
   outputDir: string,
   baseName: string,
+  options: Record<string, unknown> = {},
 ): Promise<Output> {
   switch (tool) {
     case "WORD_TO_PDF": return wordToPdf(inputs[0]!, outputDir, baseName);
@@ -177,6 +383,15 @@ async function processConversion(
     case "JPG_TO_PDF": return imagesToPdf(inputs, outputDir);
     case "PDF_TO_JPG": return pdfToJpg(inputs[0]!, outputDir, baseName);
     case "OCR_PDF": return ocrPdf(inputs[0]!, outputDir, baseName);
+    case "SPLIT_PDF": return splitPdf(inputs[0]!, outputDir, baseName);
+    case "ROTATE_PDF": return rotatePdf(inputs[0]!, outputDir, baseName, Number(options.angle ?? 90));
+    case "DELETE_PDF_PAGES": return deletePdfPages(inputs[0]!, outputDir, baseName, options.pages);
+    case "WATERMARK_PDF": return watermarkPdf(inputs[0]!, outputDir, baseName, options.text);
+    case "REORDER_PDF": return reorderPdf(inputs[0]!, outputDir, baseName, options.pages);
+    case "ADD_PAGE_NUMBERS": return addPageNumbers(inputs[0]!, outputDir, baseName, options.position);
+    case "PROTECT_PDF": return protectPdf(inputs[0]!, outputDir, baseName, options.password);
+    case "UNLOCK_PDF": return unlockPdf(inputs[0]!, outputDir, baseName, options.password);
+    case "SIGN_PDF": return signPdf(inputs[0]!, outputDir, baseName, options.signer, options.position);
     default: throw new Error(`Unsupported conversion tool: ${tool}`);
   }
 }
@@ -186,7 +401,7 @@ const worker = new Worker<JobData>(
   async (job) => {
     const conversion = await prisma.conversion.findUnique({
       where: { id: job.data.conversionId },
-      include: { inputFile: true },
+      include: { inputFile: true, user: true },
     });
     if (!conversion) throw new Error("Conversion not found");
 
@@ -215,7 +430,7 @@ const worker = new Worker<JobData>(
       }
 
       const baseName = path.parse(conversion.inputFile.originalName).name;
-      const output = await processConversion(conversion.tool, inputPaths, workDir, baseName);
+      const output = await processConversion(conversion.tool, inputPaths, workDir, baseName, job.data.options);
       const outputExt = path.extname(output.path);
       const outputKey = `output/${conversion.userId}/${nanoid()}${outputExt}`;
       const outputBuffer = await readFile(output.path);
@@ -239,7 +454,13 @@ const worker = new Worker<JobData>(
           finishedAt: new Date(),
         },
       });
+      await sendConversionResultEmail(
+        conversion.user.email,
+        conversion.inputFile.originalName,
+        "COMPLETED",
+      ).catch((error) => console.error("Conversion email failed", error));
     } catch (error) {
+      captureError(error, { conversionId: conversion.id, tool: conversion.tool, worker: "conversion" });
       await prisma.conversion.update({
         where: { id: conversion.id },
         data: {
@@ -248,6 +469,12 @@ const worker = new Worker<JobData>(
           finishedAt: new Date(),
         },
       });
+      await sendConversionResultEmail(
+        conversion.user.email,
+        conversion.inputFile.originalName,
+        "FAILED",
+        error instanceof Error ? error.message : "Unknown error",
+      ).catch((mailError) => console.error("Conversion email failed", mailError));
       throw error;
     } finally {
       await rm(workDir, { recursive: true, force: true });

@@ -15,6 +15,7 @@ export default function DashboardPage() {
     queryKey: ["profile"],
     queryFn: async () => (await api.get("/profile")).data,
     enabled: !!token,
+    staleTime: 300_000,
   });
   const dailyLimit = profile.data?.plan.dailyLimit ?? 0;
   const usedToday = profile.data?.usedToday ?? 0;

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { AdminNav } from "@/components/admin/admin-nav";
-import { api } from "@/services/api";
+import { adminApi } from "@/services/api";
 
 type Statistics = {
   daily: { statDate: string; newUsers: number; totalConversions: number; successConversions: number; failedConversions: number; totalRevenue: number }[];
@@ -10,7 +10,7 @@ type Statistics = {
 };
 
 export default function StatisticsPage() {
-  const { data } = useQuery<Statistics>({ queryKey: ["admin-statistics"], queryFn: async () => (await api.get("/admin/statistics")).data });
+  const { data } = useQuery<Statistics>({ queryKey: ["admin-statistics"], queryFn: async () => (await adminApi.get("/admin/statistics")).data });
   const max = Math.max(1, ...(data?.daily.map((item) => item.totalConversions) ?? [1]));
   return (
     <section className="container-page py-14">

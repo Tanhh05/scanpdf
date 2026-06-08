@@ -3,9 +3,10 @@ import multer from "multer";
 import { nanoid } from "nanoid";
 import path from "node:path";
 import type { ConversionTool } from "@prisma/client";
+import { z } from "zod";
 import { prisma } from "../config/prisma.js";
 import { conversionQueue } from "../config/queue.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuthOrApiKey } from "../middleware/auth.js";
 import { getDailyUsage, getUserPlan } from "../services/plan.service.js";
 import { storage } from "../services/storage.service.js";
 import { addDays } from "../utils/date.js";
@@ -18,7 +19,25 @@ const upload = multer({
   limits: { files: 20, fileSize: 200 * 1024 * 1024 },
 });
 
-const tools: Record<string, { tool: ConversionTool; extensions: string[]; multiple?: boolean }> = {
+const rotateSchema = z.object({ angle: z.coerce.number().refine((value) => [90, 180, 270].includes(value)).default(90) });
+const deletePagesSchema = z.object({ pages: z.string().trim().min(1).max(200) });
+const watermarkSchema = z.object({ text: z.string().trim().min(1).max(80).default("ScanPDF") });
+const reorderPagesSchema = z.object({ pages: z.string().trim().min(1).max(500) });
+const pageNumbersSchema = z.object({
+  position: z.enum(["bottom-center", "bottom-right", "top-right"]).default("bottom-center"),
+});
+const passwordSchema = z.object({ password: z.string().min(4).max(64) });
+const signatureSchema = z.object({
+  signer: z.string().trim().min(2).max(80),
+  position: z.enum(["bottom-left", "bottom-right"]).default("bottom-right"),
+});
+
+const tools: Record<string, {
+  tool: ConversionTool;
+  extensions: string[];
+  multiple?: boolean;
+  parseOptions?: (body: unknown) => Record<string, unknown>;
+}> = {
   "word-to-pdf": { tool: "WORD_TO_PDF", extensions: [".doc", ".docx", ".odt"] },
   "pdf-to-word": { tool: "PDF_TO_WORD", extensions: [".pdf"] },
   "merge-pdf": { tool: "MERGE_PDF", extensions: [".pdf"], multiple: true },
@@ -26,9 +45,97 @@ const tools: Record<string, { tool: ConversionTool; extensions: string[]; multip
   "jpg-to-pdf": { tool: "JPG_TO_PDF", extensions: [".jpg", ".jpeg", ".png"], multiple: true },
   "pdf-to-jpg": { tool: "PDF_TO_JPG", extensions: [".pdf"] },
   "ocr-pdf": { tool: "OCR_PDF", extensions: [".pdf"] },
+  "split-pdf": { tool: "SPLIT_PDF", extensions: [".pdf"] },
+  "rotate-pdf": { tool: "ROTATE_PDF", extensions: [".pdf"], parseOptions: (body) => rotateSchema.parse(body) },
+  "delete-pdf-pages": { tool: "DELETE_PDF_PAGES", extensions: [".pdf"], parseOptions: (body) => deletePagesSchema.parse(body) },
+  "watermark-pdf": { tool: "WATERMARK_PDF", extensions: [".pdf"], parseOptions: (body) => watermarkSchema.parse(body) },
+  "reorder-pdf": { tool: "REORDER_PDF", extensions: [".pdf"], parseOptions: (body) => reorderPagesSchema.parse(body) },
+  "add-page-numbers": { tool: "ADD_PAGE_NUMBERS", extensions: [".pdf"], parseOptions: (body) => pageNumbersSchema.parse(body) },
+  "protect-pdf": { tool: "PROTECT_PDF", extensions: [".pdf"], parseOptions: (body) => passwordSchema.parse(body) },
+  "unlock-pdf": { tool: "UNLOCK_PDF", extensions: [".pdf"], parseOptions: (body) => passwordSchema.parse(body) },
+  "sign-pdf": { tool: "SIGN_PDF", extensions: [".pdf"], parseOptions: (body) => signatureSchema.parse(body) },
 };
 
-router.post("/:tool", requireAuth, upload.fields([
+const batchTools = new Set(["word-to-pdf", "compress-pdf", "pdf-to-jpg"]);
+
+async function getBillingContext(userId: string, body: unknown) {
+  const parsed = z.object({ teamId: z.uuid().optional() }).passthrough().parse(body ?? {});
+  if (!parsed.teamId) {
+    const plan = await getUserPlan(userId);
+    const used = await getDailyUsage(userId);
+    return { plan, used, teamId: null, priorityPlanName: plan.name };
+  }
+
+  const member = await prisma.teamMember.findUnique({
+    where: { teamId_userId: { teamId: parsed.teamId, userId } },
+    include: { team: true },
+  });
+  if (!member) throw new HttpError(403, "Bạn không thuộc team này");
+  const plan = await getUserPlan(member.team.ownerId);
+  if (plan.name !== "Business") throw new HttpError(403, "Team conversion yêu cầu owner dùng gói Business");
+  const used = await prisma.usageLog.count({
+    where: { teamId: parsed.teamId, createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
+  });
+  return { plan, used, teamId: parsed.teamId, priorityPlanName: plan.name };
+}
+
+router.post("/batch/:tool", requireAuthOrApiKey, upload.array("files", 20), asyncHandler(async (req, res) => {
+  const value = req.params.tool;
+  const toolName = Array.isArray(value) ? value[0] : value;
+  const config = toolName ? tools[toolName] : undefined;
+  if (!config || !toolName || !batchTools.has(toolName)) {
+    throw new HttpError(404, "Công cụ batch chưa được hỗ trợ");
+  }
+  const files = (req.files as Express.Multer.File[] | undefined) ?? [];
+  if (!files.length) throw new HttpError(400, "Vui lòng chọn file");
+  const invalidFile = files.find((file) => !config.extensions.includes(path.extname(file.originalname).toLowerCase()));
+  if (invalidFile) throw new HttpError(400, `Định dạng file không hợp lệ: ${invalidFile.originalname}`);
+
+  const { plan, used, teamId, priorityPlanName } = await getBillingContext(req.user!.id, req.body);
+  if (used + files.length > plan.dailyLimit) {
+    throw new HttpError(429, `Bạn chỉ còn ${Math.max(0, plan.dailyLimit - used)} lượt chuyển đổi hôm nay`);
+  }
+  if (files.some((file) => file.size > plan.maxFileSizeMb * 1024 * 1024)) {
+    throw new HttpError(413, `Có file vượt quá giới hạn ${plan.maxFileSizeMb}MB`);
+  }
+
+  const storedFiles = await Promise.all(files.map(async (file) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    const storageKey = `input/${req.user!.id}/${nanoid()}${extension}`;
+    await storage.put(storageKey, file.buffer, file.mimetype);
+    return { file, storageKey };
+  }));
+  const conversions = await prisma.$transaction(async (tx) => {
+    const created = [];
+    for (const item of storedFiles) {
+      const inputFile = await tx.file.create({
+        data: {
+          userId: req.user!.id,
+          teamId,
+          originalName: item.file.originalname,
+          storageKey: item.storageKey,
+          fileType: item.file.mimetype,
+          fileSize: item.file.size,
+          expiredAt: addDays(plan.storageDays),
+        },
+      });
+      const conversion = await tx.conversion.create({
+        data: { userId: req.user!.id, teamId, inputFileId: inputFile.id, tool: config.tool },
+      });
+      await tx.usageLog.create({ data: { userId: req.user!.id, teamId, tool: config.tool } });
+      created.push({ ...conversion, inputFileIds: [inputFile.id] });
+    }
+    return created;
+  });
+  await Promise.all(conversions.map((conversion) => conversionQueue.add(config.tool, {
+    conversionId: conversion.id,
+    inputFileIds: conversion.inputFileIds,
+    options: {},
+  }, { priority: priorityPlanName === "Free" ? 10 : 1 })));
+  res.status(202).json(conversions.map(({ inputFileIds: _inputFileIds, ...conversion }) => conversion));
+}));
+
+router.post("/:tool", requireAuthOrApiKey, upload.fields([
   { name: "file", maxCount: 1 },
   { name: "files", maxCount: 20 },
 ]), asyncHandler(async (req, res) => {
@@ -48,9 +155,9 @@ router.post("/:tool", requireAuth, upload.fields([
   if (invalidFile) {
     throw new HttpError(400, `Định dạng file không hợp lệ. Hỗ trợ: ${config.extensions.join(", ")}`);
   }
+  const options = config.parseOptions?.(req.body) ?? {};
 
-  const plan = await getUserPlan(req.user!.id);
-  const used = await getDailyUsage(req.user!.id);
+  const { plan, used, teamId, priorityPlanName } = await getBillingContext(req.user!.id, req.body);
   if (used >= plan.dailyLimit) throw new HttpError(429, "Bạn đã hết lượt chuyển đổi hôm nay");
   if (files.some((file) => file.size > plan.maxFileSizeMb * 1024 * 1024)) {
     throw new HttpError(413, `File vượt quá giới hạn ${plan.maxFileSizeMb}MB`);
@@ -69,6 +176,7 @@ router.post("/:tool", requireAuth, upload.fields([
       inputFiles.push(await tx.file.create({
         data: {
           userId: req.user!.id,
+          teamId,
           originalName: item.file.originalname,
           storageKey: item.storageKey,
           fileType: item.file.mimetype,
@@ -80,19 +188,21 @@ router.post("/:tool", requireAuth, upload.fields([
     const created = await tx.conversion.create({
       data: {
         userId: req.user!.id,
+        teamId,
         inputFileId: inputFiles[0]!.id,
         tool: config.tool,
       },
     });
-    await tx.usageLog.create({ data: { userId: req.user!.id, tool: config.tool } });
+    await tx.usageLog.create({ data: { userId: req.user!.id, teamId, tool: config.tool } });
     return { ...created, inputFileIds: inputFiles.map((file) => file.id) };
   });
 
   await conversionQueue.add(config.tool, {
     conversionId: conversion.id,
     inputFileIds: conversion.inputFileIds,
+    options,
   }, {
-    priority: plan.name === "Free" ? 10 : 1,
+    priority: priorityPlanName === "Free" ? 10 : 1,
   });
 
   const { inputFileIds: _inputFileIds, ...response } = conversion;

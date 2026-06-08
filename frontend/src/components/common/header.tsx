@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { ChevronDown, CreditCard, LayoutDashboard, LogOut, Menu, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/auth.store";
+import { ThemeToggle } from "@/components/common/theme-toggle";
 
 function getInitials(fullName?: string, email?: string) {
   const words = fullName?.trim().split(/\s+/).filter(Boolean) ?? [];
@@ -39,9 +40,11 @@ export function Header() {
           <Link href="/#tools" className="transition hover:text-indigo-600">Công cụ PDF</Link>
           <Link href="/tools/compress-pdf" className="transition hover:text-indigo-600">Nén PDF</Link>
           <Link href="/tools/merge-pdf" className="transition hover:text-indigo-600">Ghép PDF</Link>
+          <Link href="/ai/chat-pdf" className="transition hover:text-indigo-600">AI PDF</Link>
           <Link href="/pricing" className="transition hover:text-indigo-600">Bảng giá</Link>
         </nav>
         <div className="hidden items-center gap-4 text-sm font-bold md:flex">
+          <ThemeToggle />
           {user ? (
             <div className="relative">
               <button
@@ -104,9 +107,14 @@ export function Header() {
       {menuOpen && (
         <div className="border-t border-slate-100 bg-white px-4 py-5 md:hidden">
           <nav className="mx-auto flex max-w-xl flex-col gap-1 text-sm font-bold">
+            <div className="mb-2 flex items-center justify-between rounded-lg px-3 py-2">
+              <span>Giao diện</span>
+              <ThemeToggle />
+            </div>
             <Link href="/#tools" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Công cụ PDF</Link>
             <Link href="/tools/compress-pdf" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Nén PDF</Link>
             <Link href="/tools/merge-pdf" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Ghép PDF</Link>
+            <Link href="/ai/chat-pdf" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">AI PDF</Link>
             <Link href="/pricing" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Bảng giá</Link>
             <div className="mt-3 border-t border-slate-100 pt-3">
               {user ? (

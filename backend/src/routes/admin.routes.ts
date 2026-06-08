@@ -2,12 +2,17 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../config/prisma.js";
 import { requireAdmin, requireAuth } from "../middleware/auth.js";
+import { cleanupExpiredFiles } from "../services/cleanup.service.js";
 import { startOfDay } from "../utils/date.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { HttpError } from "../utils/http-error.js";
 
 const router = Router();
 router.use(requireAuth, requireAdmin);
+
+router.post("/cleanup/expired-files", asyncHandler(async (_req, res) => {
+  res.json(await cleanupExpiredFiles());
+}));
 
 router.get("/dashboard", asyncHandler(async (_req, res) => {
   const today = startOfDay();
@@ -95,6 +100,103 @@ router.patch("/users/:id/status", asyncHandler(async (req, res) => {
     return updated;
   });
   res.json(user);
+}));
+
+router.patch("/users/:id/plan", asyncHandler(async (req, res) => {
+  const value = req.params.id;
+  const id = Array.isArray(value) ? value[0] : value;
+  if (!id) throw new HttpError(400, "ID không hợp lệ");
+  const input = z.object({
+    planId: z.uuid(),
+    durationDays: z.coerce.number().int().min(1).max(365).default(30),
+  }).parse(req.body);
+  const [user, plan] = await Promise.all([
+    prisma.user.findUnique({ where: { id }, select: { id: true } }),
+    prisma.plan.findUnique({ where: { id: input.planId } }),
+  ]);
+  if (!user) throw new HttpError(404, "Không tìm thấy người dùng");
+  if (!plan) throw new HttpError(404, "Không tìm thấy gói dịch vụ");
+
+  const subscription = await prisma.$transaction(async (tx) => {
+    await tx.subscription.updateMany({
+      where: { userId: id, status: "ACTIVE" },
+      data: { status: "CANCELLED" },
+    });
+    const created = await tx.subscription.create({
+      data: {
+        userId: id,
+        planId: plan.id,
+        endDate: plan.name === "Free"
+          ? null
+          : new Date(Date.now() + input.durationDays * 86_400_000),
+      },
+      include: { plan: true },
+    });
+    await tx.adminLog.create({
+      data: {
+        adminId: req.user!.id,
+        action: "USER_PLAN_CHANGED",
+        targetType: "USER",
+        targetId: id,
+      },
+    });
+    return created;
+  });
+  res.json(subscription);
+}));
+
+router.get("/plans", asyncHandler(async (_req, res) => {
+  res.json(await prisma.plan.findMany({
+    include: { features: true, _count: { select: { subscriptions: true } } },
+    orderBy: { price: "asc" },
+  }));
+}));
+
+router.patch("/plans/:id", asyncHandler(async (req, res) => {
+  const value = req.params.id;
+  const id = Array.isArray(value) ? value[0] : value;
+  if (!id) throw new HttpError(400, "ID không hợp lệ");
+  const input = z.object({
+    price: z.coerce.number().int().min(0).max(100_000_000),
+    dailyLimit: z.coerce.number().int().min(1).max(100_000),
+    maxFileSizeMb: z.coerce.number().int().min(1).max(2000),
+    storageDays: z.coerce.number().int().min(1).max(365),
+  }).parse(req.body);
+  const plan = await prisma.$transaction(async (tx) => {
+    const updated = await tx.plan.update({ where: { id }, data: input });
+    await tx.adminLog.create({
+      data: {
+        adminId: req.user!.id,
+        action: "PLAN_UPDATED",
+        targetType: "PLAN",
+        targetId: id,
+      },
+    });
+    return updated;
+  });
+  res.json(plan);
+}));
+
+router.get("/logs", asyncHandler(async (req, res) => {
+  const query = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(30),
+    action: z.string().trim().default(""),
+  }).parse(req.query);
+  const where = query.action
+    ? { action: { contains: query.action, mode: "insensitive" as const } }
+    : {};
+  const [items, total] = await Promise.all([
+    prisma.adminLog.findMany({
+      where,
+      include: { admin: { select: { fullName: true, email: true } } },
+      orderBy: { createdAt: "desc" },
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    }),
+    prisma.adminLog.count({ where }),
+  ]);
+  res.json({ items, total, page: query.page, pages: Math.ceil(total / query.limit) });
 }));
 
 router.get("/payments", asyncHandler(async (req, res) => {

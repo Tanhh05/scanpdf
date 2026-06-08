@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "ScanPDF",
+    "slug": "scanpdf",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#f8fafc",
+      "dark": {
+        "image": "./assets/icon.png",
+        "backgroundColor": "#0b1120"
+      }
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "vn.scanpdf.mobile"
+    },
+    "android": {
+      "package": "vn.scanpdf.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-document-picker"
+    ]
+  }
+}

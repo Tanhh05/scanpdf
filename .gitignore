@@ -3,6 +3,11 @@ node_modules
 .next-dev
 dist
 coverage
+apps/chrome-extension/dist
+apps/desktop/release
+apps/mobile/.expo
+apps/mobile/dist-android
+apps/mobile/dist-ios
 .env
 .env.local
 *.log

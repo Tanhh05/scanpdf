@@ -5,6 +5,7 @@ import axios from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { z } from "zod";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth.store";
@@ -15,11 +16,13 @@ const schema = z.object({
   fullName: z.string().optional(),
   email: z.email("Email không hợp lệ"),
   password: z.string().min(8, "Mật khẩu cần ít nhất 8 ký tự"),
+  otp: z.string().optional(),
 });
 type FormValues = z.infer<typeof schema>;
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
+  const [requiresTwoFactor, setRequiresTwoFactor] = useState(false);
   const setSession = useAuthStore((state) => state.setSession);
   const { register, handleSubmit, formState: { errors, isSubmitting }, setError } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -29,8 +32,15 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     try {
       const { data } = await api.post(`/auth/${mode}`, values);
       setSession(data.token, data.user);
-      router.push("/dashboard");
+      if (mode === "register") {
+        window.location.assign(data.verifyUrl ?? "/verify-email?sent=1");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.data?.requiresTwoFactor) {
+        setRequiresTwoFactor(true);
+      }
       setError("root", {
         message: axios.isAxiosError(error) ? error.response?.data?.message : "Không thể kết nối máy chủ",
       });
@@ -68,6 +78,16 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             <input {...register("password")} type="password" className="field mt-2" placeholder="Tối thiểu 8 ký tự" />
             {errors.password && <small className="text-red-600">{errors.password.message}</small>}
           </label>
+          {!isRegister && (
+            <div className="text-right">
+              <Link href="/forgot-password" className="text-sm font-bold text-indigo-600">Quên mật khẩu?</Link>
+            </div>
+          )}
+          {!isRegister && requiresTwoFactor && (
+            <label className="block text-sm font-semibold">Mã xác thực 2FA
+              <input {...register("otp")} inputMode="numeric" maxLength={6} className="field mt-2" placeholder="123456" />
+            </label>
+          )}
           {errors.root && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{errors.root.message}</p>}
           <button disabled={isSubmitting} className="btn-primary w-full">
             {isSubmitting ? "Đang xử lý..." : isRegister ? "Đăng ký" : "Đăng nhập"}
