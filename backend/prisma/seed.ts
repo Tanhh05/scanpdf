@@ -16,6 +16,15 @@ async function main() {
       create: plan,
     });
   }
+
+  const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+  if (adminEmail) {
+    const admin = await prisma.user.updateMany({
+      where: { email: adminEmail },
+      data: { role: "ADMIN" },
+    });
+    console.log(admin.count ? `Promoted admin user: ${adminEmail}` : `ADMIN_EMAIL user not found: ${adminEmail}`);
+  }
 }
 
 main()
