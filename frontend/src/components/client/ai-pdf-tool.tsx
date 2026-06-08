@@ -86,7 +86,7 @@ export function AiPdfTool({
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
             <Sparkles size={18} />
           </span>
-          <h1 className="mt-5 text-3xl font-black tracking-[-0.035em] text-slate-950">{title}</h1>
+          <h1 className="mt-5 text-3xl font-black tracking-[-0.015em] text-slate-950">{title}</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
 
           <label className="mt-7 flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-indigo-300 bg-white p-6 text-center transition hover:border-indigo-500 hover:bg-indigo-50/30">

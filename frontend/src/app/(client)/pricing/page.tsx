@@ -6,23 +6,9 @@ import { ArrowRight, Check } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { formatPlanPrice, isFreePlan, isRecommendedPlan, planDescription, planFeatures, type Plan, sortPlans } from "@/lib/plans";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth.store";
-
-type Plan = {
-  id: string;
-  name: string;
-  price: number;
-  dailyLimit: number;
-  maxFileSizeMb: number;
-  storageDays: number;
-};
-
-const planDescriptions: Record<string, string> = {
-  Free: "Cho nhu cầu cá nhân cơ bản",
-  Pro: "Xử lý tài liệu thường xuyên",
-  Business: "Cho nhóm và khối lượng lớn",
-};
 
 export default function PricingPage() {
   const router = useRouter();
@@ -67,16 +53,11 @@ export default function PricingPage() {
         )}
 
         <div className="mx-auto mt-12 grid max-w-6xl items-stretch gap-5 lg:grid-cols-3">
-          {plans.data?.map((plan) => {
-            const isPro = plan.name === "Pro";
-            const isFree = plan.price === 0;
+          {sortPlans(plans.data ?? []).map((plan) => {
+            const isPro = isRecommendedPlan(plan);
+            const isFree = isFreePlan(plan);
             const isLoading = checkout.isPending && selectedPlanId === plan.id;
-            const features = [
-              `${plan.dailyLimit.toLocaleString("vi-VN")} lượt mỗi ngày`,
-              `Tối đa ${plan.maxFileSizeMb}MB mỗi file`,
-              `Lưu file trong ${plan.storageDays} ngày`,
-              ...(isFree ? [] : ["Ưu tiên hàng đợi"]),
-            ];
+            const features = planFeatures(plan);
 
             return (
               <article
@@ -95,11 +76,11 @@ export default function PricingPage() {
 
                 <h2 className="text-2xl font-black text-slate-950">{plan.name}</h2>
                 <p className="mt-2 text-sm text-slate-500">
-                  {planDescriptions[plan.name] ?? "Gói dịch vụ ScanPDF"}
+                  {planDescription(plan)}
                 </p>
 
                 <p className="mt-8 flex items-end gap-1 text-slate-950">
-                  <strong className="text-4xl font-black tracking-tight">{plan.price.toLocaleString("vi-VN")}đ</strong>
+                  <strong className="text-4xl font-black tracking-tight">{formatPlanPrice(plan.price)}</strong>
                   <span className="pb-1 text-sm text-slate-400">/tháng</span>
                 </p>
 

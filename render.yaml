@@ -1,0 +1,121 @@
+services:
+  - type: web
+    name: scanpdf-backend
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health/ready
+    preDeployCommand: npm run db:deploy
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scanpdf-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: scanpdf-redis
+          type: keyvalue
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        value: ""
+      - key: API_URL
+        sync: false
+      - key: STORAGE_DRIVER
+        value: supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: documents
+      - key: OPENAI_MODEL
+        value: gpt-5.2
+      - key: AI_PROVIDER
+        value: openai
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: MAIL_FROM
+        value: ScanPDF <no-reply@scanpdf.vn>
+      - key: CLEANUP_INTERVAL_MINUTES
+        value: 1440
+      - key: CLEANUP_BATCH_SIZE
+        value: 200
+      - key: SENTRY_TRACES_SAMPLE_RATE
+        value: 0.1
+
+  - type: worker
+    name: scanpdf-conversion-worker
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    dockerCommand: node dist/src/workers/conversion.worker.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scanpdf-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: scanpdf-redis
+          type: keyvalue
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        value: ""
+      - key: API_URL
+        sync: false
+      - key: STORAGE_DRIVER
+        value: supabase
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: documents
+      - key: OPENAI_MODEL
+        value: gpt-5.2
+      - key: AI_PROVIDER
+        value: openai
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: MAIL_FROM
+        value: ScanPDF <no-reply@scanpdf.vn>
+      - key: CLEANUP_INTERVAL_MINUTES
+        value: 0
+      - key: CLEANUP_BATCH_SIZE
+        value: 200
+      - key: SENTRY_TRACES_SAMPLE_RATE
+        value: 0.1
+
+  - type: keyvalue
+    name: scanpdf-redis
+    plan: starter
+    region: singapore
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+databases:
+  - name: scanpdf-db
+    plan: basic-256mb
+    region: singapore
+    databaseName: scanpdf
+    user: scanpdf

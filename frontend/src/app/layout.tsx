@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { Source_Sans_3 } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/common/providers";
 
-const sourceSans = Source_Sans_3({
+const inter = Inter({
   subsets: ["latin", "vietnamese"],
   display: "swap",
-  variable: "--font-source-sans",
+  variable: "--font-app",
 });
 
 export const metadata: Metadata = {
@@ -35,7 +35,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           }}
         />
       </head>
-      <body className={sourceSans.variable} suppressHydrationWarning>
+      <body className={inter.variable} suppressHydrationWarning>
         <Providers>
           {children}
         </Providers>

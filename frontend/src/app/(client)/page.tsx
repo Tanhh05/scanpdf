@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   Bot,
@@ -30,6 +31,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { formatPlanPrice, isFreePlan, isRecommendedPlan, planDescription, planFeatures, type Plan, sortPlans } from "@/lib/plans";
+import { api } from "@/services/api";
 
 const popularTools = [
   {
@@ -96,33 +99,12 @@ const aiFeatures = [
   },
 ];
 
-const plans = [
-  {
-    name: "Miễn phí",
-    description: "Dành cho cá nhân dùng thỉnh thoảng.",
-    price: "0đ",
-    features: ["Tối đa 5 tệp/ngày", "Nén & Ghép cơ bản", "Kích thước tệp tới 10MB"],
-    href: "/register",
-  },
-  {
-    name: "Pro",
-    description: "Tăng tốc công việc của bạn.",
-    price: "10.000đ",
-    recommended: true,
-    features: ["Không giới hạn số lượng tệp", "500 yêu cầu AI mỗi tháng", "OCR nhận diện chữ viết tay", "Ưu tiên xử lý nhanh nhất"],
-    href: "/pricing",
-  },
-  {
-    name: "Doanh nghiệp",
-    description: "Giải pháp bảo mật cao cấp.",
-    price: "Liên hệ",
-    features: ["Quản lý tập trung đội ngũ", "Tích hợp API tùy chỉnh", "Bảo mật chuẩn ngân hàng", "Hỗ trợ 24/7 riêng biệt"],
-    href: "/pricing",
-  },
-];
-
 export default function HomePage() {
   const [showAllTools, setShowAllTools] = useState(false);
+  const plans = useQuery<Plan[]>({
+    queryKey: ["plans"],
+    queryFn: async () => (await api.get("/plans")).data,
+  });
   const displayedTools = showAllTools
     ? allTools
     : popularTools.map(({ name, description, href, icon }) => [name, description, href, icon] as const);
@@ -135,7 +117,7 @@ export default function HomePage() {
           <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black text-indigo-600 shadow-sm ring-1 ring-indigo-100">
             <Sparkles size={14} /> Mới: Trò chuyện với tài liệu PDF bằng AI
           </span>
-          <h1 className="mx-auto mt-8 max-w-4xl text-5xl font-black leading-[1.03] tracking-[-0.055em] text-slate-950 sm:text-6xl lg:text-7xl">
+          <h1 className="mx-auto mt-8 max-w-4xl text-5xl font-black leading-[1.05] tracking-[-0.025em] text-slate-950 sm:text-6xl lg:text-7xl">
             Xử lý PDF thông minh với{" "}
             <span className="text-indigo-600">tốc độ vượt trội</span>
           </h1>
@@ -169,7 +151,7 @@ export default function HomePage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-indigo-600">Công cụ phổ biến</p>
-              <h2 className="mt-2 text-3xl font-black tracking-[-0.035em] text-slate-950 sm:text-4xl">
+              <h2 className="mt-2 text-3xl font-black tracking-[-0.015em] text-slate-950 sm:text-4xl">
                 Giải quyết mọi vấn đề về PDF
               </h2>
             </div>
@@ -246,7 +228,7 @@ export default function HomePage() {
             <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-indigo-600">
               AI PDF Assistant
             </span>
-            <h2 className="mt-5 max-w-xl text-4xl font-black leading-tight tracking-[-0.04em] text-slate-950">
+            <h2 className="mt-5 max-w-xl text-4xl font-black leading-tight tracking-[-0.018em] text-slate-950">
               Làm việc thông minh hơn với trợ lý AI tích hợp
             </h2>
             <p className="mt-5 max-w-xl text-sm leading-7 text-slate-500">
@@ -276,53 +258,62 @@ export default function HomePage() {
       <section className="bg-[#eef3ff] py-16 sm:py-24">
         <div className="container-page">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-4xl font-black tracking-[-0.04em] text-slate-950">Gói dịch vụ linh hoạt</h2>
+            <h2 className="text-4xl font-black tracking-[-0.018em] text-slate-950">Gói dịch vụ linh hoạt</h2>
             <p className="mt-4 text-sm leading-7 text-slate-500">
               Chọn gói phù hợp với nhu cầu của bạn, từ sử dụng cá nhân đến các giải pháp doanh nghiệp quy mô lớn.
             </p>
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {plans.map((plan) => (
-              <article
-                key={plan.name}
-                className={`relative rounded-2xl border bg-white p-8 ${
-                  plan.recommended
-                    ? "border-indigo-600 shadow-[0_22px_60px_rgba(91,92,240,0.2)]"
-                    : "border-slate-200"
-                }`}
-              >
-                {plan.recommended && (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-4 py-1 text-[10px] font-black uppercase tracking-wide text-white">
-                    Khuyên dùng
-                  </span>
-                )}
-                <h3 className="text-xl font-black text-slate-950">{plan.name}</h3>
-                <p className="mt-2 text-sm text-slate-500">{plan.description}</p>
-                <p className="mt-8 text-4xl font-black tracking-[-0.04em] text-slate-950">
-                  {plan.price}
-                  {plan.price !== "Liên hệ" && <span className="text-sm font-medium text-slate-500">/tháng</span>}
-                </p>
-                <ul className="mt-8 space-y-4">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3 text-sm text-slate-600">
-                      <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-indigo-600" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={plan.href}
-                  className={plan.recommended
-                    ? "mt-9 inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-5 py-3 text-sm font-black text-white transition hover:bg-indigo-700"
-                    : "mt-9 inline-flex w-full items-center justify-center rounded-lg border border-slate-300 px-5 py-3 text-sm font-black text-slate-900 transition hover:bg-slate-50"
-                  }
+            {sortPlans(plans.data ?? []).map((plan) => {
+              const recommended = isRecommendedPlan(plan);
+              const free = isFreePlan(plan);
+              return (
+                <article
+                  key={plan.id}
+                  className={`relative rounded-2xl border bg-white p-8 ${
+                    recommended
+                      ? "border-indigo-600 shadow-[0_22px_60px_rgba(91,92,240,0.2)]"
+                      : "border-slate-200"
+                  }`}
                 >
-                  {plan.name === "Miễn phí" ? "Bắt đầu miễn phí" : plan.name === "Pro" ? "Nâng cấp ngay" : "Liên hệ tư vấn"}
-                </Link>
-              </article>
-            ))}
+                  {recommended && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-4 py-1 text-[10px] font-black uppercase tracking-wide text-white">
+                      Khuyên dùng
+                    </span>
+                  )}
+                  <h3 className="text-xl font-black text-slate-950">{plan.name}</h3>
+                  <p className="mt-2 text-sm text-slate-500">{planDescription(plan)}</p>
+                  <p className="mt-8 text-4xl font-black tracking-[-0.018em] text-slate-950">
+                    {formatPlanPrice(plan.price)}
+                    <span className="text-sm font-medium text-slate-500">/tháng</span>
+                  </p>
+                  <ul className="mt-8 space-y-4">
+                    {planFeatures(plan).map((feature) => (
+                      <li key={feature} className="flex items-start gap-3 text-sm text-slate-600">
+                        <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-indigo-600" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={free ? "/register" : "/pricing"}
+                    className={recommended
+                      ? "mt-9 inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-5 py-3 text-sm font-black text-white transition hover:bg-indigo-700"
+                      : "mt-9 inline-flex w-full items-center justify-center rounded-lg border border-slate-300 px-5 py-3 text-sm font-black text-slate-900 transition hover:bg-slate-50"
+                    }
+                  >
+                    {free ? "Bắt đầu miễn phí" : recommended ? "Nâng cấp ngay" : "Xem chi tiết"}
+                  </Link>
+                </article>
+              );
+            })}
           </div>
+          {plans.isLoading && (
+            <div className="mt-12 grid gap-6 lg:grid-cols-3">
+              {[0, 1, 2].map((item) => <div key={item} className="h-[430px] animate-pulse rounded-2xl bg-white/70" />)}
+            </div>
+          )}
         </div>
       </section>
 
