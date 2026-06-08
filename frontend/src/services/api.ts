@@ -8,7 +8,9 @@ const DEFAULT_API_BASE_URL =
 const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
 const shouldIgnoreConfiguredApiUrl =
   process.env.NODE_ENV === "production" &&
-  (!configuredApiBaseUrl || configuredApiBaseUrl.includes("localhost"));
+  (!configuredApiBaseUrl ||
+    configuredApiBaseUrl.includes("localhost") ||
+    configuredApiBaseUrl.includes("api.scanpdf.vn"));
 
 export const API_BASE_URL = shouldIgnoreConfiguredApiUrl
   ? DEFAULT_API_BASE_URL
