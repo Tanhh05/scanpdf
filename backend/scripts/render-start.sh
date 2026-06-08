@@ -2,6 +2,7 @@
 set -e
 
 npm run db:deploy
+npm run db:seed
 
 node dist/src/workers/conversion.worker.js &
 worker_pid=$!
