@@ -83,14 +83,32 @@ export function ToolWorkspace({
         </aside>
 
         <div className="min-w-0 flex-1">
-          <div className="flex min-h-16 items-center justify-between border-b border-slate-200 bg-white px-5 sm:px-7">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.14em] text-indigo-500">Công cụ PDF</p>
-              <h1 className="mt-0.5 text-xl font-black text-slate-950">{title}</h1>
+          <div className="flex min-h-16 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 sm:px-7">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Link
+                href="/"
+                aria-label="Về trang chủ ScanPDF"
+                className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-indigo-50 transition hover:bg-indigo-100 md:hidden"
+              >
+                <Image
+                  src="/scanpdf-icon.png"
+                  alt="ScanPDF"
+                  width={40}
+                  height={40}
+                  className="h-10 w-10 object-contain"
+                  priority
+                />
+              </Link>
+              <div className="min-w-0">
+                <p className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-indigo-500 sm:text-xs sm:tracking-[0.14em]">
+                  Công cụ PDF
+                </p>
+                <h1 className="mt-0.5 truncate text-lg font-black text-slate-950 sm:text-xl">{title}</h1>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               <ThemeToggle />
-              <Link href="/pricing" className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700">
+              <Link href="/pricing" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-bold text-slate-800 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 sm:px-4">
                 Nâng cấp
               </Link>
             </div>
