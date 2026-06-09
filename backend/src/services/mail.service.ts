@@ -44,6 +44,22 @@ async function sendMail(mail: Mail) {
   await createTransporter().sendMail({ from: env.MAIL_FROM, ...mail });
 }
 
+export async function sendTestEmail(to: string) {
+  if (!isMailConfigured()) return false;
+  await sendMail({
+    to,
+    subject: "ScanPDF - Kiểm tra gửi email",
+    text: "Email từ backend ScanPDF đã được gửi thành công.",
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
+        <h2>ScanPDF email test</h2>
+        <p>Email từ backend ScanPDF đã được gửi thành công.</p>
+      </div>
+    `,
+  });
+  return true;
+}
+
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   if (!isMailConfigured()) return false;
 
