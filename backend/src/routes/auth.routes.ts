@@ -206,7 +206,6 @@ router.post("/forgot-password", asyncHandler(async (req, res) => {
 
   res.status(202).json({
     message: "Nếu email tồn tại, hướng dẫn đặt lại mật khẩu sẽ được gửi.",
-    resetUrl: env.NODE_ENV === "production" || env.SMTP_HOST ? undefined : resetUrl,
   });
 }));
 

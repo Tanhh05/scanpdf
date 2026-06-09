@@ -9,7 +9,7 @@ import { api } from "@/services/api";
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const request = useMutation({
-    mutationFn: async () => (await api.post<{ message: string; resetUrl?: string }>("/auth/forgot-password", { email })).data,
+    mutationFn: async () => (await api.post<{ message: string }>("/auth/forgot-password", { email })).data,
   });
   const error = request.error
     ? axios.isAxiosError(request.error) ? request.error.response?.data?.message ?? "Không thể gửi yêu cầu" : "Không thể gửi yêu cầu"
@@ -28,11 +28,6 @@ export default function ForgotPasswordPage() {
         {request.data && (
           <div className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">
             <p>{request.data.message}</p>
-            {request.data.resetUrl && (
-              <Link className="mt-2 block font-bold text-indigo-600" href={request.data.resetUrl}>
-                Mở link reset local
-              </Link>
-            )}
           </div>
         )}
         <button disabled={request.isPending || !email} onClick={() => request.mutate()} className="btn-primary mt-6 w-full">
