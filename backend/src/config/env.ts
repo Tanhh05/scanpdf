@@ -37,6 +37,7 @@ const schema = z.object({
   SMTP_SECURE: z.coerce.boolean().default(false),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
   MAIL_FROM: z.string().default("ScanPDF <no-reply@scanpdf.vn>"),
   CLEANUP_INTERVAL_MINUTES: z.coerce.number().int().min(0).default(1440),
   CLEANUP_BATCH_SIZE: z.coerce.number().int().min(1).max(1000).default(200),

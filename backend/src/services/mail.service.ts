@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 import { env } from "../config/env.js";
 
 export function isMailConfigured() {
-  return Boolean(env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS);
+  return Boolean(env.RESEND_API_KEY || (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS));
 }
 
 function createTransporter() {
@@ -17,11 +17,37 @@ function createTransporter() {
   });
 }
 
+type Mail = {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+};
+
+async function sendMail(mail: Mail) {
+  if (env.RESEND_API_KEY) {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from: env.MAIL_FROM, ...mail }),
+    });
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Resend email failed (${response.status}): ${body.slice(0, 500)}`);
+    }
+    return;
+  }
+
+  await createTransporter().sendMail({ from: env.MAIL_FROM, ...mail });
+}
+
 export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   if (!isMailConfigured()) return false;
 
-  await createTransporter().sendMail({
-    from: env.MAIL_FROM,
+  await sendMail({
     to,
     subject: "Đặt lại mật khẩu ScanPDF",
     text: `Bạn vừa yêu cầu đặt lại mật khẩu ScanPDF.\n\nMở liên kết sau trong 30 phút để đặt lại mật khẩu:\n${resetUrl}\n\nNếu bạn không yêu cầu, hãy bỏ qua email này.`,
@@ -46,8 +72,7 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
 export async function sendEmailVerification(to: string, verifyUrl: string) {
   if (!isMailConfigured()) return false;
 
-  await createTransporter().sendMail({
-    from: env.MAIL_FROM,
+  await sendMail({
     to,
     subject: "Xác thực email ScanPDF",
     text: `Xác thực email ScanPDF bằng liên kết sau trong 24 giờ:\n${verifyUrl}`,
@@ -74,8 +99,7 @@ export async function sendConversionResultEmail(
 ) {
   if (!isMailConfigured()) return false;
   const completed = status === "COMPLETED";
-  await createTransporter().sendMail({
-    from: env.MAIL_FROM,
+  await sendMail({
     to,
     subject: completed ? `ScanPDF đã xử lý xong ${fileName}` : `ScanPDF không thể xử lý ${fileName}`,
     text: completed
@@ -96,8 +120,7 @@ export async function sendConversionResultEmail(
 
 export async function sendPaymentSuccessEmail(to: string, planName: string, amount: number, transactionCode: string) {
   if (!isMailConfigured()) return false;
-  await createTransporter().sendMail({
-    from: env.MAIL_FROM,
+  await sendMail({
     to,
     subject: `Thanh toán ScanPDF ${planName} thành công`,
     text: `Thanh toán ${amount.toLocaleString("vi-VN")} VNĐ cho gói ${planName} đã thành công. Mã giao dịch: ${transactionCode}.`,
@@ -116,8 +139,7 @@ export async function sendPaymentSuccessEmail(to: string, planName: string, amou
 
 export async function sendTeamInviteEmail(to: string, teamName: string, inviteUrl: string) {
   if (!isMailConfigured()) return false;
-  await createTransporter().sendMail({
-    from: env.MAIL_FROM,
+  await sendMail({
     to,
     subject: `Bạn được mời vào team ${teamName} trên ScanPDF`,
     text: `Bạn được mời vào team ${teamName} trên ScanPDF.\n\nMở liên kết sau để chấp nhận lời mời:\n${inviteUrl}`,
