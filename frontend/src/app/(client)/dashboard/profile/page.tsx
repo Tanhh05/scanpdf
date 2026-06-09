@@ -192,7 +192,7 @@ export default function ProfilePage() {
               </p>
             )}
             {updateProfile.isError && <p className="mt-4 text-sm font-bold text-red-600">{getErrorMessage(updateProfile.error)}</p>}
-            <button disabled={updateProfile.isPending} className="btn-primary mt-6 !rounded-xl !py-3">
+            <button disabled={updateProfile.isPending} className="btn-primary mt-6 !py-3">
               {updateProfile.isPending ? "Đang lưu..." : "Lưu thay đổi"}
             </button>
           </form>
@@ -238,12 +238,18 @@ export default function ProfilePage() {
               </p>
             )}
             {changePassword.isError && <p className="mt-4 text-sm font-bold text-red-600">{getErrorMessage(changePassword.error)}</p>}
-            <button disabled={changePassword.isPending} className="btn-primary mt-6 !rounded-xl !py-3">
+            <button disabled={changePassword.isPending} className="btn-primary mt-6 !py-3">
               {changePassword.isPending ? "Đang cập nhật..." : "Đổi mật khẩu"}
             </button>
           </form>
         </div>
 
+        {user?.role === "ADMIN" ? (
+          <article className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+            <h2 className="text-xl font-black text-amber-950">Xác thực hai lớp (2FA)</h2>
+            <p className="mt-2 text-sm text-amber-800">2FA cho tài khoản quản trị đang tạm thời bị tắt.</p>
+          </article>
+        ) : (
         <article className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
@@ -260,7 +266,7 @@ export default function ProfilePage() {
                 type="button"
                 disabled={setupTwoFactor.isPending || !profile.data?.user.emailVerifiedAt}
                 onClick={() => setupTwoFactor.mutate()}
-                className="btn-primary !rounded-xl"
+                className="btn-primary"
               >
                 {setupTwoFactor.isPending ? "Đang tạo..." : "Thiết lập 2FA"}
               </button>
@@ -295,7 +301,7 @@ export default function ProfilePage() {
                   type="button"
                   disabled={twoFactorToken.length !== 6 || enableTwoFactor.isPending}
                   onClick={() => enableTwoFactor.mutate()}
-                  className="btn-primary mt-3 !rounded-xl"
+                  className="btn-primary mt-3"
                 >
                   Xác nhận bật 2FA
                 </button>
@@ -335,6 +341,7 @@ export default function ProfilePage() {
             </div>
           )}
         </article>
+        )}
       </div>
     </AccountLayout>
   );

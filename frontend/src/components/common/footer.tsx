@@ -1,9 +1,9 @@
 "use client";
 
 import { Globe2, Mail, ShieldCheck } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandLogo } from "@/components/common/brand-logo";
 
 const footerGroups = [
   {
@@ -45,8 +45,7 @@ export function Footer() {
       <div className="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.25fr_1fr_1fr_1fr]">
         <div>
           <Link href="/" className="flex items-center gap-2.5 text-xl font-black text-slate-950">
-            <Image src="/scanpdf-icon.png" alt="ScanPDF" width={38} height={38} className="h-9 w-9 object-contain" />
-            ScanPDF
+            <BrandLogo />
           </Link>
           <p className="mt-5 max-w-xs text-sm leading-6 text-slate-500">
             Giải pháp PDF thông minh giúp hàng triệu người dùng xử lý tài liệu hiệu quả mỗi ngày.

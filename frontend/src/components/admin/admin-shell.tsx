@@ -2,45 +2,68 @@
 
 import {
   BarChart3,
+  CircleUserRound,
   CreditCard,
-  FileText,
-  LayoutDashboard,
+  FileClock,
+  LayoutGrid,
   LogOut,
+  Menu,
   Settings,
   Shield,
+  SlidersHorizontal,
   Users,
+  X,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAdminAuthStore } from "@/stores/admin-auth.store";
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { BrandLogo } from "@/components/common/brand-logo";
 
 const navigation = [
-  { label: "Tổng quan", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "Tổng quan", href: "/admin/dashboard", icon: LayoutGrid },
   { label: "Người dùng", href: "/admin/users", icon: Users },
-  { label: "Gói dịch vụ", href: "/admin/plans", icon: Settings },
+  { label: "Gói dịch vụ", href: "/admin/plans", icon: SlidersHorizontal },
   { label: "Thanh toán", href: "/admin/payments", icon: CreditCard },
   { label: "Thống kê", href: "/admin/statistics", icon: BarChart3 },
-  { label: "Nhật ký", href: "/admin/logs", icon: FileText },
+  { label: "Nhật ký", href: "/admin/logs", icon: FileClock },
 ];
+
+const pageTitles: Record<string, string> = {
+  "/admin/dashboard": "Tổng quan",
+  "/admin/users": "Quản lý người dùng",
+  "/admin/plans": "Cấu hình Gói dịch vụ",
+  "/admin/payments": "Thanh toán",
+  "/admin/statistics": "Thống kê 30 ngày qua",
+  "/admin/logs": "Nhật ký hệ thống",
+};
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, token, logout } = useAdminAuthStore();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, token, hasHydrated, logout } = useAdminAuthStore();
   const isLoginPage = pathname === "/admin/login";
 
   if (isLoginPage) return <main className="min-h-screen bg-slate-950">{children}</main>;
 
+  if (!hasHydrated) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f9f8ff]">
+        <div className="h-9 w-9 animate-spin rounded-full border-4 border-[#0b4dcc]/20 border-t-[#0b4dcc]" aria-label="Đang tải phiên đăng nhập" />
+      </main>
+    );
+  }
+
   if (!token) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-950 p-6 text-white">
-        <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/10 p-8 text-center shadow-2xl">
-          <Shield className="mx-auto text-indigo-300" size={48} />
-          <h1 className="mt-5 text-3xl font-black">Admin ScanPDF</h1>
-          <p className="mt-3 text-sm text-slate-300">Đăng nhập bằng tài khoản quản trị để tiếp tục.</p>
-          <Link href="/admin/login" className="mt-7 inline-flex rounded-xl bg-white px-6 py-3 font-black text-slate-950">
+      <main className="flex min-h-screen items-center justify-center bg-[#f9f8ff] p-6 text-[#111527]">
+        <div className="w-full max-w-md rounded-2xl border border-[#d8dceb] bg-white p-8 text-center shadow-xl">
+          <Shield className="mx-auto text-[#0b4dcc]" size={48} />
+          <h1 className="mt-5 text-3xl font-bold">ScanPDF Admin</h1>
+          <p className="mt-3 text-sm text-slate-500">Đăng nhập bằng tài khoản quản trị để tiếp tục.</p>
+          <Link href="/admin/login" className="mt-7 inline-flex rounded-xl bg-[#0b4dcc] px-6 py-3 font-bold text-white">
             Đăng nhập admin
           </Link>
         </div>
@@ -48,75 +71,107 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     );
   }
 
+  function handleLogout() {
+    logout();
+    router.replace("/admin/login");
+  }
+
+  const sidebar = (
+    <div className="flex h-full flex-col bg-[#fbfaff] text-[#20263a]">
+      <div className="flex h-[76px] items-center px-5">
+        <BrandLogo compact admin />
+      </div>
+
+      <nav className="flex-1 space-y-1 px-3 pt-2">
+        {navigation.map((item) => {
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setMobileOpen(false)}
+              className={`flex h-11 items-center gap-3 rounded-lg px-4 text-sm font-medium transition ${
+                active
+                  ? "bg-[#2f67e9] text-white shadow-[0_5px_12px_rgba(47,103,233,0.2)]"
+                  : "text-[#252b40] hover:bg-[#edf2ff] hover:text-[#0b4dcc]"
+              }`}
+            >
+              <item.icon size={19} strokeWidth={2} />
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="border-t border-[#d8dceb] px-3 pb-4 pt-3">
+        <Link href="/admin/users" className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#edf2ff]">
+          <CircleUserRound size={19} /> Hồ sơ
+        </Link>
+        <Link href="/admin/plans" className="mt-1 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#edf2ff]">
+          <Settings size={19} /> Cài đặt
+        </Link>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="mt-1 flex w-full items-center gap-3 rounded-lg bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100"
+        >
+          <LogOut size={19} /> Đăng xuất
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-950">
-      <div className="grid min-h-screen lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-slate-800 bg-slate-950 text-white lg:block">
-          <div className="sticky top-0 flex h-screen flex-col">
-            <div className="flex h-20 items-center gap-3 border-b border-white/10 px-6">
-              <Image src="/scanpdf-icon.png" alt="ScanPDF" width={42} height={42} className="h-11 w-11 object-contain" />
-              <div>
-                <p className="text-lg font-black">ScanPDF Admin</p>
-                <p className="text-xs text-slate-400">Quản trị hệ thống</p>
-              </div>
-            </div>
-            <nav className="flex-1 space-y-1 p-4">
-              {navigation.map((item) => {
-                const active = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                      active ? "bg-indigo-600 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    <item.icon size={19} /> {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
-            <div className="border-t border-white/10 p-4">
-              <div className="rounded-2xl bg-white/5 p-4">
-                <p className="truncate font-black">{user?.fullName}</p>
-                <p className="mt-1 truncate text-xs text-slate-400">{user?.email}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  logout();
-                  router.push("/admin/login");
-                }}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 px-4 py-3 text-sm font-bold text-red-200 hover:bg-red-500/10"
-              >
-                <LogOut size={17} /> Đăng xuất
+    <main className="min-h-screen bg-[#f9f8ff] text-[#111527]">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-[#cfd4e4] lg:block">
+        {sidebar}
+      </aside>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button type="button" aria-label="Đóng menu" onClick={() => setMobileOpen(false)} className="absolute inset-0 bg-slate-950/35 backdrop-blur-sm" />
+          <aside className="relative h-full w-[260px] shadow-2xl">
+            <button type="button" onClick={() => setMobileOpen(false)} className="absolute right-3 top-4 z-10 rounded-lg p-2 text-slate-500 hover:bg-slate-100">
+              <X size={20} />
+            </button>
+            {sidebar}
+          </aside>
+        </div>
+      )}
+
+      <section className="min-h-screen lg:pl-[248px]">
+        <header className="h-[72px] px-4 sm:px-6 lg:px-7">
+          <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <button type="button" onClick={() => setMobileOpen(true)} className="rounded-xl border border-[#cfd4e4] bg-white p-2.5 lg:hidden">
+                <Menu size={21} />
               </button>
+              <h1 className="truncate text-[22px] font-bold tracking-[-0.02em]">{pageTitles[pathname] ?? "ScanPDF Admin"}</h1>
+            </div>
+            <div className="flex items-center gap-3 sm:gap-5">
+              <ThemeToggle className="!border-0 !bg-transparent hover:!bg-[#edf2ff]" />
+              <span className="hidden h-8 w-px bg-[#cfd4e4] sm:block" />
+              <div className="hidden text-right sm:block">
+                <p className="max-w-40 truncate text-sm font-semibold">{user?.fullName || "Quản trị viên"}</p>
+                <p className="text-[11px] uppercase tracking-wide text-[#586075]">Super Admin</p>
+              </div>
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-[#0b4dcc] bg-[#dce6ff] text-xs font-bold text-[#0b4dcc]">
+                {(user?.fullName || user?.email || "A").charAt(0).toUpperCase()}
+              </div>
             </div>
           </div>
-        </aside>
+        </header>
 
-        <section className="min-w-0">
-          <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-4 backdrop-blur lg:px-8">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-indigo-600">Admin Console</p>
-                <h1 className="mt-1 text-2xl font-black">Quản trị ScanPDF</h1>
-              </div>
-              <div className="flex gap-2 overflow-x-auto lg:hidden">
-                {navigation.map((item) => (
-                  <Link key={item.href} href={item.href} className="shrink-0 rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold">
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-              <div className="hidden items-center md:flex">
-                <ThemeToggle />
-              </div>
-            </div>
-          </header>
-          <div className="p-4 lg:p-8">{children}</div>
-        </section>
-      </div>
+        <div className="mx-auto min-h-[calc(100vh-124px)] max-w-[1440px] px-4 pb-8 sm:px-6 lg:px-7">
+          {children}
+        </div>
+        <footer className="border-t border-[#d8dceb] px-6 py-4 text-center text-[11px] text-[#737b90] lg:text-left">
+          <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-3">
+            <span>© 2026 ScanPDF Admin. All rights reserved.</span>
+            <span>Version 2.1.0-stable</span>
+          </div>
+        </footer>
+      </section>
     </main>
   );
 }

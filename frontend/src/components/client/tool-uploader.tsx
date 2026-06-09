@@ -179,7 +179,7 @@ export function ToolUploader({
               ? `Vui lòng chọn ít nhất ${minimumFiles} file để tiếp tục`
               : `${files.length} file đã sẵn sàng để xử lý`}
           </p>
-          <button disabled={files.length < minimumFiles || upload.isPending} onClick={() => upload.mutate()} className="btn-primary min-w-56 !rounded-xl !bg-[#1262e8] !py-3.5 hover:!bg-[#0756d4]">
+          <button disabled={files.length < minimumFiles || upload.isPending} onClick={() => upload.mutate()} className="btn-primary min-w-56 !bg-[#1262e8] !py-3.5 hover:!bg-[#0756d4]">
             {upload.isPending ? "Đang tải lên..." : "Bắt đầu chuyển đổi"}
           </button>
         </div>

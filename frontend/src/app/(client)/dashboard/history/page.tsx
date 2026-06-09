@@ -6,6 +6,7 @@ import { Download, FileText, LoaderCircle, Search, Share2, Trash2 } from "lucide
 import Link from "next/link";
 import { useState } from "react";
 import { AccountLayout } from "@/components/client/account-layout";
+import { Pagination } from "@/components/common/pagination";
 import { type Conversion, type ConversionList, toolNames } from "@/lib/account";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth.store";
@@ -47,7 +48,7 @@ export default function HistoryPage() {
   const history = useQuery<ConversionList>({
     queryKey: ["conversions", page, search, status],
     queryFn: async () => (await api.get("/conversions", {
-      params: { page, limit: 20, search, status: status || undefined },
+      params: { page, limit: 5, search, status: status || undefined },
     })).data,
     enabled: !!token,
     placeholderData: keepPreviousData,
@@ -120,7 +121,7 @@ export default function HistoryPage() {
             <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Lịch sử chuyển đổi</h1>
             <p className="mt-2 text-slate-500">Tìm kiếm, tải xuống hoặc xóa các tài liệu đã xử lý.</p>
           </div>
-          <Link href="/tools/word-to-pdf" className="btn-primary !rounded-lg !py-2.5">Chuyển đổi mới</Link>
+          <Link href="/tools/word-to-pdf" className="btn-primary !py-2.5">Chuyển đổi mới</Link>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -227,11 +228,7 @@ export default function HistoryPage() {
           {history.data && history.data.pages > 1 && (
             <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm">
               <span className="text-slate-500">{history.data.total} kết quả</span>
-              <div className="flex items-center gap-3">
-                <button disabled={page <= 1} onClick={() => setPage((value) => value - 1)} className="rounded-lg border border-slate-200 px-3 py-2 font-bold disabled:opacity-40">Trước</button>
-                <strong>{page}/{history.data.pages}</strong>
-                <button disabled={page >= history.data.pages} onClick={() => setPage((value) => value + 1)} className="rounded-lg border border-slate-200 px-3 py-2 font-bold disabled:opacity-40">Sau</button>
-              </div>
+              <Pagination page={page} pages={history.data.pages} onPageChange={setPage} />
             </div>
           )}
         </article>

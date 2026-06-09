@@ -5,7 +5,8 @@ import { Download } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { AccountLayout } from "@/components/client/account-layout";
-import type { Payment } from "@/lib/account";
+import { Pagination } from "@/components/common/pagination";
+import type { PaginatedList, Payment } from "@/lib/account";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -13,20 +14,22 @@ export default function PaymentsPage() {
   const token = useAuthStore((state) => state.token);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [downloadError, setDownloadError] = useState("");
-  const payments = useQuery<Payment[]>({
-    queryKey: ["my-payments"],
-    queryFn: async () => (await api.get("/payments/mine")).data,
+  const [paymentPage, setPaymentPage] = useState(1);
+  const [subscriptionPage, setSubscriptionPage] = useState(1);
+  const payments = useQuery<PaginatedList<Payment>>({
+    queryKey: ["my-payments", paymentPage],
+    queryFn: async () => (await api.get("/payments/mine", { params: { page: paymentPage, limit: 5 } })).data,
     enabled: !!token,
   });
-  const subscriptions = useQuery<Array<{
+  const subscriptions = useQuery<PaginatedList<{
     id: string;
     status: string;
     startDate: string;
     endDate?: string | null;
     plan: { name: string };
   }>>({
-    queryKey: ["my-subscriptions"],
-    queryFn: async () => (await api.get("/subscriptions")).data,
+    queryKey: ["my-subscriptions", subscriptionPage],
+    queryFn: async () => (await api.get("/subscriptions", { params: { page: subscriptionPage, limit: 5 } })).data,
     enabled: !!token,
   });
 
@@ -59,7 +62,7 @@ export default function PaymentsPage() {
             <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Lịch sử thanh toán</h1>
             <p className="mt-2 text-slate-500">Theo dõi các giao dịch nâng cấp tài khoản.</p>
           </div>
-          <Link href="/pricing" className="btn-primary !rounded-lg !py-2.5">Xem các gói</Link>
+          <Link href="/pricing" className="btn-primary !py-2.5">Xem các gói</Link>
         </div>
         {downloadError && <p className="rounded-xl bg-red-50 px-4 py-3 text-sm font-bold text-red-600">{downloadError}</p>}
         <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -69,7 +72,7 @@ export default function PaymentsPage() {
                 <tr><th className="p-4 sm:px-6">Mã giao dịch</th><th>Gói</th><th>Số tiền</th><th>Trạng thái</th><th>Ngày</th><th>Hóa đơn</th></tr>
               </thead>
               <tbody>
-                {payments.data?.map((item) => (
+                {payments.data?.items.map((item) => (
                   <tr key={item.id} className="border-t border-slate-100">
                     <td className="p-4 font-bold sm:px-6">{item.transactionCode}</td>
                     <td>{item.plan.name}</td>
@@ -88,10 +91,16 @@ export default function PaymentsPage() {
                     </td>
                   </tr>
                 ))}
-                {!payments.data?.length && <tr><td colSpan={6} className="p-12 text-center text-slate-500">Chưa có giao dịch.</td></tr>}
+                {!payments.data?.items.length && <tr><td colSpan={6} className="p-12 text-center text-slate-500">Chưa có giao dịch.</td></tr>}
               </tbody>
             </table>
           </div>
+          {payments.data && payments.data.pages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
+              <span>{payments.data.total} giao dịch</span>
+              <Pagination page={paymentPage} pages={payments.data.pages} onPageChange={setPaymentPage} />
+            </div>
+          )}
         </article>
 
         <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -104,7 +113,7 @@ export default function PaymentsPage() {
                 <tr><th className="p-4 sm:px-6">Gói</th><th>Trạng thái</th><th>Bắt đầu</th><th>Kết thúc</th></tr>
               </thead>
               <tbody>
-                {subscriptions.data?.map((item) => (
+                {subscriptions.data?.items.map((item) => (
                   <tr key={item.id} className="border-t border-slate-100">
                     <td className="p-4 font-bold sm:px-6">{item.plan.name}</td>
                     <td><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold">{item.status}</span></td>
@@ -112,10 +121,16 @@ export default function PaymentsPage() {
                     <td>{item.endDate ? new Date(item.endDate).toLocaleString("vi-VN") : "Không giới hạn"}</td>
                   </tr>
                 ))}
-                {!subscriptions.data?.length && <tr><td colSpan={4} className="p-10 text-center text-slate-500">Chưa có lịch sử gói.</td></tr>}
+                {!subscriptions.data?.items.length && <tr><td colSpan={4} className="p-10 text-center text-slate-500">Chưa có lịch sử gói.</td></tr>}
               </tbody>
             </table>
           </div>
+          {subscriptions.data && subscriptions.data.pages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
+              <span>{subscriptions.data.total} lần đăng ký</span>
+              <Pagination page={subscriptionPage} pages={subscriptions.data.pages} onPageChange={setSubscriptionPage} />
+            </div>
+          )}
         </article>
       </div>
     </AccountLayout>

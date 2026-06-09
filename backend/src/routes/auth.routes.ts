@@ -44,6 +44,10 @@ function hashResetToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
+export function requiresTwoFactorAtLogin(user: { role: "USER" | "ADMIN"; twoFactorEnabled: boolean }) {
+  return user.role !== "ADMIN" && user.twoFactorEnabled;
+}
+
 async function createEmailVerification(user: { id: string; email: string }) {
   const token = crypto.randomBytes(32).toString("hex");
   await prisma.emailVerificationToken.create({
@@ -94,7 +98,8 @@ router.post("/login", asyncHandler(async (req, res) => {
     throw new HttpError(401, "Email hoặc mật khẩu không đúng");
   }
   if (user.status !== "ACTIVE") throw new HttpError(403, "Tài khoản đã bị khóa");
-  if (user.twoFactorEnabled) {
+  // Admin 2FA is temporarily bypassed while the admin authentication flow is being revised.
+  if (requiresTwoFactorAtLogin(user)) {
     if (!user.twoFactorSecret) throw new HttpError(500, "Cấu hình 2FA không hợp lệ");
     if (!input.otp) {
       res.status(401).json({ message: "Vui lòng nhập mã xác thực 2FA", requiresTwoFactor: true });

@@ -92,6 +92,7 @@ router.patch("/profile/password", asyncHandler(async (req, res) => {
 router.post("/profile/2fa/setup", asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
   if (!user) throw new HttpError(404, "Không tìm thấy tài khoản");
+  if (user.role === "ADMIN") throw new HttpError(403, "2FA cho tài khoản quản trị đang tạm thời bị tắt");
   if (!user.emailVerifiedAt) throw new HttpError(403, "Vui lòng xác thực email trước khi bật 2FA");
   const setup = createTwoFactorSecret(user.email);
   await prisma.user.update({
@@ -107,6 +108,7 @@ router.post("/profile/2fa/setup", asyncHandler(async (req, res) => {
 router.post("/profile/2fa/enable", asyncHandler(async (req, res) => {
   const { token } = z.object({ token: z.string().regex(/^\d{6}$/) }).parse(req.body);
   const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+  if (user?.role === "ADMIN") throw new HttpError(403, "2FA cho tài khoản quản trị đang tạm thời bị tắt");
   if (!user?.twoFactorSecret) throw new HttpError(400, "Vui lòng tạo cấu hình 2FA trước");
   const valid = await verifyTwoFactorToken(decryptTwoFactorSecret(user.twoFactorSecret), token);
   if (!valid) throw new HttpError(400, "Mã xác thực không đúng");
@@ -117,6 +119,7 @@ router.post("/profile/2fa/enable", asyncHandler(async (req, res) => {
 router.post("/profile/2fa/disable", asyncHandler(async (req, res) => {
   const { token } = z.object({ token: z.string().regex(/^\d{6}$/) }).parse(req.body);
   const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+  if (user?.role === "ADMIN") throw new HttpError(403, "2FA cho tài khoản quản trị đang tạm thời bị tắt");
   if (!user?.twoFactorEnabled || !user.twoFactorSecret) throw new HttpError(400, "2FA chưa được bật");
   const valid = await verifyTwoFactorToken(decryptTwoFactorSecret(user.twoFactorSecret), token);
   if (!valid) throw new HttpError(400, "Mã xác thực không đúng");
@@ -128,20 +131,36 @@ router.post("/profile/2fa/disable", asyncHandler(async (req, res) => {
 }));
 
 router.get("/api-keys", asyncHandler(async (req, res) => {
-  const keys = await prisma.apiKey.findMany({
-    where: { userId: req.user!.id },
-    select: {
-      id: true,
-      name: true,
-      prefix: true,
-      lastFour: true,
-      createdAt: true,
-      lastUsedAt: true,
-      revokedAt: true,
-    },
-    orderBy: { createdAt: "desc" },
+  const query = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(5),
+  }).parse(req.query);
+  const where = { userId: req.user!.id };
+  const [items, total] = await Promise.all([
+    prisma.apiKey.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        prefix: true,
+        lastFour: true,
+        createdAt: true,
+        lastUsedAt: true,
+        revokedAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    }),
+    prisma.apiKey.count({ where }),
+  ]);
+  res.json({
+    items,
+    total,
+    page: query.page,
+    pages: Math.ceil(total / query.limit),
+    limit: query.limit,
   });
-  res.json(keys);
 }));
 
 router.post("/api-keys", asyncHandler(async (req, res) => {
@@ -184,7 +203,7 @@ router.delete("/api-keys/:id", asyncHandler(async (req, res) => {
 router.get("/conversions", asyncHandler(async (req, res) => {
   const query = z.object({
     page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(20),
+    limit: z.coerce.number().int().min(1).max(100).default(5),
     search: z.string().trim().default(""),
     status: z.enum(["QUEUED", "PROCESSING", "COMPLETED", "FAILED"]).optional(),
   }).parse(req.query);
@@ -271,25 +290,57 @@ router.post("/conversions/:id/share", asyncHandler(async (req, res) => {
 }));
 
 router.get("/shares", asyncHandler(async (req, res) => {
-  const shares = await prisma.fileShare.findMany({
-    where: { userId: req.user!.id },
-    include: { file: { select: { originalName: true } } },
-    orderBy: { createdAt: "desc" },
-    take: 100,
-  });
-  res.json(shares.map(({ passwordHash, tokenHash, ...share }) => ({
+  const query = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(5),
+  }).parse(req.query);
+  const where = { userId: req.user!.id };
+  const [shares, total] = await Promise.all([
+    prisma.fileShare.findMany({
+      where,
+      include: { file: { select: { originalName: true } } },
+      orderBy: { createdAt: "desc" },
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    }),
+    prisma.fileShare.count({ where }),
+  ]);
+  const items = shares.map(({ passwordHash, tokenHash, ...share }) => ({
     ...share,
     passwordProtected: Boolean(passwordHash),
-  })));
+  }));
+  res.json({
+    items,
+    total,
+    page: query.page,
+    pages: Math.ceil(total / query.limit),
+    limit: query.limit,
+  });
 }));
 
 router.get("/subscriptions", asyncHandler(async (req, res) => {
-  res.json(await prisma.subscription.findMany({
-    where: { userId: req.user!.id },
-    include: { plan: true },
-    orderBy: { startDate: "desc" },
-    take: 50,
-  }));
+  const query = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(5),
+  }).parse(req.query);
+  const where = { userId: req.user!.id };
+  const [items, total] = await Promise.all([
+    prisma.subscription.findMany({
+      where,
+      include: { plan: true },
+      orderBy: { startDate: "desc" },
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    }),
+    prisma.subscription.count({ where }),
+  ]);
+  res.json({
+    items,
+    total,
+    page: query.page,
+    pages: Math.ceil(total / query.limit),
+    limit: query.limit,
+  });
 }));
 
 router.delete("/shares/:id", asyncHandler(async (req, res) => {

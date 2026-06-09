@@ -39,7 +39,7 @@ export function AccountLayout({ children }: { children: ReactNode }) {
       void queryClient.prefetchQuery<ConversionList>({
         queryKey: ["conversions", 1, "", ""],
         queryFn: async () => (await api.get("/conversions", {
-          params: { page: 1, limit: 20 },
+          params: { page: 1, limit: 5 },
         })).data,
         staleTime: 120_000,
       });
@@ -82,7 +82,7 @@ export function AccountLayout({ children }: { children: ReactNode }) {
               );
             })}
           </nav>
-          <Link href="/tools/word-to-pdf" className="btn-primary mt-4 w-full !rounded-xl !py-3">
+          <Link href="/tools/word-to-pdf" className="btn-primary mt-4 w-full !py-3">
             Công cụ PDF <ArrowRight size={16} />
           </Link>
         </aside>

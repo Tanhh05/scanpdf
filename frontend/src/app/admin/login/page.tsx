@@ -2,34 +2,41 @@
 
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { Shield } from "lucide-react";
-import Image from "next/image";
+import { ArrowRight, AtSign, Eye, EyeOff, LockKeyhole, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { api } from "@/services/api";
 import { useAdminAuthStore } from "@/stores/admin-auth.store";
-import { ThemeToggle } from "@/components/common/theme-toggle";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const setSession = useAdminAuthStore((state) => state.setSession);
+  const token = useAdminAuthStore((state) => state.token);
+  const adminUser = useAdminAuthStore((state) => state.user);
+  const hasHydrated = useAdminAuthStore((state) => state.hasHydrated);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [otp, setOtp] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const login = useMutation({
-    mutationFn: async () => (await api.post("/auth/login", {
-      email,
-      password,
-      otp: otp || undefined,
-    })).data,
-    onSuccess: (data) => {
+    mutationFn: async () => {
+      const data = (await api.post("/auth/login", { email, password })).data;
       if (data.user.role !== "ADMIN") {
         throw new Error("Tài khoản này không có quyền ADMIN");
       }
+      return data;
+    },
+    onSuccess: (data) => {
       setSession(data.token, data.user);
-      router.push("/admin/dashboard");
+      router.replace("/admin/dashboard");
     },
   });
+
+  useEffect(() => {
+    if (hasHydrated && token && adminUser?.role === "ADMIN") {
+      router.replace("/admin/dashboard");
+    }
+  }, [adminUser?.role, hasHydrated, router, token]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,43 +48,73 @@ export default function AdminLoginPage() {
       ? login.error.response?.data?.message ?? "Không thể đăng nhập admin"
       : login.error.message
     : "";
-  const requiresTwoFactor = axios.isAxiosError(login.error) && login.error.response?.data?.requiresTwoFactor;
 
   return (
-    <section className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#1d4ed8_0,#020617_42%,#020617_100%)] p-6 text-white">
-      <ThemeToggle className="absolute right-6 top-6 border-white/20 bg-white/10 text-white hover:bg-white/20" />
-      <form onSubmit={submit} className="w-full max-w-md rounded-3xl border border-white/10 bg-white/10 p-8 shadow-2xl backdrop-blur">
-        <div className="flex items-center gap-3">
-          <Image src="/scanpdf-icon.png" alt="ScanPDF" width={48} height={48} className="h-12 w-12 object-contain" />
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-indigo-200">Admin Console</p>
-            <h1 className="text-3xl font-black">ScanPDF</h1>
+    <section className="flex min-h-screen items-center justify-center bg-[#faf8ff] px-4 py-5 text-[#172033]">
+      <form
+        onSubmit={submit}
+        className="w-full max-w-[420px] rounded-xl border border-[#dde0e8] bg-white p-6 shadow-[0_12px_36px_rgba(38,42,58,0.10)] sm:p-8"
+      >
+          <h1 className="text-2xl font-bold leading-8 tracking-[-0.02em]">Đăng nhập hệ thống</h1>
+
+          <div className="mt-5 flex items-start gap-3 rounded-lg border border-[#b8c7ff] bg-[#f4f5ff] px-4 py-3.5 text-sm font-medium leading-5 text-[#4c5260]">
+            <ShieldCheck className="mt-0.5 shrink-0 text-[#2162e8]" size={17} />
+            <p>Đây là khu vực quản trị riêng. Vui lòng không chia sẻ thông tin đăng nhập.</p>
           </div>
-        </div>
-        <div className="mt-8 flex items-start gap-3 rounded-2xl bg-black/20 p-4">
-          <Shield className="mt-0.5 text-indigo-200" size={22} />
-          <p className="text-sm leading-6 text-slate-200">Đây là khu vực quản trị riêng. Session admin không dùng chung với tài khoản client.</p>
-        </div>
-        <div className="mt-7 space-y-4">
-          <label className="block text-sm font-bold">
-            Email admin
-            <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" className="field mt-2 !bg-white !text-slate-950" required />
-          </label>
-          <label className="block text-sm font-bold">
-            Mật khẩu
-            <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" className="field mt-2 !bg-white !text-slate-950" required />
-          </label>
-          {requiresTwoFactor && (
-            <label className="block text-sm font-bold">
-              Mã 2FA
-              <input value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" className="field mt-2 !bg-white !text-slate-950" placeholder="123456" />
+
+          <div className="mt-6 space-y-5">
+            <label className="block text-sm font-semibold leading-5">
+              Email quản trị
+              <span className="relative mt-2 block">
+                <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8e96a8]" size={17} />
+                <input
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  type="email"
+                  autoComplete="username"
+                  placeholder="admin@scanpdf.vn"
+                  className="h-12 w-full rounded-lg border border-[#d9dde6] bg-white pl-11 pr-4 text-sm font-normal outline-none transition placeholder:text-[#687083] focus:border-[#2864e8] focus:ring-2 focus:ring-[#2864e8]/10"
+                  required
+                />
+              </span>
             </label>
-          )}
-          {errorMessage && <p className="rounded-xl bg-red-500/15 p-3 text-sm font-bold text-red-100">{errorMessage}</p>}
-          <button disabled={login.isPending} className="w-full rounded-xl bg-white px-5 py-3.5 font-black text-slate-950 transition hover:bg-indigo-50 disabled:opacity-60">
-            {login.isPending ? "Đang đăng nhập..." : "Đăng nhập admin"}
-          </button>
-        </div>
+
+            <label className="block text-sm font-semibold leading-5">
+              <span className="flex items-center justify-between gap-4">
+                Mật khẩu
+                <Link href="/forgot-password" className="font-semibold text-[#1757d4] hover:underline">Quên mật khẩu?</Link>
+              </span>
+              <span className="relative mt-2 block">
+                <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8e96a8]" size={17} />
+                <input
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  className="h-12 w-full rounded-lg border border-[#d9dde6] bg-white pl-11 pr-11 text-sm font-normal outline-none transition focus:border-[#2864e8] focus:ring-2 focus:ring-[#2864e8]/10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                  className="absolute right-2.5 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md text-[#8e96a8] hover:bg-slate-100"
+                >
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                </button>
+              </span>
+            </label>
+
+            {errorMessage && <p className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p>}
+
+            <button
+              disabled={login.isPending}
+              className="flex h-[50px] w-full items-center justify-center gap-2 rounded-lg bg-[#2d66e8] text-sm font-bold text-white transition hover:bg-[#2458ce] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {login.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
+              {!login.isPending && <ArrowRight size={18} />}
+            </button>
+          </div>
       </form>
     </section>
   );

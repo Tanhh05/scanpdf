@@ -37,7 +37,7 @@ router.get("/dashboard", asyncHandler(async (_req, res) => {
 router.get("/users", asyncHandler(async (req, res) => {
   const query = z.object({
     page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(20),
+    limit: z.coerce.number().int().min(1).max(100).default(5),
     search: z.string().trim().default(""),
     status: z.enum(["ACTIVE", "SUSPENDED"]).optional(),
   }).parse(req.query);
@@ -147,21 +147,50 @@ router.patch("/users/:id/plan", asyncHandler(async (req, res) => {
 
 router.get("/plans", asyncHandler(async (_req, res) => {
   res.json(await prisma.plan.findMany({
-    include: { features: true, _count: { select: { subscriptions: true } } },
+    include: {
+      features: true,
+      _count: { select: { subscriptions: true, payments: true } },
+    },
     orderBy: { price: "asc" },
   }));
+}));
+
+const planInputSchema = z.object({
+  name: z.string().trim().min(2).max(50),
+  price: z.coerce.number().int().min(0).max(100_000_000),
+  dailyLimit: z.coerce.number().int().min(1).max(100_000),
+  maxFileSizeMb: z.coerce.number().int().min(1).max(2000),
+  storageDays: z.coerce.number().int().min(1).max(365),
+});
+
+router.post("/plans", asyncHandler(async (req, res) => {
+  const input = planInputSchema.parse(req.body);
+  const existingPlan = await prisma.plan.findFirst({
+    where: { name: { equals: input.name, mode: "insensitive" } },
+    select: { id: true },
+  });
+  if (existingPlan) throw new HttpError(409, "Tên gói dịch vụ đã tồn tại");
+
+  const plan = await prisma.$transaction(async (tx) => {
+    const created = await tx.plan.create({ data: input });
+    await tx.adminLog.create({
+      data: {
+        adminId: req.user!.id,
+        action: "PLAN_CREATED",
+        targetType: "PLAN",
+        targetId: created.id,
+      },
+    });
+    return created;
+  });
+  res.status(201).json(plan);
 }));
 
 router.patch("/plans/:id", asyncHandler(async (req, res) => {
   const value = req.params.id;
   const id = Array.isArray(value) ? value[0] : value;
   if (!id) throw new HttpError(400, "ID không hợp lệ");
-  const input = z.object({
-    price: z.coerce.number().int().min(0).max(100_000_000),
-    dailyLimit: z.coerce.number().int().min(1).max(100_000),
-    maxFileSizeMb: z.coerce.number().int().min(1).max(2000),
-    storageDays: z.coerce.number().int().min(1).max(365),
-  }).parse(req.body);
+  const input = planInputSchema.omit({ name: true }).parse(req.body);
   const plan = await prisma.$transaction(async (tx) => {
     const updated = await tx.plan.update({ where: { id }, data: input });
     await tx.adminLog.create({
@@ -177,10 +206,45 @@ router.patch("/plans/:id", asyncHandler(async (req, res) => {
   res.json(plan);
 }));
 
+router.delete("/plans/:id", asyncHandler(async (req, res) => {
+  const value = req.params.id;
+  const id = Array.isArray(value) ? value[0] : value;
+  if (!id) throw new HttpError(400, "ID không hợp lệ");
+
+  const plan = await prisma.plan.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      _count: { select: { subscriptions: true, payments: true } },
+    },
+  });
+  if (!plan) throw new HttpError(404, "Không tìm thấy gói dịch vụ");
+  if (plan.name.toLowerCase() === "free") {
+    throw new HttpError(400, "Không thể xóa gói Free mặc định");
+  }
+  if (plan._count.subscriptions > 0 || plan._count.payments > 0) {
+    throw new HttpError(409, "Không thể xóa gói đã có đăng ký hoặc thanh toán");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.plan.delete({ where: { id } });
+    await tx.adminLog.create({
+      data: {
+        adminId: req.user!.id,
+        action: "PLAN_DELETED",
+        targetType: "PLAN",
+        targetId: id,
+      },
+    });
+  });
+  res.status(204).send();
+}));
+
 router.get("/logs", asyncHandler(async (req, res) => {
   const query = z.object({
     page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(30),
+    limit: z.coerce.number().int().min(1).max(100).default(5),
     action: z.string().trim().default(""),
   }).parse(req.query);
   const where = query.action
@@ -202,7 +266,7 @@ router.get("/logs", asyncHandler(async (req, res) => {
 router.get("/payments", asyncHandler(async (req, res) => {
   const query = z.object({
     page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(20),
+    limit: z.coerce.number().int().min(1).max(100).default(5),
     status: z.enum(["PENDING", "PAID", "FAILED", "CANCELLED"]).optional(),
   }).parse(req.query);
   const where = query.status ? { status: query.status } : {};

@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { ChevronDown, CreditCard, LayoutDashboard, LogOut, Menu, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/auth.store";
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { BrandLogo } from "@/components/common/brand-logo";
 
 function getInitials(fullName?: string, email?: string) {
   const words = fullName?.trim().split(/\s+/).filter(Boolean) ?? [];
@@ -26,15 +26,7 @@ export function Header() {
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
       <div className="container-page flex h-[72px] items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5 text-xl font-black tracking-tight text-slate-950">
-          <Image
-            src="/scanpdf-icon.png"
-            alt="ScanPDF"
-            width={40}
-            height={40}
-            priority
-            className="h-10 w-10 object-contain"
-          />
-          ScanPDF
+          <BrandLogo />
         </Link>
         <nav className="hidden items-center gap-8 text-sm font-bold text-slate-700 md:flex">
           <Link href="/#tools" className="transition hover:text-indigo-600">Công cụ PDF</Link>
@@ -91,7 +83,7 @@ export function Header() {
           ) : (
             <>
               <Link href="/login" className="transition hover:text-indigo-600">Đăng nhập</Link>
-              <Link href="/register" className="btn-primary !rounded-lg !px-5 !py-2.5">Dùng miễn phí</Link>
+              <Link href="/register" className="btn-primary !px-5 !py-2.5">Dùng miễn phí</Link>
             </>
           )}
         </div>

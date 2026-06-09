@@ -7,6 +7,7 @@ import {
   verifyTwoFactorToken,
 } from "../src/services/two-factor.service.js";
 import { OTP } from "otplib";
+import { requiresTwoFactorAtLogin } from "../src/routes/auth.routes.js";
 
 describe("two-factor helpers", () => {
   it("encrypts secrets and verifies TOTP codes", async () => {
@@ -20,5 +21,11 @@ describe("two-factor helpers", () => {
     expect(generateTwoFactorToken(setup.secret)).toMatch(/^\d{6}$/);
     await expect(verifyTwoFactorToken(setup.secret, token)).resolves.toBe(true);
     await expect(verifyTwoFactorToken(setup.secret, "000000")).resolves.toBe(false);
+  });
+
+  it("temporarily bypasses 2FA for admins only", () => {
+    expect(requiresTwoFactorAtLogin({ role: "ADMIN", twoFactorEnabled: true })).toBe(false);
+    expect(requiresTwoFactorAtLogin({ role: "USER", twoFactorEnabled: true })).toBe(true);
+    expect(requiresTwoFactorAtLogin({ role: "USER", twoFactorEnabled: false })).toBe(false);
   });
 });

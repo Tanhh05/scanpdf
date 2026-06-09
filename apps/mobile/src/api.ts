@@ -78,8 +78,10 @@ export function getConversion(id: string) {
   return request<Conversion>(`/conversions/${id}`);
 }
 
-export function getConversions() {
-  return request<{ items: Conversion[] }>("/conversions?limit=50");
+export function getConversions(page = 1) {
+  return request<{ items: Conversion[]; total: number; page: number; pages: number; limit: number }>(
+    `/conversions?page=${page}&limit=5`,
+  );
 }
 
 function absoluteDownloadUrl(apiUrl: string, value: string) {

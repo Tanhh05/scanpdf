@@ -98,12 +98,28 @@ router.post("/webhook/confirm", requireAuth, requireAdmin, asyncHandler(async (r
 }));
 
 router.get("/mine", requireAuth, asyncHandler(async (req, res) => {
-  res.json(await prisma.payment.findMany({
-    where: { userId: req.user!.id },
-    include: { plan: true },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  }));
+  const query = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(5),
+  }).parse(req.query);
+  const where = { userId: req.user!.id };
+  const [items, total] = await Promise.all([
+    prisma.payment.findMany({
+      where,
+      include: { plan: true },
+      orderBy: { createdAt: "desc" },
+      skip: (query.page - 1) * query.limit,
+      take: query.limit,
+    }),
+    prisma.payment.count({ where }),
+  ]);
+  res.json({
+    items,
+    total,
+    page: query.page,
+    pages: Math.ceil(total / query.limit),
+    limit: query.limit,
+  });
 }));
 
 router.get("/:id/invoice", requireAuth, asyncHandler(async (req, res) => {

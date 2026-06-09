@@ -40,6 +40,9 @@ button { cursor: pointer; border: 0; font: inherit; font-weight: 700; }
 .history-item { border: 1px solid #e2e8f0; border-radius: 11px; background: #fff; padding: 10px; }
 .history-item strong { display: block; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .history-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; color: #64748b; font-size: 10px; }
+.pagination { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.pagination span { color: #64748b; font-size: 11px; }
+.pagination button:disabled { cursor: not-allowed; opacity: .45; }
 .download { margin-top: 8px; border-radius: 8px; background: #ecfdf5; color: #047857; padding: 7px 10px; font-size: 11px; }
 @media (prefers-color-scheme: dark) {
   :root, body { background: #0f172a; color: #f8fafc; }

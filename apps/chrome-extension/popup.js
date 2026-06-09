@@ -17,7 +17,7 @@ const tools = [
 ];
 
 const $ = (id) => document.getElementById(id);
-let state = { apiUrl: DEFAULT_API_URL, token: null, user: null };
+let state = { apiUrl: DEFAULT_API_URL, token: null, user: null, historyPage: 1, historyPages: 1 };
 let pollTimer;
 
 async function loadState() {
@@ -181,11 +181,13 @@ async function downloadResult(conversion) {
   }
 }
 
-async function loadHistory() {
+async function loadHistory(page = state.historyPage) {
   const list = $("history-list");
   list.textContent = "Đang tải...";
   try {
-    const data = await api("/conversions?limit=20");
+    const data = await api(`/conversions?page=${page}&limit=5`);
+    state.historyPage = data.page;
+    state.historyPages = Math.max(1, data.pages);
     list.innerHTML = "";
     if (!data.items.length) list.textContent = "Chưa có lịch sử chuyển đổi.";
     for (const item of data.items) {
@@ -206,6 +208,10 @@ async function loadHistory() {
       }
       list.append(card);
     }
+    $("history-page").textContent = `Trang ${state.historyPage}/${state.historyPages}`;
+    $("history-prev").disabled = state.historyPage <= 1;
+    $("history-next").disabled = state.historyPage >= state.historyPages;
+    $("history-pagination").classList.toggle("hidden", state.historyPages <= 1);
   } catch (error) {
     list.textContent = error.message;
   }
@@ -218,7 +224,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   $("login-form").addEventListener("submit", login);
   $("tool").addEventListener("change", configureToolInput);
   $("convert-button").addEventListener("click", convert);
-  $("refresh-history").addEventListener("click", loadHistory);
+  $("refresh-history").addEventListener("click", () => loadHistory());
+  $("history-prev").addEventListener("click", () => loadHistory(state.historyPage - 1));
+  $("history-next").addEventListener("click", () => loadHistory(state.historyPage + 1));
   $("logout-button").addEventListener("click", async () => {
     clearInterval(pollTimer);
     state.token = null;

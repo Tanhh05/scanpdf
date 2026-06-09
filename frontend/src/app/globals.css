@@ -23,6 +23,20 @@
   box-sizing: border-box;
   font-family: inherit;
 }
+
+/* Keep the entire product on a sharp, square-cornered visual system. */
+*,
+*::before,
+*::after {
+  border-radius: 0 !important;
+}
+
+body [class],
+body [class]::before,
+body [class]::after {
+  border-radius: 0 !important;
+}
+
 html { scroll-behavior: smooth; }
 body {
   margin: 0;

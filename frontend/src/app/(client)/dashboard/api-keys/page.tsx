@@ -5,6 +5,8 @@ import axios from "axios";
 import { Check, Copy, KeyRound, Trash2 } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { AccountLayout } from "@/components/client/account-layout";
+import { Pagination } from "@/components/common/pagination";
+import type { PaginatedList } from "@/lib/account";
 import { api } from "@/services/api";
 
 type ApiKey = {
@@ -22,9 +24,10 @@ export default function ApiKeysPage() {
   const [name, setName] = useState("");
   const [newKey, setNewKey] = useState("");
   const [copied, setCopied] = useState(false);
-  const keys = useQuery<ApiKey[]>({
-    queryKey: ["api-keys"],
-    queryFn: async () => (await api.get("/api-keys")).data,
+  const [page, setPage] = useState(1);
+  const keys = useQuery<PaginatedList<ApiKey>>({
+    queryKey: ["api-keys", page],
+    queryFn: async () => (await api.get("/api-keys", { params: { page, limit: 5 } })).data,
   });
   const createKey = useMutation({
     mutationFn: async () => (await api.post("/api-keys", { name })).data,
@@ -62,7 +65,7 @@ export default function ApiKeysPage() {
           <h2 className="text-xl font-black">Tạo API key</h2>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <input value={name} onChange={(event) => setName(event.target.value)} className="field flex-1" placeholder="Ví dụ: Production server" minLength={2} required />
-            <button disabled={createKey.isPending} className="btn-primary !rounded-xl">
+            <button disabled={createKey.isPending} className="btn-primary">
               <KeyRound size={18} /> {createKey.isPending ? "Đang tạo..." : "Tạo key"}
             </button>
           </div>
@@ -91,7 +94,7 @@ export default function ApiKeysPage() {
             <h2 className="text-xl font-black">API key của bạn</h2>
           </div>
           <div className="divide-y divide-slate-100">
-            {keys.data?.map((key) => (
+            {keys.data?.items.map((key) => (
               <div key={key.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-black text-slate-900">{key.name}</p>
@@ -115,8 +118,14 @@ export default function ApiKeysPage() {
                 )}
               </div>
             ))}
-            {!keys.data?.length && <p className="p-8 text-center text-slate-500">Chưa có API key.</p>}
+            {!keys.data?.items.length && <p className="p-8 text-center text-slate-500">Chưa có API key.</p>}
           </div>
+          {keys.data && keys.data.pages > 1 && (
+            <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
+              <span>{keys.data.total} API key</span>
+              <Pagination page={page} pages={keys.data.pages} onPageChange={setPage} />
+            </div>
+          )}
         </article>
 
         <article className="rounded-2xl bg-slate-950 p-6 text-white">

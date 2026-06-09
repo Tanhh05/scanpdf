@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { FormEvent, useState } from "react";
 import { AccountLayout } from "@/components/client/account-layout";
+import { Pagination } from "@/components/common/pagination";
 import { api } from "@/services/api";
 
 type Team = {
@@ -43,11 +44,19 @@ export default function TeamsPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"ADMIN" | "MEMBER">("MEMBER");
   const [notice, setNotice] = useState("");
+  const [memberPage, setMemberPage] = useState(1);
+  const [invitePage, setInvitePage] = useState(1);
   const teams = useQuery<Team[]>({
     queryKey: ["teams"],
     queryFn: async () => (await api.get("/teams")).data,
   });
   const activeTeam = teams.data?.find((team) => team.id === selectedTeamId) ?? teams.data?.[0];
+  const memberLimit = 5;
+  const inviteLimit = 5;
+  const memberPages = Math.max(1, Math.ceil((activeTeam?.members.length ?? 0) / memberLimit));
+  const invitePages = Math.max(1, Math.ceil((activeTeam?.invites.length ?? 0) / inviteLimit));
+  const visibleMembers = activeTeam?.members.slice((memberPage - 1) * memberLimit, memberPage * memberLimit) ?? [];
+  const visibleInvites = activeTeam?.invites.slice((invitePage - 1) * inviteLimit, invitePage * inviteLimit) ?? [];
   const usage = useQuery<Usage>({
     queryKey: ["team-usage", activeTeam?.id],
     queryFn: async () => (await api.get(`/teams/${activeTeam!.id}/usage`)).data,
@@ -110,7 +119,7 @@ export default function TeamsPage() {
           <h2 className="text-xl font-black">Tạo team</h2>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <input value={teamName} onChange={(event) => setTeamName(event.target.value)} className="field flex-1" placeholder="Tên team" minLength={2} required />
-            <button disabled={createTeam.isPending} className="btn-primary !rounded-xl">{createTeam.isPending ? "Đang tạo..." : "Tạo team"}</button>
+            <button disabled={createTeam.isPending} className="btn-primary">{createTeam.isPending ? "Đang tạo..." : "Tạo team"}</button>
           </div>
           {createTeam.isError && <p className="mt-3 text-sm font-bold text-red-600">{message(createTeam.error)}</p>}
         </form>
@@ -119,7 +128,7 @@ export default function TeamsPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <label className="text-sm font-bold text-slate-700">
               Chọn team
-              <select value={activeTeam?.id ?? ""} onChange={(event) => setSelectedTeamId(event.target.value)} className="field mt-2 max-w-sm">
+              <select value={activeTeam?.id ?? ""} onChange={(event) => { setSelectedTeamId(event.target.value); setMemberPage(1); setInvitePage(1); }} className="field mt-2 max-w-sm">
                 {teams.data.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}
               </select>
             </label>
@@ -150,7 +159,7 @@ export default function TeamsPage() {
                   <option value="MEMBER">Member</option>
                   <option value="ADMIN">Admin</option>
                 </select>
-                <button disabled={invite.isPending} className="btn-primary !rounded-xl">{invite.isPending ? "Đang gửi..." : "Gửi lời mời"}</button>
+                <button disabled={invite.isPending} className="btn-primary">{invite.isPending ? "Đang gửi..." : "Gửi lời mời"}</button>
               </div>
               {notice && <p className="mt-3 text-sm font-bold text-indigo-700">{notice}</p>}
               {invite.isError && <p className="mt-3 text-sm font-bold text-red-600">{message(invite.error)}</p>}
@@ -161,7 +170,7 @@ export default function TeamsPage() {
                 <h2 className="text-xl font-black">Thành viên</h2>
               </div>
               <div className="divide-y divide-slate-100">
-                {activeTeam.members.map((member) => (
+                {visibleMembers.map((member) => (
                   <div key={member.id} className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="font-black">{member.user.fullName}</p>
@@ -190,6 +199,12 @@ export default function TeamsPage() {
                   </div>
                 ))}
               </div>
+              {memberPages > 1 && (
+                <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
+                  <span>{activeTeam.members.length} thành viên</span>
+                  <Pagination page={memberPage} pages={memberPages} onPageChange={setMemberPage} />
+                </div>
+              )}
             </article>
 
             <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -197,7 +212,7 @@ export default function TeamsPage() {
                 <h2 className="text-xl font-black">Lời mời đang chờ</h2>
               </div>
               <div className="divide-y divide-slate-100">
-                {activeTeam.invites.map((item) => (
+                {visibleInvites.map((item) => (
                   <div key={item.id} className="flex items-center justify-between gap-3 p-5">
                     <div>
                       <p className="font-bold">{item.email}</p>
@@ -207,6 +222,12 @@ export default function TeamsPage() {
                 ))}
                 {!activeTeam.invites.length && <p className="p-8 text-center text-slate-500">Không có lời mời đang chờ.</p>}
               </div>
+              {invitePages > 1 && (
+                <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
+                  <span>{activeTeam.invites.length} lời mời</span>
+                  <Pagination page={invitePage} pages={invitePages} onPageChange={setInvitePage} />
+                </div>
+              )}
             </article>
           </>
         )}

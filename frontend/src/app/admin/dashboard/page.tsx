@@ -1,20 +1,210 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import {
+  ArrowLeftRight,
+  BadgeCheck,
+  CircleDollarSign,
+  Cpu,
+  EllipsisVertical,
+  Server,
+  Star,
+  UserPlus,
+  Users,
+} from "lucide-react";
+import Link from "next/link";
+import { AdminAvatar, AdminEmpty, AdminStatusBadge, adminPanelClass } from "@/components/admin/admin-ui";
 import { adminApi } from "@/services/api";
-import { AdminNav } from "@/components/admin/admin-nav";
 
-type Metrics = { totalUsers: number; newUsers: number; proUsers: number; totalConversions: number; successRate: number; totalRevenue: number };
+type Metrics = {
+  totalUsers: number;
+  newUsers: number;
+  proUsers: number;
+  totalConversions: number;
+  successRate: number;
+  totalRevenue: number;
+};
+
+type Statistics = {
+  daily: {
+    statDate: string;
+    totalConversions: number;
+  }[];
+};
+
+type RecentUser = {
+  id: string;
+  fullName: string;
+  email: string;
+  status: string;
+  createdAt: string;
+  subscriptions: { plan: { name: string } }[];
+};
+
+function formatMoney(value: number) {
+  return `${value.toLocaleString("vi-VN")}đ`;
+}
+
 export default function AdminDashboardPage() {
-  const { data, error } = useQuery<Metrics>({ queryKey: ["admin-dashboard"], queryFn: async () => (await adminApi.get("/admin/dashboard")).data });
-  if (error) return <div className="container-page py-16 text-red-700">Không thể truy cập. Tài khoản cần quyền ADMIN.</div>;
+  const metrics = useQuery<Metrics>({
+    queryKey: ["admin-dashboard"],
+    queryFn: async () => (await adminApi.get("/admin/dashboard")).data,
+  });
+  const statistics = useQuery<Statistics>({
+    queryKey: ["admin-statistics"],
+    queryFn: async () => (await adminApi.get("/admin/statistics")).data,
+  });
+  const recentUsers = useQuery<{ items: RecentUser[] }>({
+    queryKey: ["admin-dashboard-users"],
+    queryFn: async () => (await adminApi.get("/admin/users", { params: { page: 1, limit: 5 } })).data,
+  });
+
+  if (metrics.isError) {
+    return <div className={`${adminPanelClass} p-10 text-center font-semibold text-red-600`}>Không thể tải dữ liệu tổng quan.</div>;
+  }
+
+  const data = metrics.data;
+  const daily = statistics.data?.daily.slice(-7) ?? [];
+  const width = 760;
+  const height = 260;
+  const max = Math.max(1, ...daily.map((item) => item.totalConversions));
+  const points = daily.map((item, index) => ({
+    x: daily.length > 1 ? (index / (daily.length - 1)) * width : width / 2,
+    y: height - (item.totalConversions / max) * 205 - 22,
+    item,
+  }));
+  const line = points.map((point, index) => `${index ? "L" : "M"} ${point.x} ${point.y}`).join(" ");
+  const area = points.length ? `${line} L ${width} ${height} L 0 ${height} Z` : "";
+
   const cards = [
-    ["Tổng người dùng", data?.totalUsers],
-    ["Người dùng mới hôm nay", data?.newUsers],
-    ["Người dùng trả phí", data?.proUsers],
-    ["Tổng chuyển đổi", data?.totalConversions],
-    ["Tỷ lệ thành công", data ? `${data.successRate}%` : undefined],
-    ["Doanh thu", data ? `${data.totalRevenue.toLocaleString("vi-VN")}đ` : undefined],
-  ];
-  return <section className="container-page py-14"><AdminNav /><h1 className="text-3xl font-black">Admin Dashboard</h1><div className="mt-8 grid gap-5 md:grid-cols-3">{cards.map(([label, value]) => <div className="card p-6" key={label}><p className="text-sm text-slate-500">{label}</p><strong className="mt-2 block text-3xl">{value ?? "..."}</strong></div>)}</div></section>;
+    { label: "Tổng người dùng", value: data?.totalUsers, note: `+${data?.newUsers ?? 0} hôm nay`, icon: Users, tone: "blue" },
+    { label: "Người dùng mới", value: data?.newUsers, note: "Trong hôm nay", icon: UserPlus, tone: "slate" },
+    { label: "Người dùng trả phí", value: data?.proUsers, note: "Đang hoạt động", icon: Star, tone: "blue" },
+    { label: "Tổng chuyển đổi", value: data?.totalConversions, note: "Xu hướng hệ thống", icon: ArrowLeftRight, tone: "slate" },
+    { label: "Tỷ lệ thành công", value: `${data?.successRate ?? 0}%`, note: "Hoạt động tốt", icon: BadgeCheck, tone: "green" },
+    { label: "Doanh thu", value: formatMoney(data?.totalRevenue ?? 0), note: "Tổng đã thanh toán", icon: CircleDollarSign, tone: "solid" },
+  ] as const;
+
+  return (
+    <section>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        {cards.map((card) => (
+          <article
+            key={card.label}
+            className={`min-h-[142px] rounded-xl border p-4 shadow-[0_2px_6px_rgba(30,41,59,0.035)] ${
+              card.tone === "solid"
+                ? "border-[#0b4dcc] bg-[#0b4dcc] text-white"
+                : "border-[#d8dceb] bg-white text-[#111527]"
+            }`}
+          >
+            <div className="flex items-start justify-between">
+              <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                card.tone === "solid" ? "bg-white/15" : card.tone === "green" ? "bg-emerald-100 text-emerald-700" : card.tone === "blue" ? "bg-[#e6eeff] text-[#0b4dcc]" : "bg-slate-100 text-slate-600"
+              }`}>
+                <card.icon size={20} />
+              </span>
+              <span className={`text-xs font-semibold ${card.tone === "solid" ? "text-blue-100" : card.tone === "green" ? "text-emerald-700" : "text-[#0b4dcc]"}`}>
+                {card.note}
+              </span>
+            </div>
+            <p className={`mt-4 text-[11px] font-semibold uppercase tracking-wide ${card.tone === "solid" ? "text-blue-100" : "text-[#242b40]"}`}>{card.label}</p>
+            <strong className="mt-1.5 block text-[23px] leading-none">{metrics.isLoading ? "..." : card.value}</strong>
+          </article>
+        ))}
+      </div>
+
+      <div className="mt-6 grid gap-5 xl:grid-cols-[minmax(0,2.1fr)_minmax(290px,0.9fr)]">
+        <article className={`${adminPanelClass} p-5`}>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold">Thống kê hoạt động</h2>
+              <p className="mt-1 text-sm text-[#586075]">Lượt chuyển đổi PDF trong 7 ngày qua</p>
+            </div>
+            <span className="rounded-lg border border-[#bcc5df] bg-[#eef1ff] px-4 py-2 text-sm">7 ngày gần nhất</span>
+          </div>
+          <div className="mt-5 h-[260px]">
+            {statistics.isLoading ? (
+              <div className="h-full animate-pulse rounded-xl bg-slate-50" />
+            ) : points.length ? (
+              <svg viewBox={`-10 -10 ${width + 20} ${height + 45}`} className="h-full w-full" preserveAspectRatio="none" aria-label="Biểu đồ chuyển đổi">
+                <defs>
+                  <linearGradient id="adminDashboardArea" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#2f67e9" stopOpacity=".22" />
+                    <stop offset="100%" stopColor="#2f67e9" stopOpacity=".01" />
+                  </linearGradient>
+                </defs>
+                {[0, 1, 2, 3].map((item) => <line key={item} x1="0" x2={width} y1={item * 80} y2={item * 80} stroke="#e4e7f0" strokeDasharray="4 5" />)}
+                <path d={area} fill="url(#adminDashboardArea)" />
+                <path d={line} fill="none" stroke="#0b4dcc" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                {points.map(({ x, y, item }) => (
+                  <circle key={item.statDate} cx={x} cy={y} r="4" fill="#fff" stroke="#0b4dcc" strokeWidth="2" vectorEffect="non-scaling-stroke">
+                    <title>{`${item.statDate}: ${item.totalConversions} lượt`}</title>
+                  </circle>
+                ))}
+              </svg>
+            ) : (
+              <AdminEmpty>Chưa có dữ liệu chuyển đổi.</AdminEmpty>
+            )}
+          </div>
+          <div className="flex justify-between text-xs text-[#586075]">
+            {daily.map((item) => <span key={item.statDate}>{new Date(`${item.statDate}T00:00:00`).toLocaleDateString("vi-VN", { weekday: "short" })}</span>)}
+          </div>
+        </article>
+
+        <article className={`${adminPanelClass} overflow-hidden`}>
+          <div className="border-b border-[#d8dceb] px-5 py-4">
+            <h2 className="text-lg font-bold">Trạng thái hệ thống</h2>
+          </div>
+          <div className="space-y-5 p-5">
+            {[
+              { label: "Dung lượng ổ đĩa", value: 45, icon: Server, color: "bg-[#0b4dcc]" },
+              { label: "CPU Usage", value: 12, icon: Cpu, color: "bg-slate-600" },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-4">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e8efff] text-[#0b4dcc]"><item.icon size={22} /></span>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex justify-between text-sm"><span>{item.label}</span><strong>{item.value}%</strong></div>
+                  <div className="h-2 rounded-full bg-[#e7eaf4]"><div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.value}%` }} /></div>
+                </div>
+              </div>
+            ))}
+            <div className="border-t border-[#d8dceb] pt-5">
+              <p className="text-xs font-semibold uppercase tracking-wide">Nhật ký gần đây</p>
+              <div className="mt-5 space-y-5 text-sm">
+                <div><p className="flex items-center gap-3"><i className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Người dùng mới hôm nay: {data?.newUsers ?? 0}</p><span className="ml-5 mt-1 block text-xs text-slate-500">Dữ liệu trực tiếp</span></div>
+                <div><p className="flex items-center gap-3"><i className="h-2.5 w-2.5 rounded-full bg-[#0b4dcc]" /> Tỷ lệ thành công: {data?.successRate ?? 0}%</p><span className="ml-5 mt-1 block text-xs text-slate-500">Toàn hệ thống</span></div>
+              </div>
+            </div>
+          </div>
+          <Link href="/admin/logs" className="block bg-[#f0f3ff] px-6 py-4 text-center text-sm font-semibold text-[#0b4dcc]">Xem tất cả hoạt động</Link>
+        </article>
+      </div>
+
+      <article className={`${adminPanelClass} mt-6 overflow-hidden`}>
+        <div className="flex items-center justify-between border-b border-[#d8dceb] px-5 py-4">
+          <h2 className="text-lg font-bold">Người dùng mới nhất</h2>
+          <Link href="/admin/users" className="text-sm font-semibold text-[#0b4dcc]">Quản lý tất cả →</Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-left">
+            <thead className="bg-[#f0f2ff] text-xs uppercase tracking-wide text-[#293047]">
+              <tr><th className="px-7 py-4">Người dùng</th><th className="px-5 py-4">Trạng thái</th><th className="px-5 py-4">Ngày tham gia</th><th className="px-5 py-4">Gói</th><th className="px-5 py-4 text-center">Thao tác</th></tr>
+            </thead>
+            <tbody>
+              {recentUsers.data?.items.map((user) => (
+                <tr key={user.id} className="border-t border-[#e3e6ef] text-sm">
+                  <td className="px-7 py-4"><div className="flex items-center gap-3"><AdminAvatar name={user.fullName} /><div><strong className="block">{user.fullName}</strong><span className="text-xs text-slate-500">{user.email}</span></div></div></td>
+                  <td className="px-5 py-4"><AdminStatusBadge status={user.status} /></td>
+                  <td className="px-5 py-4">{new Date(user.createdAt).toLocaleDateString("vi-VN")}</td>
+                  <td className="px-5 py-4 font-medium text-[#0b4dcc]">{user.subscriptions[0]?.plan.name ?? "Free"}</td>
+                  <td className="px-5 py-4 text-center"><EllipsisVertical className="mx-auto" size={18} /></td>
+                </tr>
+              ))}
+              {!recentUsers.isLoading && !recentUsers.data?.items.length && <tr><td colSpan={5}><AdminEmpty>Chưa có người dùng.</AdminEmpty></td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  );
 }

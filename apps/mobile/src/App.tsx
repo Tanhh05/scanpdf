@@ -64,6 +64,8 @@ export default function App() {
   const [option, setOption] = useState("");
   const [conversion, setConversion] = useState<Conversion | null>(null);
   const [history, setHistory] = useState<Conversion[]>([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyPages, setHistoryPages] = useState(1);
   const [busy, setBusy] = useState(false);
   const [apiUrl, updateApiUrl] = useState("");
 
@@ -141,10 +143,13 @@ export default function App() {
     }
   }
 
-  async function loadHistory() {
+  async function loadHistory(page = historyPage) {
     setBusy(true);
     try {
-      setHistory((await getConversions()).items);
+      const data = await getConversions(page);
+      setHistory(data.items);
+      setHistoryPage(data.page);
+      setHistoryPages(Math.max(1, data.pages));
     } catch (error) {
       Alert.alert("Không thể tải lịch sử", error instanceof Error ? error.message : "Có lỗi xảy ra");
     } finally {
@@ -154,7 +159,7 @@ export default function App() {
 
   useEffect(() => {
     if (tab === "history" && user) void loadHistory();
-  }, [tab, user]);
+  }, [historyPage, tab, user]);
 
   if (loading) {
     return <SafeAreaView style={styles.loading}><ActivityIndicator color={colors.primary} /></SafeAreaView>;
@@ -227,14 +232,24 @@ export default function App() {
 
       {tab === "history" && (
         <View style={styles.contentFlex}>
-          <View style={styles.pageRow}><View><Text style={styles.eyebrow}>TÀI KHOẢN</Text><Text style={styles.heading}>Lịch sử</Text></View><Pressable onPress={loadHistory}><Text style={styles.link}>Làm mới</Text></Pressable></View>
+          <View style={styles.pageRow}><View><Text style={styles.eyebrow}>TÀI KHOẢN</Text><Text style={styles.heading}>Lịch sử</Text></View><Pressable onPress={() => loadHistory()}><Text style={styles.link}>Làm mới</Text></Pressable></View>
           {busy ? <ActivityIndicator color={colors.primary} /> : (
             <FlatList data={history} keyExtractor={(item) => item.id} contentContainerStyle={styles.list} renderItem={({ item }) => (
               <View style={styles.historyItem}>
                 <View style={styles.historyInfo}><Text style={styles.fileName}>{item.inputFile?.originalName || item.tool}</Text><Text style={styles.muted}>{item.status} · {new Date(item.createdAt).toLocaleDateString("vi-VN")}</Text></View>
                 {item.canDownload && <Pressable onPress={() => downloadAndShare(item).catch((error) => Alert.alert("Lỗi", error.message))}><Text style={styles.link}>Tải</Text></Pressable>}
               </View>
-            )} ListEmptyComponent={<Text style={styles.muted}>Chưa có lịch sử chuyển đổi.</Text>} />
+            )} ListEmptyComponent={<Text style={styles.muted}>Chưa có lịch sử chuyển đổi.</Text>} ListFooterComponent={historyPages > 1 ? (
+              <View style={styles.pagination}>
+                <Pressable disabled={historyPage <= 1} onPress={() => setHistoryPage((value) => value - 1)} style={[styles.pageButton, historyPage <= 1 && styles.disabled]}>
+                  <Text style={styles.text}>Trước</Text>
+                </Pressable>
+                <Text style={styles.muted}>Trang {historyPage}/{historyPages}</Text>
+                <Pressable disabled={historyPage >= historyPages} onPress={() => setHistoryPage((value) => value + 1)} style={[styles.pageButton, historyPage >= historyPages && styles.disabled]}>
+                  <Text style={styles.text}>Sau</Text>
+                </Pressable>
+              </View>
+            ) : null} />
           )}
         </View>
       )}
@@ -303,6 +318,8 @@ function makeStyles(colors: typeof lightColors) {
     historyItem: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderColor: colors.border, borderRadius: 14, backgroundColor: colors.surface, padding: 15 },
     historyInfo: { flex: 1, gap: 4 },
     fileName: { color: colors.text, fontWeight: "800" },
+    pagination: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 6 },
+    pageButton: { borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 16, paddingVertical: 10 },
     logoutButton: { alignItems: "center", borderWidth: 1, borderColor: "#ef4444", borderRadius: 12, padding: 14 },
     tabs: { position: "absolute", right: 0, bottom: 0, left: 0, flexDirection: "row", borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.surface, paddingBottom: Platform.OS === "ios" ? 12 : 4 },
     tab: { flex: 1, alignItems: "center", paddingVertical: 14 },

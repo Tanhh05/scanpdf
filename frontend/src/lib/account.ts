@@ -44,6 +44,14 @@ export type Payment = {
   plan: { name: string };
 };
 
+export type PaginatedList<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  pages: number;
+  limit: number;
+};
+
 export const toolNames: Record<string, string> = {
   WORD_TO_PDF: "Word sang PDF",
   PDF_TO_WORD: "PDF sang Word",

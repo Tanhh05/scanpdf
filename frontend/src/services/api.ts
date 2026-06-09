@@ -18,9 +18,26 @@ api.interceptors.request.use((config) => {
 
 adminApi.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const state = localStorage.getItem("scanpdf-admin-auth");
-    const token = state ? JSON.parse(state)?.state?.token : null;
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const state = localStorage.getItem("scanpdf-admin-auth");
+      const token = state ? JSON.parse(state)?.state?.token : null;
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    } catch {
+      localStorage.removeItem("scanpdf-admin-auth");
+    }
   }
   return config;
 });
+
+adminApi.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (typeof window !== "undefined" && error.response?.status === 401) {
+      localStorage.removeItem("scanpdf-admin-auth");
+      if (window.location.pathname !== "/admin/login") {
+        window.location.replace("/admin/login?expired=1");
+      }
+    }
+    return Promise.reject(error);
+  },
+);
