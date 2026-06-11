@@ -19,6 +19,7 @@ import teamRoutes from "./routes/team.routes.js";
 import userRoutes from "./routes/user.routes.js";
 
 export const app = express();
+app.set("trust proxy", 1);
 initMonitoring();
 
 app.use(helmet());

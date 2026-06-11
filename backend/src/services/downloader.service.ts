@@ -82,7 +82,9 @@ export type PreparedDownload = {
   cleanup: () => Promise<void>;
 };
 
-const binaryPath = path.resolve(process.cwd(), ".cache", "bin", process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+const binaryPath = process.env.YT_DLP_PATH
+  ? path.resolve(process.env.YT_DLP_PATH)
+  : path.resolve(process.cwd(), ".cache", "bin", process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
 let binaryReady: Promise<string> | null = null;
 type YtDlpClient = {
   getVideoInfo(args: string[]): Promise<YtDlpInfo>;
@@ -287,16 +289,22 @@ export function buildAssets(provider: DownloaderProvider, info: YtDlpInfo, sourc
 async function ensureBinaryPath() {
   if (!binaryReady) {
     binaryReady = (async () => {
-      const YTDlpWrap = await loadYtDlpWrap();
-      await mkdir(path.dirname(binaryPath), { recursive: true });
       try {
         await access(binaryPath);
-      } catch {
+      } catch (error) {
+        if (process.env.YT_DLP_PATH) {
+          throw new Error(`Không tìm thấy yt-dlp tại ${binaryPath}`, { cause: error });
+        }
+        const YTDlpWrap = await loadYtDlpWrap();
+        await mkdir(path.dirname(binaryPath), { recursive: true });
         await YTDlpWrap.downloadFromGithub(binaryPath);
       }
       await chmod(binaryPath, 0o755);
       return binaryPath;
-    })();
+    })().catch((error) => {
+      binaryReady = null;
+      throw error;
+    });
   }
   return binaryReady;
 }
@@ -318,6 +326,7 @@ export async function analyzeMedia(provider: DownloaderProvider, sourceUrl: stri
     ]) as YtDlpInfo;
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
+    console.error(`[downloader:${provider}] analyze failed`, error);
     if (message.includes("Unable to extract")) {
       throw new HttpError(422, `Không thể đọc nội dung từ URL ${providerLabel(provider)} này lúc này. Hãy thử một bài đăng công khai khác.`);
     }
