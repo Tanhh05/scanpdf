@@ -1,4 +1,5 @@
 FROM node:22-bookworm-slim AS base
+LABEL org.opencontainers.image.title="scanpdf-backend"
 WORKDIR /app
 RUN apt-get update \
   && apt-get install -y --no-install-recommends libreoffice-writer poppler-utils ghostscript qpdf tesseract-ocr tesseract-ocr-vie fonts-dejavu ffmpeg \

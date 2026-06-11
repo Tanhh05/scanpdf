@@ -4,8 +4,14 @@ services:
     runtime: docker
     plan: free
     region: singapore
+    branch: main
+    autoDeployTrigger: commit
     dockerfilePath: ./backend/Dockerfile
     dockerContext: ./backend
+    buildFilter:
+      paths:
+        - backend/**
+        - render.yaml
     healthCheckPath: /health/ready
     envVars:
       - key: NODE_ENV
