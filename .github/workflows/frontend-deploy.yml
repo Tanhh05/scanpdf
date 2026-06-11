@@ -15,6 +15,9 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint -w frontend
+        env:
+          NEXT_PUBLIC_API_URL: https://api.scanpdf.vn/api
       - run: npm run build -w frontend
         env:
           NEXT_PUBLIC_API_URL: https://api.scanpdf.vn/api

@@ -29,6 +29,7 @@ function toolLabel(tool: string) {
 export default function StatisticsPage() {
   const [search, setSearch] = useState("");
   const [toolPage, setToolPage] = useState(1);
+  const [selectedTool, setSelectedTool] = useState<ToolStat | null>(null);
   const { data, isLoading } = useQuery<Statistics>({
     queryKey: ["admin-statistics"],
     queryFn: async () => (await adminApi.get("/admin/statistics")).data,
@@ -113,7 +114,16 @@ export default function StatisticsPage() {
                     <td className="px-4 py-3.5 font-semibold text-[#0b4dcc]">{item.successCount.toLocaleString("vi-VN")}</td>
                     <td className="px-4 py-3.5 font-semibold text-red-600">{item.failedCount.toLocaleString("vi-VN")}</td>
                     <td className="px-4 py-3.5"><div className="flex items-center gap-3"><div className="h-2 w-24 rounded-full bg-[#e3e7f2]"><div className="h-full rounded-full bg-[#0b4dcc]" style={{ width: `${rate}%` }} /></div><span>{rate}%</span></div></td>
-                    <td className="px-4 py-3.5 text-center"><Eye className="mx-auto" size={18} /></td>
+                    <td className="px-4 py-3.5 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTool(item)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#eef2ff] hover:text-[#0b4dcc]"
+                        title="Xem chi tiết công cụ"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -128,6 +138,29 @@ export default function StatisticsPage() {
           </div>
         )}
       </article>
+
+      {selectedTool && (
+        <article className={`${adminPanelClass} mt-5 p-5`}>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold">{toolLabel(selectedTool.tool)}</h3>
+              <p className="mt-1 text-sm text-slate-500">Tổng hợp theo trạng thái thực thi</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(selectedTool.tool)}
+              className="inline-flex h-10 items-center rounded-lg border border-[#bcc5df] px-4 text-sm font-semibold text-[#0b4dcc]"
+            >
+              Sao chép mã công cụ
+            </button>
+          </div>
+          <div className="mt-4 grid gap-3 text-sm md:grid-cols-3">
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Tổng lượt</p><p className="mt-2 text-xl font-semibold">{selectedTool.totalUsage.toLocaleString("vi-VN")}</p></div>
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Thành công</p><p className="mt-2 text-xl font-semibold text-[#0b4dcc]">{selectedTool.successCount.toLocaleString("vi-VN")}</p></div>
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Thất bại</p><p className="mt-2 text-xl font-semibold text-red-600">{selectedTool.failedCount.toLocaleString("vi-VN")}</p></div>
+          </div>
+        </article>
+      )}
     </section>
   );
 }

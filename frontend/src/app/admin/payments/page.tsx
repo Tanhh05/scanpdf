@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, CircleDollarSign, Download, MoreVertical, Search, Timer, XCircle } from "lucide-react";
+import { CheckCircle2, CircleDollarSign, Download, Eye, MoreVertical, Search, Timer, XCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
   AdminAvatar,
@@ -27,6 +27,7 @@ export default function PaymentsPage() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
   const [search, setSearch] = useState("");
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const payments = useQuery<{ items: Payment[]; total: number; pages: number }>({
     queryKey: ["admin-payments", page, status],
     queryFn: async () => (await adminApi.get("/admin/payments", { params: { page, limit: 5, status: status || undefined } })).data,
@@ -120,7 +121,16 @@ export default function PaymentsPage() {
                   <td className="px-4 py-3.5 font-bold">{item.amount.toLocaleString("vi-VN")}đ</td>
                   <td className="px-4 py-3.5"><AdminStatusBadge status={item.status} /></td>
                   <td className="px-4 py-3.5">{new Date(item.createdAt).toLocaleString("vi-VN")}</td>
-                  <td className="px-4 py-3.5 text-center"><MoreVertical className="mx-auto" size={19} /></td>
+                  <td className="px-4 py-3.5 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPayment(item)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#eef2ff] hover:text-[#0b4dcc]"
+                      title="Xem giao dịch"
+                    >
+                      <MoreVertical size={19} />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {!payments.isLoading && !visibleItems.length && <tr><td colSpan={7}><AdminEmpty>Không có giao dịch phù hợp.</AdminEmpty></td></tr>}
@@ -132,6 +142,40 @@ export default function PaymentsPage() {
           <AdminPagination page={page} pages={payments.data?.pages ?? 1} onPageChange={setPage} />
         </div>
       </article>
+
+      {selectedPayment && (
+        <article className={`${adminPanelClass} mt-5 p-5`}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-lg font-bold">Chi tiết giao dịch</h3>
+              <p className="mt-1 text-sm text-slate-500">Mã đơn #{selectedPayment.transactionCode}</p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(selectedPayment.transactionCode)}
+                className="inline-flex h-10 items-center rounded-lg border border-[#bcc5df] px-4 text-sm font-semibold text-[#0b4dcc]"
+              >
+                Sao chép mã đơn
+              </button>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(selectedPayment.user.email)}
+                className="inline-flex h-10 items-center rounded-lg border border-[#bcc5df] px-4 text-sm font-semibold text-[#0b4dcc]"
+              >
+                <Eye size={16} className="mr-2" />
+                Sao chép email
+              </button>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Người dùng</p><p className="mt-2 font-semibold">{selectedPayment.user.fullName}</p><p className="text-slate-500">{selectedPayment.user.email}</p></div>
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Gói</p><p className="mt-2 font-semibold">{selectedPayment.plan.name}</p></div>
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Số tiền</p><p className="mt-2 font-semibold">{selectedPayment.amount.toLocaleString("vi-VN")}đ</p></div>
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Trạng thái</p><div className="mt-2"><AdminStatusBadge status={selectedPayment.status} /></div><p className="mt-2 text-slate-500">{new Date(selectedPayment.createdAt).toLocaleString("vi-VN")}</p></div>
+          </div>
+        </article>
+      )}
     </section>
   );
 }

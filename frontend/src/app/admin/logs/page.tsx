@@ -19,14 +19,19 @@ export default function AdminLogsPage() {
   const [page, setPage] = useState(1);
   const [action, setAction] = useState("");
   const [search, setSearch] = useState("");
+  const [targetType, setTargetType] = useState("");
+  const [selectedLog, setSelectedLog] = useState<AdminLog | null>(null);
   const logs = useQuery<{ items: AdminLog[]; total: number; pages: number }>({
     queryKey: ["admin-logs", page, action],
     queryFn: async () => (await adminApi.get("/admin/logs", { params: { page, limit: 5, action } })).data,
   });
   const visibleItems = useMemo(() => {
     const keyword = search.trim().toLowerCase();
-    return (logs.data?.items ?? []).filter((item) => !keyword || [item.admin.fullName, item.admin.email, item.targetId ?? "", item.action].some((value) => value.toLowerCase().includes(keyword)));
-  }, [logs.data?.items, search]);
+    return (logs.data?.items ?? []).filter((item) => {
+      if (targetType && item.targetType !== targetType) return false;
+      return !keyword || [item.admin.fullName, item.admin.email, item.targetId ?? "", item.action, item.targetType].some((value) => value.toLowerCase().includes(keyword));
+    });
+  }, [logs.data?.items, search, targetType]);
   const activeAdmins = new Set(visibleItems.map((item) => item.admin.email)).size;
 
   function exportCsv() {
@@ -57,7 +62,7 @@ export default function AdminLogsPage() {
           <option value="PLAN_">Gói dịch vụ</option>
           <option value="PAYMENT_">Thanh toán</option>
         </select>
-        <select className={adminInputClass} defaultValue="">
+        <select value={targetType} onChange={(event) => { setTargetType(event.target.value); setPage(1); }} className={adminInputClass}>
           <option value="">Tất cả đối tượng</option>
           <option value="USER">USER</option>
           <option value="PLAN">PLAN</option>
@@ -79,7 +84,16 @@ export default function AdminLogsPage() {
                   <td className="px-4 py-3.5 font-semibold tracking-wide">{item.targetType}</td>
                   <td className="px-4 py-3.5"><span className="rounded-md bg-slate-600 px-2.5 py-1 font-mono text-xs text-white">{item.targetId ? `#${item.targetId.slice(0, 8)}` : "-"}</span></td>
                   <td className="px-4 py-3.5">{new Date(item.createdAt).toLocaleString("vi-VN")}</td>
-                  <td className="px-4 py-3.5 text-center"><Eye className="mx-auto" size={18} /></td>
+                  <td className="px-4 py-3.5 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLog(item)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#eef2ff] hover:text-[#0b4dcc]"
+                      title="Xem chi tiết"
+                    >
+                      <Eye size={18} />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {!logs.isLoading && !visibleItems.length && <tr><td colSpan={6}><AdminEmpty>Chưa có nhật ký quản trị.</AdminEmpty></td></tr>}
@@ -104,6 +118,31 @@ export default function AdminLogsPage() {
           </article>
         ))}
       </div>
+
+      {selectedLog && (
+        <article className={`${adminPanelClass} mt-5 p-5`}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="text-lg font-bold">Chi tiết nhật ký</h3>
+              <p className="mt-1 text-sm text-slate-500">Bản ghi `{selectedLog.id}`</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => selectedLog.targetId && navigator.clipboard.writeText(selectedLog.targetId)}
+              disabled={!selectedLog.targetId}
+              className="inline-flex h-10 items-center rounded-lg border border-[#bcc5df] px-4 text-sm font-semibold text-[#0b4dcc] disabled:cursor-not-allowed disabled:text-slate-400"
+            >
+              Sao chép target ID
+            </button>
+          </div>
+          <div className="mt-4 grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Admin</p><p className="mt-2 font-semibold">{selectedLog.admin.fullName}</p><p className="text-slate-500">{selectedLog.admin.email}</p></div>
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Thao tác</p><p className="mt-2 font-semibold">{selectedLog.action}</p></div>
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Đối tượng</p><p className="mt-2 font-semibold">{selectedLog.targetType}</p></div>
+            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Thời gian</p><p className="mt-2 font-semibold">{new Date(selectedLog.createdAt).toLocaleString("vi-VN")}</p></div>
+          </div>
+        </article>
+      )}
     </section>
   );
 }

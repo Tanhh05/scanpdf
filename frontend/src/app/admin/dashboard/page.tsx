@@ -7,12 +7,14 @@ import {
   CircleDollarSign,
   Cpu,
   EllipsisVertical,
+  Eye,
   Server,
   Star,
   UserPlus,
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 import { AdminAvatar, AdminEmpty, AdminStatusBadge, adminPanelClass } from "@/components/admin/admin-ui";
 import { adminApi } from "@/services/api";
 
@@ -46,6 +48,7 @@ function formatMoney(value: number) {
 }
 
 export default function AdminDashboardPage() {
+  const [selectedUser, setSelectedUser] = useState<RecentUser | null>(null);
   const metrics = useQuery<Metrics>({
     queryKey: ["admin-dashboard"],
     queryFn: async () => (await adminApi.get("/admin/dashboard")).data,
@@ -197,7 +200,16 @@ export default function AdminDashboardPage() {
                   <td className="px-5 py-4"><AdminStatusBadge status={user.status} /></td>
                   <td className="px-5 py-4">{new Date(user.createdAt).toLocaleDateString("vi-VN")}</td>
                   <td className="px-5 py-4 font-medium text-[#0b4dcc]">{user.subscriptions[0]?.plan.name ?? "Free"}</td>
-                  <td className="px-5 py-4 text-center"><EllipsisVertical className="mx-auto" size={18} /></td>
+                  <td className="px-5 py-4 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedUser(user)}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#eef2ff] hover:text-[#0b4dcc]"
+                      title="Xem nhanh"
+                    >
+                      <EllipsisVertical size={18} />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {!recentUsers.isLoading && !recentUsers.data?.items.length && <tr><td colSpan={5}><AdminEmpty>Chưa có người dùng.</AdminEmpty></td></tr>}
@@ -205,6 +217,47 @@ export default function AdminDashboardPage() {
           </table>
         </div>
       </article>
+
+      {selectedUser && (
+        <article className={`${adminPanelClass} mt-5 p-5`}>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-center gap-3">
+              <AdminAvatar name={selectedUser.fullName} />
+              <div>
+                <h3 className="text-lg font-bold">{selectedUser.fullName}</h3>
+                <p className="text-sm text-slate-500">{selectedUser.email}</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(selectedUser.email)}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#bcc5df] px-4 text-sm font-semibold text-[#0b4dcc] hover:bg-[#eef2ff]"
+              >
+                <Eye size={17} />
+                Sao chép email
+              </button>
+              <Link href="/admin/users" className="inline-flex h-10 items-center rounded-lg bg-[#0b4dcc] px-4 text-sm font-semibold text-white">
+                Mở trang người dùng
+              </Link>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+            <div className="rounded-lg bg-[#f4f6fb] p-4">
+              <p className="text-slate-500">Trạng thái</p>
+              <div className="mt-2"><AdminStatusBadge status={selectedUser.status} /></div>
+            </div>
+            <div className="rounded-lg bg-[#f4f6fb] p-4">
+              <p className="text-slate-500">Ngày tham gia</p>
+              <p className="mt-2 font-semibold">{new Date(selectedUser.createdAt).toLocaleString("vi-VN")}</p>
+            </div>
+            <div className="rounded-lg bg-[#f4f6fb] p-4">
+              <p className="text-slate-500">Gói hiện tại</p>
+              <p className="mt-2 font-semibold text-[#0b4dcc]">{selectedUser.subscriptions[0]?.plan.name ?? "Free"}</p>
+            </div>
+          </div>
+        </article>
+      )}
     </section>
   );
 }
