@@ -7,6 +7,29 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: user
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: scanpdf
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U user -d scanpdf"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -17,15 +40,23 @@ jobs:
       - run: npm run db:generate
         env:
           DATABASE_URL: postgresql://user:password@localhost:5432/scanpdf
+          REDIS_URL: redis://localhost:6379
+      - run: npm run db:deploy -w backend
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/scanpdf
+          REDIS_URL: redis://localhost:6379
       - run: npm run lint -w backend
         env:
           DATABASE_URL: postgresql://user:password@localhost:5432/scanpdf
           JWT_SECRET: ci-secret-at-least-16-characters
+          REDIS_URL: redis://localhost:6379
       - run: npm run build -w backend
         env:
           DATABASE_URL: postgresql://user:password@localhost:5432/scanpdf
           JWT_SECRET: ci-secret-at-least-16-characters
+          REDIS_URL: redis://localhost:6379
       - run: npm run test -w backend
         env:
           DATABASE_URL: postgresql://user:password@localhost:5432/scanpdf
           JWT_SECRET: ci-secret-at-least-16-characters
+          REDIS_URL: redis://localhost:6379
