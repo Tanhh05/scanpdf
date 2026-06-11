@@ -86,8 +86,8 @@ export function ToolUploader({
 
   if (!token) {
     return (
-      <div className="mx-auto flex min-h-[560px] max-w-6xl flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-[0_18px_60px_rgba(15,23,42,0.06)]">
-        <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-indigo-50 text-indigo-600">
+      <div className="mx-auto flex min-h-[560px] max-w-6xl flex-col items-center justify-center rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-[0_18px_60px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+        <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
           <FileUp size={38} />
         </span>
         <h2 className="mt-6 text-2xl font-black text-slate-950">Đăng nhập để tải file lên</h2>
@@ -99,9 +99,9 @@ export function ToolUploader({
 
   const status = conversion.data?.status;
   return (
-    <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.07)]">
-      <label className="m-4 flex min-h-[470px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-indigo-200 bg-gradient-to-b from-indigo-50/80 to-blue-50/50 p-8 text-center transition hover:border-indigo-400 hover:from-indigo-50 hover:to-blue-50 sm:m-6">
-        <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white text-[#08275f] shadow-[0_12px_35px_rgba(79,70,229,0.12)]">
+    <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.07)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+      <label className="m-4 flex min-h-[470px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-indigo-200 bg-gradient-to-b from-indigo-50/80 to-blue-50/50 p-8 text-center transition hover:border-indigo-400 hover:from-indigo-50 hover:to-blue-50 dark:border-indigo-500/45 dark:from-slate-800 dark:to-slate-900 dark:hover:border-indigo-400 dark:hover:from-slate-800 dark:hover:to-slate-800 sm:m-6">
+        <span className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white text-[#08275f] shadow-[0_12px_35px_rgba(79,70,229,0.12)] dark:bg-slate-950 dark:text-indigo-300 dark:shadow-none">
           <CloudUpload size={42} strokeWidth={1.6} />
         </span>
         <h2 className="mt-6 text-2xl font-black text-slate-950">
@@ -117,13 +117,13 @@ export function ToolUploader({
           <span className="flex items-center border-l border-white/25 px-3.5"><ChevronDown size={18} /></span>
         </span>
         {files.length > 0 && (
-          <p className="mt-5 max-w-2xl truncate rounded-lg bg-white/80 px-4 py-2 text-sm font-bold text-slate-700 shadow-sm">
+          <p className="mt-5 max-w-2xl truncate rounded-lg bg-white/80 px-4 py-2 text-sm font-bold text-slate-700 shadow-sm dark:bg-slate-950/80 dark:text-slate-200 dark:shadow-none">
             {files.map((file) => file.name).join(", ")}
           </p>
         )}
         <div className="mt-6 flex flex-wrap justify-center gap-2 text-[11px] font-black">
           {accept.split(",").map((format) => (
-            <span key={format} className="rounded-full border border-indigo-100 bg-white px-3 py-1 uppercase text-indigo-600">
+            <span key={format} className="rounded-full border border-indigo-100 bg-white px-3 py-1 uppercase text-indigo-600 dark:border-indigo-500/40 dark:bg-slate-950 dark:text-indigo-300">
               {format.replace(".", "")}
             </span>
           ))}
@@ -133,7 +133,7 @@ export function ToolUploader({
       </label>
 
       {(fields.length > 0 || Boolean(teams.data?.length)) && !status && (
-        <div className="grid gap-4 border-t border-slate-100 bg-white px-6 py-5 sm:grid-cols-2">
+        <div className="grid gap-4 border-t border-slate-100 bg-white px-6 py-5 dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-2">
           {Boolean(teams.data?.length) && (
             <label className="block text-sm font-bold text-slate-800">
               Workspace
@@ -173,7 +173,7 @@ export function ToolUploader({
       )}
 
       {!status && (
-        <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 bg-white px-6 py-5 sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 bg-white px-6 py-5 dark:border-slate-800 dark:bg-slate-900 sm:flex-row">
           <p className="text-sm text-slate-500">
             {files.length < minimumFiles
               ? `Vui lòng chọn ít nhất ${minimumFiles} file để tiếp tục`
@@ -185,18 +185,18 @@ export function ToolUploader({
         </div>
       )}
       {(status === "QUEUED" || status === "PROCESSING") && (
-        <div className="flex items-center justify-center gap-3 border-t border-slate-100 bg-blue-50 p-5 font-semibold text-blue-700">
+        <div className="flex items-center justify-center gap-3 border-t border-slate-100 bg-blue-50 p-5 font-semibold text-blue-700 dark:border-slate-800 dark:bg-blue-950/35 dark:text-blue-300">
           <LoaderCircle className="animate-spin" /> {status === "QUEUED" ? "Đang chờ xử lý..." : "Đang chuyển đổi..."}
         </div>
       )}
       {status === "COMPLETED" && (
-        <div className="border-t border-slate-100 bg-emerald-50 p-5 text-center">
+        <div className="border-t border-slate-100 bg-emerald-50 p-5 text-center dark:border-slate-800 dark:bg-emerald-950/35">
           <p className="flex items-center justify-center gap-2 font-bold text-emerald-700"><CheckCircle2 /> Hoàn tất</p>
           <button onClick={download} className="btn-primary mt-4"><Download size={18} /> Tải file</button>
         </div>
       )}
       {(status === "FAILED" || upload.isError) && (
-        <p className="flex items-center justify-center gap-2 border-t border-red-100 bg-red-50 p-5 text-red-700">
+        <p className="flex items-center justify-center gap-2 border-t border-red-100 bg-red-50 p-5 text-red-700 dark:border-red-900/70 dark:bg-red-950/35 dark:text-red-300">
           <XCircle /> {conversion.data?.errorMessage || (axios.isAxiosError(upload.error) ? upload.error.response?.data?.message : "Chuyển đổi thất bại")}
         </p>
       )}

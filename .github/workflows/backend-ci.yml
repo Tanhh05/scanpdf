@@ -26,3 +26,6 @@ jobs:
           DATABASE_URL: postgresql://user:password@localhost:5432/scanpdf
           JWT_SECRET: ci-secret-at-least-16-characters
       - run: npm run test -w backend
+        env:
+          DATABASE_URL: postgresql://user:password@localhost:5432/scanpdf
+          JWT_SECRET: ci-secret-at-least-16-characters

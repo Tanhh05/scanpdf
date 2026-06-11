@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import {
+  Archive,
   ArrowRight,
   Bot,
   Check,
@@ -11,14 +12,20 @@ import {
   Download,
   Droplet,
   Edit3,
+  Eraser,
   FileImage,
   FileText,
+  Film,
+  FileVideo,
+  Files,
   FolderOpen,
   Globe2,
   Hash,
+  ImageDown,
   LockKeyhole,
   LockKeyholeOpen,
   PenLine,
+  PlaySquare,
   RotateCw,
   ScanText,
   Scissors,
@@ -26,6 +33,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   UploadCloud,
+  WandSparkles,
   Zap,
 } from "lucide-react";
 import Image from "next/image";
@@ -35,6 +43,24 @@ import { formatPlanPrice, isFreePlan, isRecommendedPlan, planDescription, planFe
 import { api } from "@/services/api";
 
 const popularTools = [
+  {
+    name: "TikTok Downloader",
+    description: "Tải video TikTok không watermark, MP3, ảnh và slideshow từ URL công khai.",
+    href: "/tiktok-downloader",
+    icon: PlaySquare,
+  },
+  {
+    name: "Instagram Downloader",
+    description: "Tải Reels, Story, post ảnh và carousel Instagram chỉ bằng một link.",
+    href: "/instagram-downloader",
+    icon: ImageDown,
+  },
+  {
+    name: "AI Remove Watermark Ảnh",
+    description: "Xóa logo, chữ đè và watermark khỏi ảnh, đồng thời fill lại nền tự nhiên.",
+    href: "/remove-watermark-image",
+    icon: Eraser,
+  },
   {
     name: "Nén PDF",
     description: "Giảm dung lượng tệp mà vẫn giữ nguyên chất lượng hiển thị tốt nhất.",
@@ -62,6 +88,21 @@ const popularTools = [
 ];
 
 const allTools = [
+  ["TikTok Downloader", "Tải video TikTok không watermark, MP3, ảnh và slideshow.", "/tiktok-downloader", PlaySquare],
+  ["Facebook Downloader", "Tải Reels và video Facebook công khai chất lượng cao.", "/facebook-downloader", PlaySquare],
+  ["Instagram Downloader", "Tải Reels, Story, post ảnh và carousel Instagram.", "/instagram-downloader", ImageDown],
+  ["YouTube Downloader", "Tải video MP4 và MP3 từ YouTube.", "/youtube-downloader", PlaySquare],
+  ["AI Remove Watermark Ảnh", "Xóa logo, chữ đè và watermark khỏi ảnh.", "/remove-watermark-image", Eraser],
+  ["Remove Watermark Video", "Xử lý watermark TikTok, logo góc và subtitle cứng.", "/remove-watermark-video", Film],
+  ["Video Compress", "Nén video để giảm dung lượng file tải lên hoặc chia sẻ.", "/tools/video-compress", Archive],
+  ["Video Convert", "Đổi MOV, AVI, MKV sang MP4.", "/tools/video-convert", FileVideo],
+  ["Video To GIF", "Chuyển video thành GIF để chia sẻ nhanh.", "/tools/video-to-gif", FileImage],
+  ["Extract Audio", "Trích xuất âm thanh từ video sang MP3.", "/tools/extract-audio", FileText],
+  ["Video Merge", "Ghép nhiều video thành một file MP4.", "/tools/video-merge", Files],
+  ["Video Trim", "Cắt đoạn video theo mốc thời gian.", "/tools/video-trim", Scissors],
+  ["Auto Subtitle", "Tạo subtitle SRT tự động và dịch sang EN hoặc VI.", "/tools/auto-subtitle-video", FileText],
+  ["AI Summary Video", "Tạo transcript và tóm tắt nội dung video.", "/tools/video-summary", WandSparkles],
+  ["Generate Shorts", "AI chọn highlight và xuất shorts từ video dài.", "/tools/generate-shorts", Film],
   ["Nén PDF", "Giảm dung lượng PDF để chia sẻ nhanh hơn.", "/tools/compress-pdf", SlidersHorizontal],
   ["Ghép PDF", "Kết hợp nhiều file PDF thành một tài liệu.", "/tools/merge-pdf", Scissors],
   ["PDF sang Word", "Chuyển PDF thành Word có thể chỉnh sửa.", "/tools/pdf-to-word", FileText],
@@ -111,10 +152,12 @@ export default function HomePage() {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-[#f4f6ff] pb-24 pt-16 text-center sm:pb-28 sm:pt-24">
-        <div className="absolute left-1/2 top-0 h-[520px] w-[760px] -translate-x-1/2 rounded-full bg-indigo-200/30 blur-3xl" />
+      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#eef2ff_0%,#f8fbff_45%,#ffffff_100%)] pb-24 pt-16 text-center dark:bg-[linear-gradient(180deg,#0b1120_0%,#0f172a_45%,#111827_100%)] sm:pb-28 sm:pt-24">
+        <div className="hero-orb hero-orb-left" />
+        <div className="hero-orb hero-orb-right" />
+        <div className="absolute left-1/2 top-0 h-[520px] w-[760px] -translate-x-1/2 rounded-full bg-indigo-200/20 blur-3xl dark:bg-indigo-500/10" />
         <div className="container-page relative">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-black text-indigo-600 shadow-sm ring-1 ring-indigo-100">
+          <span className="glass-panel inline-flex items-center gap-2 rounded-full border border-white/80 px-4 py-2 text-xs font-black text-indigo-600 shadow-sm ring-1 ring-indigo-100/70 dark:border-slate-700 dark:text-indigo-300 dark:ring-slate-700">
             <Sparkles size={14} /> Mới: Trò chuyện với tài liệu PDF bằng AI
           </span>
           <h1 className="mx-auto mt-8 max-w-4xl text-5xl font-black leading-[1.05] tracking-[-0.025em] text-slate-950 sm:text-6xl lg:text-7xl">
@@ -126,14 +169,14 @@ export default function HomePage() {
             bảo mật và được hỗ trợ bởi trí tuệ nhân tạo.
           </p>
 
-          <div className="mx-auto mt-11 max-w-3xl rounded-[28px] border-2 border-dashed border-indigo-300 bg-white/55 p-5 shadow-[0_22px_70px_rgba(91,92,240,0.12)] backdrop-blur sm:p-8">
-            <div className="rounded-[22px] bg-[#f0f1ff] px-6 py-12">
-              <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-200">
+          <div className="mx-auto mt-11 max-w-3xl rounded-[28px] border-2 border-dashed border-indigo-300 bg-white/55 p-5 shadow-[0_22px_70px_rgba(91,92,240,0.12)] backdrop-blur dark:border-indigo-500/45 dark:bg-slate-900/70 sm:p-8">
+            <div className="rounded-[22px] bg-[#f0f1ff] px-6 py-12 dark:bg-slate-800">
+              <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none">
                 <UploadCloud size={28} />
               </span>
               <h2 className="mt-7 text-xl font-black text-slate-950">Tải tệp PDF lên tại đây</h2>
               <p className="mt-2 text-sm text-slate-500">hoặc kéo và thả tài liệu vào vùng này</p>
-              <Link href="/tools/word-to-pdf" className="mt-6 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-7 py-3 text-sm font-black text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700">
+              <Link href="/tools/word-to-pdf" className="mt-6 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-7 py-3 text-sm font-black text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700 dark:shadow-none">
                 Chọn tệp từ thiết bị
               </Link>
               <div className="mt-5 flex items-center justify-center gap-4 text-slate-500">
@@ -146,7 +189,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="tools" className="bg-white py-16 sm:py-20">
+      <section id="tools" className="bg-white py-16 dark:bg-slate-950 sm:py-20">
         <div className="container-page">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -167,12 +210,8 @@ export default function HomePage() {
 
           <div id="all-tools" className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {displayedTools.map(([name, description, href, Icon]) => (
-              <Link
-                key={href}
-                href={href}
-                className="group rounded-2xl border border-slate-200 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
-              >
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+              <Link key={href} href={href} className="group rounded-[26px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-7 shadow-sm transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] dark:hover:border-indigo-500/60 dark:hover:shadow-none">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
                   <Icon size={20} />
                 </span>
                 <h3 className="mt-7 text-xl font-black text-slate-950">{name}</h3>
@@ -188,7 +227,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setShowAllTools(false)}
-                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600"
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 shadow-sm transition hover:border-indigo-200 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-indigo-500 dark:hover:text-indigo-300"
               >
                 Thu gọn <ChevronUp size={16} />
               </button>
@@ -197,10 +236,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#f4f6ff] py-16 sm:py-24">
+      <section className="bg-[#f4f6ff] py-16 dark:bg-slate-950 sm:py-24">
         <div className="container-page grid items-center gap-14 lg:grid-cols-2">
           <div className="relative">
-            <div className="overflow-hidden rounded-2xl bg-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
+            <div className="overflow-hidden rounded-[30px] bg-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
               <Image
                 src="/scanpdf-logo.png"
                 alt="AI PDF ScanPDF"
@@ -209,7 +248,7 @@ export default function HomePage() {
                 className="aspect-[1.1] w-full object-contain p-12 opacity-90"
               />
             </div>
-            <div className="absolute -bottom-8 right-10 rounded-2xl bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+            <div className="absolute -bottom-8 right-10 rounded-[24px] bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.16)] dark:bg-slate-900 dark:shadow-none">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white">
                   <Zap size={17} />
@@ -225,7 +264,7 @@ export default function HomePage() {
           </div>
 
           <div>
-            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-indigo-600">
+            <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
               AI PDF Assistant
             </span>
             <h2 className="mt-5 max-w-xl text-4xl font-black leading-tight tracking-[-0.018em] text-slate-950">
@@ -255,7 +294,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#eef3ff] py-16 sm:py-24">
+      <section className="bg-[#eef3ff] py-16 dark:bg-slate-900 sm:py-24">
         <div className="container-page">
           <div className="mx-auto max-w-2xl text-center">
             <h2 className="text-4xl font-black tracking-[-0.018em] text-slate-950">Gói dịch vụ linh hoạt</h2>
@@ -271,10 +310,10 @@ export default function HomePage() {
               return (
                 <article
                   key={plan.id}
-                  className={`relative rounded-2xl border bg-white p-8 ${
+                  className={`relative rounded-2xl border bg-white p-8 dark:bg-slate-950 ${
                     recommended
-                      ? "border-indigo-600 shadow-[0_22px_60px_rgba(91,92,240,0.2)]"
-                      : "border-slate-200"
+                      ? "border-indigo-600 shadow-[0_22px_60px_rgba(91,92,240,0.2)] dark:shadow-none"
+                      : "border-slate-200 dark:border-slate-800"
                   }`}
                 >
                   {recommended && (
@@ -300,7 +339,7 @@ export default function HomePage() {
                     href={free ? "/register" : "/pricing"}
                     className={recommended
                       ? "mt-9 inline-flex w-full items-center justify-center rounded-lg bg-indigo-600 px-5 py-3 text-sm font-black text-white transition hover:bg-indigo-700"
-                      : "mt-9 inline-flex w-full items-center justify-center rounded-lg border border-slate-300 px-5 py-3 text-sm font-black text-slate-900 transition hover:bg-slate-50"
+                      : "mt-9 inline-flex w-full items-center justify-center rounded-lg border border-slate-300 px-5 py-3 text-sm font-black text-slate-900 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
                     }
                   >
                     {free ? "Bắt đầu miễn phí" : recommended ? "Nâng cấp ngay" : "Xem chi tiết"}
@@ -311,7 +350,7 @@ export default function HomePage() {
           </div>
           {plans.isLoading && (
             <div className="mt-12 grid gap-6 lg:grid-cols-3">
-              {[0, 1, 2].map((item) => <div key={item} className="h-[430px] animate-pulse rounded-2xl bg-white/70" />)}
+              {[0, 1, 2].map((item) => <div key={item} className="h-[430px] animate-pulse rounded-2xl bg-white/70 dark:bg-slate-800" />)}
             </div>
           )}
         </div>

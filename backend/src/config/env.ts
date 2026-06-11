@@ -30,6 +30,8 @@ const schema = z.object({
   AI_PROVIDER: z.enum(["openai", "gemini"]).default("openai"),
   OPENAI_API_KEY: z.string().optional(),
   OPENAI_MODEL: z.string().default("gpt-5.2"),
+  OPENAI_IMAGE_MODEL: z.string().default("gpt-image-1"),
+  OPENAI_TRANSCRIBE_MODEL: z.string().default("gpt-4o-transcribe-diarize"),
   GEMINI_API_KEY: z.string().optional(),
   GEMINI_MODEL: z.string().default("gemini-2.0-flash"),
   SMTP_HOST: z.string().optional(),

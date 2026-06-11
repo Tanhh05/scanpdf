@@ -77,7 +77,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col bg-[#fbfaff] text-[#20263a]">
+    <div className="flex h-full flex-col bg-[#fbfaff] text-[#20263a] dark:bg-slate-950 dark:text-slate-100">
       <div className="flex h-[76px] items-center px-5">
         <BrandLogo compact admin />
       </div>
@@ -92,8 +92,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               onClick={() => setMobileOpen(false)}
               className={`flex h-11 items-center gap-3 rounded-lg px-4 text-sm font-medium transition ${
                 active
-                  ? "bg-[#2f67e9] text-white shadow-[0_5px_12px_rgba(47,103,233,0.2)]"
-                  : "text-[#252b40] hover:bg-[#edf2ff] hover:text-[#0b4dcc]"
+                  ? "bg-[#2f67e9] text-white shadow-[0_5px_12px_rgba(47,103,233,0.2)] dark:bg-blue-600"
+                  : "text-[#252b40] hover:bg-[#edf2ff] hover:text-[#0b4dcc] dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
               }`}
             >
               <item.icon size={19} strokeWidth={2} />
@@ -103,17 +103,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         })}
       </nav>
 
-      <div className="border-t border-[#d8dceb] px-3 pb-4 pt-3">
-        <Link href="/admin/users" className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#edf2ff]">
+      <div className="border-t border-[#d8dceb] px-3 pb-4 pt-3 dark:border-slate-800">
+        <Link href="/admin/users" className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#edf2ff] dark:hover:bg-slate-900">
           <CircleUserRound size={19} /> Hồ sơ
         </Link>
-        <Link href="/admin/plans" className="mt-1 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#edf2ff]">
+        <Link href="/admin/plans" className="mt-1 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#edf2ff] dark:hover:bg-slate-900">
           <Settings size={19} /> Cài đặt
         </Link>
         <button
           type="button"
           onClick={handleLogout}
-          className="mt-1 flex w-full items-center gap-3 rounded-lg bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100"
+          className="mt-1 flex w-full items-center gap-3 rounded-lg bg-red-50 px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100 dark:bg-red-950/30 dark:text-red-300 dark:hover:bg-red-950/50"
         >
           <LogOut size={19} /> Đăng xuất
         </button>
@@ -122,8 +122,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <main className="min-h-screen bg-[#f9f8ff] text-[#111527]">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-[#cfd4e4] lg:block">
+    <main className="min-h-screen bg-[#f9f8ff] text-[#111527] dark:bg-slate-950 dark:text-slate-100">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-[#cfd4e4] dark:border-slate-800 lg:block">
         {sidebar}
       </aside>
 
@@ -143,19 +143,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <header className="h-[72px] px-4 sm:px-6 lg:px-7">
           <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
-              <button type="button" onClick={() => setMobileOpen(true)} className="rounded-xl border border-[#cfd4e4] bg-white p-2.5 lg:hidden">
+              <button type="button" onClick={() => setMobileOpen(true)} className="rounded-xl border border-[#cfd4e4] bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900 lg:hidden">
                 <Menu size={21} />
               </button>
               <h1 className="truncate text-[22px] font-bold tracking-[-0.02em]">{pageTitles[pathname] ?? "ScanPDF Admin"}</h1>
             </div>
             <div className="flex items-center gap-3 sm:gap-5">
-              <ThemeToggle className="!border-0 !bg-transparent hover:!bg-[#edf2ff]" />
-              <span className="hidden h-8 w-px bg-[#cfd4e4] sm:block" />
+              <ThemeToggle className="!border-0 !bg-transparent hover:!bg-[#edf2ff] dark:hover:!bg-slate-800" />
+              <span className="hidden h-8 w-px bg-[#cfd4e4] dark:bg-slate-800 sm:block" />
               <div className="hidden text-right sm:block">
                 <p className="max-w-40 truncate text-sm font-semibold">{user?.fullName || "Quản trị viên"}</p>
-                <p className="text-[11px] uppercase tracking-wide text-[#586075]">Super Admin</p>
+                <p className="text-[11px] uppercase tracking-wide text-[#586075] dark:text-slate-400">Super Admin</p>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-[#0b4dcc] bg-[#dce6ff] text-xs font-bold text-[#0b4dcc]">
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-[#0b4dcc] bg-[#dce6ff] text-xs font-bold text-[#0b4dcc] dark:border-blue-400 dark:bg-slate-900 dark:text-blue-300">
                 {(user?.fullName || user?.email || "A").charAt(0).toUpperCase()}
               </div>
             </div>
@@ -165,7 +165,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto min-h-[calc(100vh-124px)] max-w-[1440px] px-4 pb-8 sm:px-6 lg:px-7">
           {children}
         </div>
-        <footer className="border-t border-[#d8dceb] px-6 py-4 text-center text-[11px] text-[#737b90] lg:text-left">
+        <footer className="border-t border-[#d8dceb] px-6 py-4 text-center text-[11px] text-[#737b90] dark:border-slate-800 dark:text-slate-400 lg:text-left">
           <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-3">
             <span>© 2026 ScanPDF Admin. All rights reserved.</span>
             <span>Version 2.1.0-stable</span>

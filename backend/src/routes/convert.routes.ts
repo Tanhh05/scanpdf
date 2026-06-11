@@ -31,6 +31,26 @@ const signatureSchema = z.object({
   signer: z.string().trim().min(2).max(80),
   position: z.enum(["bottom-left", "bottom-right"]).default("bottom-right"),
 });
+const removeWatermarkImageSchema = z.object({
+  mode: z.enum(["auto", "logo", "text", "watermark"]).default("auto"),
+  details: z.string().trim().max(240).optional().default(""),
+});
+const removeWatermarkVideoSchema = z.object({
+  preset: z.enum(["tiktok-dual-corner", "top-left", "top-right", "bottom-left", "bottom-right", "bottom-center"]).default("tiktok-dual-corner"),
+  watermarkWidthPercent: z.coerce.number().min(5).max(40).default(18),
+  watermarkHeightPercent: z.coerce.number().min(5).max(30).default(12),
+  subtitleStripPercent: z.coerce.number().min(0).max(30).default(0),
+});
+const trimVideoSchema = z.object({
+  startSeconds: z.coerce.number().min(0),
+  endSeconds: z.coerce.number().positive(),
+}).refine((value) => value.endSeconds > value.startSeconds, {
+  message: "endSeconds phải lớn hơn startSeconds",
+  path: ["endSeconds"],
+});
+const autoSubtitleVideoSchema = z.object({
+  translateTo: z.enum(["none", "vi", "en"]).default("none"),
+});
 
 const tools: Record<string, {
   tool: ConversionTool;
@@ -38,22 +58,71 @@ const tools: Record<string, {
   multiple?: boolean;
   parseOptions?: (body: unknown) => Record<string, unknown>;
 }> = {
-  "word-to-pdf": { tool: "WORD_TO_PDF", extensions: [".doc", ".docx", ".odt"] },
-  "pdf-to-word": { tool: "PDF_TO_WORD", extensions: [".pdf"] },
-  "merge-pdf": { tool: "MERGE_PDF", extensions: [".pdf"], multiple: true },
-  "compress-pdf": { tool: "COMPRESS_PDF", extensions: [".pdf"] },
-  "jpg-to-pdf": { tool: "JPG_TO_PDF", extensions: [".jpg", ".jpeg", ".png"], multiple: true },
-  "pdf-to-jpg": { tool: "PDF_TO_JPG", extensions: [".pdf"] },
-  "ocr-pdf": { tool: "OCR_PDF", extensions: [".pdf"] },
-  "split-pdf": { tool: "SPLIT_PDF", extensions: [".pdf"] },
-  "rotate-pdf": { tool: "ROTATE_PDF", extensions: [".pdf"], parseOptions: (body) => rotateSchema.parse(body) },
-  "delete-pdf-pages": { tool: "DELETE_PDF_PAGES", extensions: [".pdf"], parseOptions: (body) => deletePagesSchema.parse(body) },
-  "watermark-pdf": { tool: "WATERMARK_PDF", extensions: [".pdf"], parseOptions: (body) => watermarkSchema.parse(body) },
-  "reorder-pdf": { tool: "REORDER_PDF", extensions: [".pdf"], parseOptions: (body) => reorderPagesSchema.parse(body) },
-  "add-page-numbers": { tool: "ADD_PAGE_NUMBERS", extensions: [".pdf"], parseOptions: (body) => pageNumbersSchema.parse(body) },
-  "protect-pdf": { tool: "PROTECT_PDF", extensions: [".pdf"], parseOptions: (body) => passwordSchema.parse(body) },
-  "unlock-pdf": { tool: "UNLOCK_PDF", extensions: [".pdf"], parseOptions: (body) => passwordSchema.parse(body) },
-  "sign-pdf": { tool: "SIGN_PDF", extensions: [".pdf"], parseOptions: (body) => signatureSchema.parse(body) },
+  "word-to-pdf": { tool: "WORD_TO_PDF" as ConversionTool, extensions: [".doc", ".docx", ".odt"] },
+  "pdf-to-word": { tool: "PDF_TO_WORD" as ConversionTool, extensions: [".pdf"] },
+  "merge-pdf": { tool: "MERGE_PDF" as ConversionTool, extensions: [".pdf"], multiple: true },
+  "compress-pdf": { tool: "COMPRESS_PDF" as ConversionTool, extensions: [".pdf"] },
+  "jpg-to-pdf": { tool: "JPG_TO_PDF" as ConversionTool, extensions: [".jpg", ".jpeg", ".png"], multiple: true },
+  "pdf-to-jpg": { tool: "PDF_TO_JPG" as ConversionTool, extensions: [".pdf"] },
+  "ocr-pdf": { tool: "OCR_PDF" as ConversionTool, extensions: [".pdf"] },
+  "split-pdf": { tool: "SPLIT_PDF" as ConversionTool, extensions: [".pdf"] },
+  "rotate-pdf": { tool: "ROTATE_PDF" as ConversionTool, extensions: [".pdf"], parseOptions: (body) => rotateSchema.parse(body) },
+  "delete-pdf-pages": { tool: "DELETE_PDF_PAGES" as ConversionTool, extensions: [".pdf"], parseOptions: (body) => deletePagesSchema.parse(body) },
+  "watermark-pdf": { tool: "WATERMARK_PDF" as ConversionTool, extensions: [".pdf"], parseOptions: (body) => watermarkSchema.parse(body) },
+  "reorder-pdf": { tool: "REORDER_PDF" as ConversionTool, extensions: [".pdf"], parseOptions: (body) => reorderPagesSchema.parse(body) },
+  "add-page-numbers": { tool: "ADD_PAGE_NUMBERS" as ConversionTool, extensions: [".pdf"], parseOptions: (body) => pageNumbersSchema.parse(body) },
+  "protect-pdf": { tool: "PROTECT_PDF" as ConversionTool, extensions: [".pdf"], parseOptions: (body) => passwordSchema.parse(body) },
+  "unlock-pdf": { tool: "UNLOCK_PDF" as ConversionTool, extensions: [".pdf"], parseOptions: (body) => passwordSchema.parse(body) },
+  "sign-pdf": { tool: "SIGN_PDF" as ConversionTool, extensions: [".pdf"], parseOptions: (body) => signatureSchema.parse(body) },
+  "remove-watermark-image": {
+    tool: "REMOVE_WATERMARK_IMAGE" as ConversionTool,
+    extensions: [".jpg", ".jpeg", ".png", ".webp"],
+    parseOptions: (body) => removeWatermarkImageSchema.parse(body),
+  },
+  "remove-watermark-video": {
+    tool: "REMOVE_WATERMARK_VIDEO" as ConversionTool,
+    extensions: [".mp4", ".mov", ".mkv", ".avi", ".webm"],
+    parseOptions: (body) => removeWatermarkVideoSchema.parse(body),
+  },
+  "video-compress": {
+    tool: "VIDEO_COMPRESS" as ConversionTool,
+    extensions: [".mp4", ".mov", ".mkv", ".avi", ".webm"],
+  },
+  "video-convert": {
+    tool: "VIDEO_CONVERT" as ConversionTool,
+    extensions: [".mp4", ".mov", ".mkv", ".avi", ".webm"],
+  },
+  "video-to-gif": {
+    tool: "VIDEO_TO_GIF" as ConversionTool,
+    extensions: [".mp4", ".mov", ".mkv", ".avi", ".webm"],
+  },
+  "extract-audio": {
+    tool: "EXTRACT_AUDIO" as ConversionTool,
+    extensions: [".mp4", ".mov", ".mkv", ".avi", ".webm"],
+  },
+  "video-merge": {
+    tool: "VIDEO_MERGE" as ConversionTool,
+    extensions: [".mp4", ".mov", ".mkv", ".avi", ".webm"],
+    multiple: true,
+  },
+  "video-trim": {
+    tool: "VIDEO_TRIM" as ConversionTool,
+    extensions: [".mp4", ".mov", ".mkv", ".avi", ".webm"],
+    parseOptions: (body) => trimVideoSchema.parse(body),
+  },
+  "auto-subtitle-video": {
+    tool: "AUTO_SUBTITLE_VIDEO" as ConversionTool,
+    extensions: [".mp4", ".mov", ".mkv", ".avi", ".webm"],
+    parseOptions: (body) => autoSubtitleVideoSchema.parse(body),
+  },
+  "video-summary": {
+    tool: "VIDEO_SUMMARY" as ConversionTool,
+    extensions: [".mp4", ".mov", ".mkv", ".avi", ".webm"],
+  },
+  "generate-shorts": {
+    tool: "GENERATE_SHORTS" as ConversionTool,
+    extensions: [".mp4", ".mov", ".mkv", ".avi", ".webm"],
+  },
 };
 
 const batchTools = new Set(["word-to-pdf", "compress-pdf", "pdf-to-jpg"]);
@@ -149,6 +218,9 @@ router.post("/:tool", requireAuthOrApiKey, upload.fields([
   if (!config.multiple && files.length !== 1) throw new HttpError(400, "Công cụ này chỉ nhận một file");
   if (config.tool === "MERGE_PDF" && files.length < 2) {
     throw new HttpError(400, "Ghép PDF cần ít nhất hai file");
+  }
+  if (config.tool === "VIDEO_MERGE" && files.length < 2) {
+    throw new HttpError(400, "Ghép video cần ít nhất hai file");
   }
 
   const invalidFile = files.find((file) => !config.extensions.includes(path.extname(file.originalname).toLowerCase()));

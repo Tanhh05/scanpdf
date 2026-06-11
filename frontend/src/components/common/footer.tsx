@@ -9,10 +9,11 @@ const footerGroups = [
   {
     title: "Công cụ phổ biến",
     links: [
+      ["TikTok Downloader", "/tiktok-downloader"],
+      ["Instagram Downloader", "/instagram-downloader"],
+      ["Remove Watermark Ảnh", "/remove-watermark-image"],
+      ["Remove Watermark Video", "/remove-watermark-video"],
       ["Nén PDF", "/tools/compress-pdf"],
-      ["Ghép PDF", "/tools/merge-pdf"],
-      ["PDF sang Word", "/tools/pdf-to-word"],
-      ["Xoay PDF", "/tools/rotate-pdf"],
     ],
   },
   {
@@ -38,10 +39,14 @@ const footerGroups = [
 export function Footer() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/tools/")) return null;
+  if (
+    pathname.startsWith("/tools/")
+    || pathname === "/remove-watermark-image"
+    || pathname === "/remove-watermark-video"
+  ) return null;
 
   return (
-    <footer className="border-t border-slate-200 bg-white">
+    <footer className="border-t border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] dark:border-slate-800 dark:bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)]">
       <div className="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.25fr_1fr_1fr_1fr]">
         <div>
           <Link href="/" className="flex items-center gap-2.5 text-xl font-black text-slate-950">
@@ -53,14 +58,14 @@ export function Footer() {
           <div className="mt-6 flex gap-3">
             <Link
               href="/#all-tools"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-indigo-50 hover:text-indigo-600"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 shadow-sm transition hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-300 dark:shadow-none dark:hover:bg-indigo-500/20 dark:hover:text-indigo-300"
               aria-label="Ngôn ngữ"
             >
               <Globe2 size={17} />
             </Link>
             <Link
               href="/dashboard/profile"
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-indigo-50 hover:text-indigo-600"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 shadow-sm transition hover:bg-indigo-50 hover:text-indigo-600 dark:bg-slate-800 dark:text-slate-300 dark:shadow-none dark:hover:bg-indigo-500/20 dark:hover:text-indigo-300"
               aria-label="Liên hệ"
             >
               <Mail size={17} />
@@ -84,7 +89,7 @@ export function Footer() {
         ))}
       </div>
 
-      <div className="border-t border-slate-200">
+      <div className="border-t border-slate-200 dark:border-slate-800">
         <div className="container-page flex flex-col gap-3 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} ScanPDF. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">

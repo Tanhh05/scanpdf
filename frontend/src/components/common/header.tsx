@@ -15,56 +15,121 @@ function getInitials(fullName?: string, email?: string) {
   return email?.slice(0, 2).toLocaleUpperCase("vi") ?? "TK";
 }
 
+const toolLinks = [
+  ["Tất cả công cụ", "/#tools"],
+  ["Nén PDF", "/tools/compress-pdf"],
+  ["PDF sang Word", "/tools/pdf-to-word"],
+  ["Word sang PDF", "/tools/word-to-pdf"],
+  ["AI PDF", "/ai/chat-pdf"],
+] as const;
+
+const downloaderLinks = [
+  ["TikTok", "/tiktok-downloader"],
+  ["YouTube", "/youtube-downloader"],
+  ["Facebook", "/facebook-downloader"],
+  ["Instagram", "/instagram-downloader"],
+] as const;
+
 export function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [downloadersOpen, setDownloadersOpen] = useState(false);
   const { user, logout } = useAuthStore();
-  if (pathname.startsWith("/tools/")) return null;
+  if (
+    pathname.startsWith("/tools/")
+    || pathname === "/remove-watermark-image"
+    || pathname === "/remove-watermark-video"
+  ) return null;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
-      <div className="container-page flex h-[72px] items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 text-xl font-black tracking-tight text-slate-950">
+    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90">
+      <div className="container-page flex h-[72px] items-center justify-between gap-5">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5 text-xl font-black tracking-tight text-slate-950 dark:text-slate-50">
           <BrandLogo />
         </Link>
-        <nav className="hidden items-center gap-8 text-sm font-bold text-slate-700 md:flex">
-          <Link href="/#tools" className="transition hover:text-indigo-600">Công cụ PDF</Link>
-          <Link href="/tools/compress-pdf" className="transition hover:text-indigo-600">Nén PDF</Link>
-          <Link href="/tools/merge-pdf" className="transition hover:text-indigo-600">Ghép PDF</Link>
-          <Link href="/ai/chat-pdf" className="transition hover:text-indigo-600">AI PDF</Link>
-          <Link href="/pricing" className="transition hover:text-indigo-600">Bảng giá</Link>
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200 lg:flex">
+          <div
+            className="relative"
+            onMouseEnter={() => setToolsOpen(true)}
+            onMouseLeave={() => setToolsOpen(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setToolsOpen((open) => !open)}
+              className="inline-flex h-10 items-center gap-1.5 px-3 transition hover:text-indigo-600 dark:hover:text-indigo-300"
+              aria-expanded={toolsOpen}
+            >
+              Công cụ <ChevronDown size={15} className={`transition ${toolsOpen ? "rotate-180" : ""}`} />
+            </button>
+            {toolsOpen && (
+              <div className="absolute left-0 top-full z-40 w-56 border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+                {toolLinks.map(([label, href]) => (
+                  <Link key={href} href={href} onClick={() => setToolsOpen(false)} className="block px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-indigo-300">
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+          <div
+            className="relative"
+            onMouseEnter={() => setDownloadersOpen(true)}
+            onMouseLeave={() => setDownloadersOpen(false)}
+          >
+            <button
+              type="button"
+              onClick={() => setDownloadersOpen((open) => !open)}
+              className="inline-flex h-10 items-center gap-1.5 px-3 transition hover:text-indigo-600 dark:hover:text-indigo-300"
+              aria-expanded={downloadersOpen}
+            >
+              Downloader <ChevronDown size={15} className={`transition ${downloadersOpen ? "rotate-180" : ""}`} />
+            </button>
+            {downloadersOpen && (
+              <div className="absolute left-0 top-full z-40 w-52 border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+                {downloaderLinks.map(([label, href]) => (
+                  <Link key={href} href={href} onClick={() => setDownloadersOpen(false)} className="block px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50 hover:text-indigo-600 dark:text-slate-200 dark:hover:bg-slate-900 dark:hover:text-indigo-300">
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+          <Link href="/remove-watermark-image" className="px-3 transition hover:text-indigo-600 dark:hover:text-indigo-300">Remove Watermark</Link>
+          <Link href="/ai/chat-pdf" className="px-3 transition hover:text-indigo-600 dark:hover:text-indigo-300">AI PDF</Link>
+          <Link href="/pricing" className="px-3 transition hover:text-indigo-600 dark:hover:text-indigo-300">Bảng giá</Link>
         </nav>
-        <div className="hidden items-center gap-4 text-sm font-bold md:flex">
+        <div className="hidden shrink-0 items-center gap-3 text-sm font-bold md:flex">
           <ThemeToggle />
           {user ? (
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setProfileOpen((open) => !open)}
-                className="flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white py-1.5 pl-1.5 pr-3 transition hover:border-slate-300 hover:bg-slate-50"
+                className="flex cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white/90 py-1.5 pl-1.5 pr-3 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:hover:bg-slate-800"
                 aria-expanded={profileOpen}
               >
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-sm font-black text-white">
                   {getInitials(user.fullName, user.email)}
                 </span>
-                <span className="max-w-32 truncate">{user.fullName}</span>
+                <span className="max-w-32 truncate dark:text-slate-100">{user.fullName}</span>
                 <ChevronDown size={15} className={`text-slate-400 transition ${profileOpen ? "rotate-180" : ""}`} />
               </button>
               {profileOpen && (
-                <div className="absolute right-0 top-[calc(100%+10px)] w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.16)]">
+                <div className="absolute right-0 top-[calc(100%+10px)] w-72 overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.16)] dark:border-slate-800 dark:bg-slate-950">
                   <div className="border-b border-slate-100 px-5 py-4">
-                    <p className="truncate text-base font-black text-slate-900">{user.fullName}</p>
+                    <p className="truncate text-base font-black text-slate-900 dark:text-slate-50">{user.fullName}</p>
                     <p className="mt-1 truncate text-xs font-normal text-slate-500">{user.email}</p>
                   </div>
                   <div className="p-2">
-                    <Link href="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-700 hover:bg-slate-50">
+                    <Link href="/dashboard" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-900">
                       <LayoutDashboard size={18} /> Tổng quan tài khoản
                     </Link>
-                    <Link href="/dashboard/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-700 hover:bg-slate-50">
+                    <Link href="/dashboard/profile" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-900">
                       <UserRound size={18} /> Hồ sơ của tôi
                     </Link>
-                    <Link href="/pricing" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-700 hover:bg-slate-50">
+                    <Link href="/pricing" onClick={() => setProfileOpen(false)} className="flex items-center gap-3 rounded-xl px-3 py-3 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-900">
                       <CreditCard size={18} /> Gói dịch vụ
                     </Link>
                   </div>
@@ -91,21 +156,23 @@ export function Header() {
           type="button"
           aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
           onClick={() => setMenuOpen((open) => !open)}
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 md:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900 md:hidden"
         >
           {menuOpen ? <X size={21} /> : <Menu size={21} />}
         </button>
       </div>
       {menuOpen && (
-        <div className="border-t border-slate-100 bg-white px-4 py-5 md:hidden">
+        <div className="border-t border-slate-100 bg-white/95 px-4 py-5 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 md:hidden">
           <nav className="mx-auto flex max-w-xl flex-col gap-1 text-sm font-bold">
             <div className="mb-2 flex items-center justify-between rounded-lg px-3 py-2">
               <span>Giao diện</span>
               <ThemeToggle />
             </div>
-            <Link href="/#tools" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Công cụ PDF</Link>
+            <Link href="/#tools" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-900">Công cụ PDF</Link>
+            <Link href="/tiktok-downloader" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">TikTok Downloader</Link>
+            <Link href="/remove-watermark-image" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Remove Watermark</Link>
+            <Link href="/instagram-downloader" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Instagram Downloader</Link>
             <Link href="/tools/compress-pdf" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Nén PDF</Link>
-            <Link href="/tools/merge-pdf" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Ghép PDF</Link>
             <Link href="/ai/chat-pdf" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">AI PDF</Link>
             <Link href="/pricing" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Bảng giá</Link>
             <div className="mt-3 border-t border-slate-100 pt-3">

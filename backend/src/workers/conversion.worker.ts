@@ -2,21 +2,27 @@ import { Worker } from "bullmq";
 import { Document, Packer, Paragraph } from "docx";
 import JSZip from "jszip";
 import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import { execFile } from "node:child_process";
 import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { promisify } from "node:util";
 import { nanoid } from "nanoid";
 import { prisma } from "../config/prisma.js";
 import { redisConnection } from "../config/queue.js";
 import { storage } from "../services/storage.service.js";
 import { sendConversionResultEmail } from "../services/mail.service.js";
+import {
+  selectVideoHighlights,
+  summarizeVideoTranscript,
+  transcribeVideoWithSpeakers,
+  translateTranscriptSegments,
+  writeSrtFile,
+  writeSummaryMarkdown,
+} from "../services/video-ai.service.js";
+import { removeImageWatermark, removeVideoWatermark } from "../services/watermark-removal.service.js";
 import { captureError, initMonitoring } from "../config/monitoring.js";
+import { runBinary } from "../utils/process.js";
 
 initMonitoring();
-
-const run = promisify(execFile);
 
 type JobData = {
   conversionId: string;
@@ -31,7 +37,7 @@ type Output = {
 };
 
 async function wordToPdf(input: string, outputDir: string, baseName: string): Promise<Output> {
-  await run("soffice", ["--headless", "--convert-to", "pdf", "--outdir", outputDir, input], {
+  await runBinary("soffice", ["--headless", "--convert-to", "pdf", "--outdir", outputDir, input], {
     timeout: 120_000,
   });
   return {
@@ -43,7 +49,7 @@ async function wordToPdf(input: string, outputDir: string, baseName: string): Pr
 
 async function pdfToWord(input: string, outputDir: string, baseName: string): Promise<Output> {
   const textFile = path.join(outputDir, "content.txt");
-  await run("pdftotext", ["-layout", input, textFile], { timeout: 120_000 });
+  await runBinary("pdftotext", ["-layout", input, textFile], { timeout: 120_000 });
   const text = await readFile(textFile, "utf8");
   const document = new Document({
     sections: [{
@@ -73,7 +79,7 @@ async function mergePdf(inputs: string[], outputDir: string): Promise<Output> {
 
 async function compressPdf(input: string, outputDir: string, baseName: string): Promise<Output> {
   const compressed = path.join(outputDir, `${baseName}-compressed.pdf`);
-  await run("gs", [
+  await runBinary("gs", [
     "-sDEVICE=pdfwrite",
     "-dCompatibilityLevel=1.4",
     "-dPDFSETTINGS=/ebook",
@@ -134,7 +140,7 @@ async function createZip(files: string[], output: string) {
 
 async function pdfToJpg(input: string, outputDir: string, baseName: string): Promise<Output> {
   const prefix = path.join(outputDir, baseName);
-  await run("pdftoppm", ["-jpeg", "-r", "150", "-jpegopt", "quality=85", input, prefix], {
+  await runBinary("pdftoppm", ["-jpeg", "-r", "150", "-jpegopt", "quality=85", input, prefix], {
     timeout: 180_000,
   });
   const images = (await readdir(outputDir))
@@ -149,7 +155,7 @@ async function pdfToJpg(input: string, outputDir: string, baseName: string): Pro
 
 async function ocrPdf(input: string, outputDir: string, baseName: string): Promise<Output> {
   const imagePrefix = path.join(outputDir, "ocr-page");
-  await run("pdftoppm", ["-png", "-r", "200", input, imagePrefix], { timeout: 180_000 });
+  await runBinary("pdftoppm", ["-png", "-r", "200", input, imagePrefix], { timeout: 180_000 });
   const images = (await readdir(outputDir))
     .filter((name) => name.startsWith("ocr-page-") && name.endsWith(".png"))
     .sort()
@@ -159,7 +165,7 @@ async function ocrPdf(input: string, outputDir: string, baseName: string): Promi
   const pagePdfs = [];
   for (const [index, image] of images.entries()) {
     const outputBase = path.join(outputDir, `ocr-result-${index + 1}`);
-    await run("tesseract", [image, outputBase, "-l", "vie+eng", "pdf"], { timeout: 180_000 });
+    await runBinary("tesseract", [image, outputBase, "-l", "vie+eng", "pdf"], { timeout: 180_000 });
     pagePdfs.push(`${outputBase}.pdf`);
   }
   const output = await mergePdf(pagePdfs, outputDir);
@@ -320,7 +326,7 @@ function getPdfPassword(value: unknown) {
 async function protectPdf(input: string, outputDir: string, baseName: string, passwordOption: unknown): Promise<Output> {
   const password = getPdfPassword(passwordOption);
   const output = path.join(outputDir, `${baseName}-protected.pdf`);
-  await run("qpdf", ["--encrypt", password, password, "256", "--", input, output], { timeout: 120_000 });
+  await runBinary("qpdf", ["--encrypt", password, password, "256", "--", input, output], { timeout: 120_000 });
   return { path: output, name: `${baseName}-protected.pdf`, contentType: "application/pdf" };
 }
 
@@ -328,7 +334,7 @@ async function unlockPdf(input: string, outputDir: string, baseName: string, pas
   const password = getPdfPassword(passwordOption);
   const output = path.join(outputDir, `${baseName}-unlocked.pdf`);
   try {
-    await run("qpdf", [`--password=${password}`, "--decrypt", input, output], { timeout: 120_000 });
+    await runBinary("qpdf", [`--password=${password}`, "--decrypt", input, output], { timeout: 120_000 });
   } catch {
     throw new Error("Không thể mở khóa PDF. Vui lòng kiểm tra lại mật khẩu");
   }
@@ -368,6 +374,158 @@ async function signPdf(
   return { path: output, name: `${baseName}-signed.pdf`, contentType: "application/pdf" };
 }
 
+async function compressVideo(input: string, outputDir: string, baseName: string): Promise<Output> {
+  const output = path.join(outputDir, `${baseName}-compressed.mp4`);
+  await runBinary("ffmpeg", [
+    "-y",
+    "-i", input,
+    "-c:v", "libx264",
+    "-preset", "veryfast",
+    "-crf", "28",
+    "-c:a", "aac",
+    "-b:a", "128k",
+    output,
+  ], { timeout: 600_000, maxBuffer: 8 * 1024 * 1024 });
+  return { path: output, name: `${baseName}-compressed.mp4`, contentType: "video/mp4" };
+}
+
+async function convertVideoToMp4(input: string, outputDir: string, baseName: string): Promise<Output> {
+  const output = path.join(outputDir, `${baseName}.mp4`);
+  await runBinary("ffmpeg", [
+    "-y",
+    "-i", input,
+    "-c:v", "libx264",
+    "-preset", "veryfast",
+    "-crf", "20",
+    "-c:a", "aac",
+    "-b:a", "160k",
+    output,
+  ], { timeout: 600_000, maxBuffer: 8 * 1024 * 1024 });
+  return { path: output, name: `${baseName}.mp4`, contentType: "video/mp4" };
+}
+
+async function videoToGif(input: string, outputDir: string, baseName: string): Promise<Output> {
+  const palette = path.join(outputDir, `${baseName}-palette.png`);
+  const output = path.join(outputDir, `${baseName}.gif`);
+  await runBinary("ffmpeg", [
+    "-y",
+    "-i", input,
+    "-vf", "fps=10,scale=720:-1:flags=lanczos,palettegen",
+    palette,
+  ], { timeout: 600_000, maxBuffer: 8 * 1024 * 1024 });
+  await runBinary("ffmpeg", [
+    "-y",
+    "-i", input,
+    "-i", palette,
+    "-lavfi", "fps=10,scale=720:-1:flags=lanczos[x];[x][1:v]paletteuse",
+    output,
+  ], { timeout: 600_000, maxBuffer: 8 * 1024 * 1024 });
+  return { path: output, name: `${baseName}.gif`, contentType: "image/gif" };
+}
+
+async function extractAudio(input: string, outputDir: string, baseName: string): Promise<Output> {
+  const output = path.join(outputDir, `${baseName}.mp3`);
+  await runBinary("ffmpeg", [
+    "-y",
+    "-i", input,
+    "-vn",
+    "-acodec", "libmp3lame",
+    "-q:a", "2",
+    output,
+  ], { timeout: 600_000, maxBuffer: 8 * 1024 * 1024 });
+  return { path: output, name: `${baseName}.mp3`, contentType: "audio/mpeg" };
+}
+
+async function mergeVideos(inputs: string[], outputDir: string): Promise<Output> {
+  if (inputs.length < 2) throw new Error("Ghép video cần ít nhất hai file");
+  const listPath = path.join(outputDir, "merge-list.txt");
+  await writeFile(listPath, inputs.map((input) => `file '${input.replace(/'/g, "'\\''")}'`).join("\n"), "utf8");
+  const output = path.join(outputDir, "merged-video.mp4");
+  await runBinary("ffmpeg", [
+    "-y",
+    "-f", "concat",
+    "-safe", "0",
+    "-i", listPath,
+    "-c:v", "libx264",
+    "-preset", "veryfast",
+    "-crf", "20",
+    "-c:a", "aac",
+    "-b:a", "160k",
+    output,
+  ], { timeout: 900_000, maxBuffer: 8 * 1024 * 1024 });
+  return { path: output, name: "scanpdf-merged-video.mp4", contentType: "video/mp4" };
+}
+
+async function trimVideo(input: string, outputDir: string, baseName: string, startOption: unknown, endOption: unknown): Promise<Output> {
+  const start = Number(startOption ?? 0);
+  const end = Number(endOption ?? 0);
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start) {
+    throw new Error("Khoảng cắt video không hợp lệ");
+  }
+  const output = path.join(outputDir, `${baseName}-trimmed.mp4`);
+  await runBinary("ffmpeg", [
+    "-y",
+    "-ss", `${start}`,
+    "-to", `${end}`,
+    "-i", input,
+    "-c:v", "libx264",
+    "-preset", "veryfast",
+    "-crf", "20",
+    "-c:a", "aac",
+    "-b:a", "160k",
+    output,
+  ], { timeout: 600_000, maxBuffer: 8 * 1024 * 1024 });
+  return { path: output, name: `${baseName}-trimmed.mp4`, contentType: "video/mp4" };
+}
+
+async function autoSubtitleVideo(input: string, outputDir: string, baseName: string, translateToOption: unknown): Promise<Output> {
+  const { segments } = await transcribeVideoWithSpeakers(input);
+  const translateTo = translateToOption === "vi" || translateToOption === "en" ? translateToOption : "none";
+  const translatedSegments = translateTo === "none" ? segments : await translateTranscriptSegments(segments, translateTo);
+  const output = path.join(outputDir, `${baseName}.srt`);
+  await writeSrtFile(output, translatedSegments);
+  return { path: output, name: `${baseName}.srt`, contentType: "application/x-subrip" };
+}
+
+async function summarizeVideo(input: string, outputDir: string, baseName: string): Promise<Output> {
+  const { segments } = await transcribeVideoWithSpeakers(input);
+  const summary = await summarizeVideoTranscript(segments);
+  const output = path.join(outputDir, `${baseName}-summary.md`);
+  await writeSummaryMarkdown(output, `${baseName} video summary`, summary, segments);
+  return { path: output, name: `${baseName}-summary.md`, contentType: "text/markdown" };
+}
+
+async function generateShorts(input: string, outputDir: string, baseName: string): Promise<Output> {
+  const { segments } = await transcribeVideoWithSpeakers(input);
+  const highlights = await selectVideoHighlights(segments);
+  const clipPaths: string[] = [];
+  const metadataPath = path.join(outputDir, `${baseName}-highlights.txt`);
+  const metadataLines: string[] = [];
+
+  for (const [index, clip] of highlights.entries()) {
+    const output = path.join(outputDir, `${baseName}-short-${index + 1}.mp4`);
+    await runBinary("ffmpeg", [
+      "-y",
+      "-ss", `${clip.start}`,
+      "-to", `${clip.end}`,
+      "-i", input,
+      "-c:v", "libx264",
+      "-preset", "veryfast",
+      "-crf", "20",
+      "-c:a", "aac",
+      "-b:a", "160k",
+      output,
+    ], { timeout: 600_000, maxBuffer: 8 * 1024 * 1024 });
+    clipPaths.push(output);
+    metadataLines.push(`Clip ${index + 1}: ${clip.title}\nStart: ${clip.start}s\nEnd: ${clip.end}s\n`);
+  }
+
+  await writeFile(metadataPath, metadataLines.join("\n"), "utf8");
+  const zipPath = path.join(outputDir, `${baseName}-shorts.zip`);
+  await createZip([...clipPaths, metadataPath], zipPath);
+  return { path: zipPath, name: `${baseName}-shorts.zip`, contentType: "application/zip" };
+}
+
 async function processConversion(
   tool: string,
   inputs: string[],
@@ -392,6 +550,17 @@ async function processConversion(
     case "PROTECT_PDF": return protectPdf(inputs[0]!, outputDir, baseName, options.password);
     case "UNLOCK_PDF": return unlockPdf(inputs[0]!, outputDir, baseName, options.password);
     case "SIGN_PDF": return signPdf(inputs[0]!, outputDir, baseName, options.signer, options.position);
+    case "REMOVE_WATERMARK_IMAGE": return removeImageWatermark(inputs[0]!, outputDir, baseName, options);
+    case "REMOVE_WATERMARK_VIDEO": return removeVideoWatermark(inputs[0]!, outputDir, baseName, options);
+    case "VIDEO_COMPRESS": return compressVideo(inputs[0]!, outputDir, baseName);
+    case "VIDEO_CONVERT": return convertVideoToMp4(inputs[0]!, outputDir, baseName);
+    case "VIDEO_TO_GIF": return videoToGif(inputs[0]!, outputDir, baseName);
+    case "EXTRACT_AUDIO": return extractAudio(inputs[0]!, outputDir, baseName);
+    case "VIDEO_MERGE": return mergeVideos(inputs, outputDir);
+    case "VIDEO_TRIM": return trimVideo(inputs[0]!, outputDir, baseName, options.startSeconds, options.endSeconds);
+    case "AUTO_SUBTITLE_VIDEO": return autoSubtitleVideo(inputs[0]!, outputDir, baseName, options.translateTo);
+    case "VIDEO_SUMMARY": return summarizeVideo(inputs[0]!, outputDir, baseName);
+    case "GENERATE_SHORTS": return generateShorts(inputs[0]!, outputDir, baseName);
     default: throw new Error(`Unsupported conversion tool: ${tool}`);
   }
 }
