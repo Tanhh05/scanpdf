@@ -141,9 +141,10 @@ function assertSupportedSourceUrl(provider: DownloaderProvider, sourceUrl: strin
     throw new HttpError(400, "URL không hợp lệ");
   }
 
+  const isTikTokShortLink = ["vt.tiktok.com", "vm.tiktok.com"].includes(hostname);
   const matchers: Record<DownloaderProvider, { ok: boolean; message: string }> = {
     tiktok: {
-      ok: pathname.includes("/video/") || pathname.includes("/photo/"),
+      ok: isTikTokShortLink || pathname.includes("/video/") || pathname.includes("/photo/"),
       message: "Hãy dán URL video hoặc slideshow TikTok cụ thể, không dùng URL hồ sơ.",
     },
     facebook: {
@@ -162,6 +163,24 @@ function assertSupportedSourceUrl(provider: DownloaderProvider, sourceUrl: strin
 
   if (!matchers[provider].ok) {
     throw new HttpError(400, matchers[provider].message);
+  }
+}
+
+const ytDlpNetworkArgs = [
+  "--socket-timeout",
+  "20",
+  "--extractor-retries",
+  "1",
+  "--retries",
+  "1",
+] as const;
+
+export function isSupportedSourceUrl(provider: DownloaderProvider, sourceUrl: string) {
+  try {
+    assertSupportedSourceUrl(provider, sourceUrl);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -323,6 +342,7 @@ export async function analyzeMedia(provider: DownloaderProvider, sourceUrl: stri
       sourceUrl,
       "--no-warnings",
       "--no-playlist",
+      ...ytDlpNetworkArgs,
     ]) as YtDlpInfo;
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
@@ -390,6 +410,7 @@ export async function prepareVideoDownload(params: {
       params.sourceUrl,
       "--no-warnings",
       "--no-playlist",
+      ...ytDlpNetworkArgs,
       "-f",
       params.formatId,
       "-o",
@@ -414,6 +435,7 @@ export async function prepareAudioDownload(sourceUrl: string, title: string) {
       sourceUrl,
       "--no-warnings",
       "--no-playlist",
+      ...ytDlpNetworkArgs,
       "-x",
       "--audio-format",
       "mp3",

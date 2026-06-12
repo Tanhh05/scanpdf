@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAssets, detectProvider, providerLabel } from "../src/services/downloader.service.js";
+import { buildAssets, detectProvider, isSupportedSourceUrl, providerLabel } from "../src/services/downloader.service.js";
 
 describe("downloader service", () => {
   it("detects supported providers from extractor metadata", () => {
@@ -38,5 +38,11 @@ describe("downloader service", () => {
 
   it("returns human labels for providers", () => {
     expect(providerLabel("youtube")).toBe("YouTube");
+  });
+
+  it("accepts TikTok short links but rejects TikTok profile URLs", () => {
+    expect(isSupportedSourceUrl("tiktok", "https://vt.tiktok.com/ZSQ5UUxpt/")).toBe(true);
+    expect(isSupportedSourceUrl("tiktok", "https://vm.tiktok.com/ZSQ5UUxpt/")).toBe(true);
+    expect(isSupportedSourceUrl("tiktok", "https://www.tiktok.com/@scanpdf")).toBe(false);
   });
 });
