@@ -51,6 +51,61 @@ type YtDlpInfo = {
   entries?: YtDlpEntry[];
 };
 
+type TikTokImage = {
+  imageURL?: {
+    urlList?: string[];
+  };
+  imageWidth?: number;
+  imageHeight?: number;
+};
+
+type TikTokItem = {
+  id?: string;
+  desc?: string;
+  author?: {
+    uniqueId?: string;
+    nickname?: string;
+  };
+  video?: {
+    width?: number;
+    height?: number;
+    duration?: number;
+    cover?: string;
+    originCover?: string;
+    playAddr?: string;
+    downloadAddr?: string;
+  };
+  music?: {
+    title?: string;
+    playUrl?: string;
+  };
+  imagePost?: {
+    title?: string;
+    images?: TikTokImage[];
+    cover?: TikTokImage;
+  };
+};
+
+type TikTokApiData = {
+  videoDetail?: {
+    statusCode?: number;
+    itemInfo?: {
+      itemStruct?: TikTokItem;
+    };
+    shareMeta?: {
+      title?: string;
+      desc?: string;
+      cover_url?: string;
+    };
+  };
+};
+
+type TikTokUniversalData = {
+  __DEFAULT_SCOPE__?: {
+    "webapp.reflow.video.detail"?: TikTokApiData["videoDetail"];
+  };
+};
+
 export type DownloaderAsset = {
   id: string;
   kind: DownloaderAssetKind;
@@ -96,6 +151,9 @@ type YtDlpRuntime = {
   downloadFromGithub(filePath?: string, version?: string, platform?: NodeJS.Platform): Promise<void>;
 };
 let ytDlpWrapClassPromise: Promise<YtDlpRuntime> | null = null;
+const analysisCache = new Map<string, { expiresAt: number; value: DownloaderAnalysis }>();
+const analysisCacheTtlMs = 5 * 60 * 1000;
+const tiktokUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1";
 
 async function loadYtDlpWrap() {
   if (!ytDlpWrapClassPromise) {
@@ -173,6 +231,15 @@ const ytDlpNetworkArgs = [
   "1",
   "--retries",
   "1",
+] as const;
+
+const ytDlpAnalyzeNetworkArgs = [
+  "--socket-timeout",
+  "8",
+  "--extractor-retries",
+  "0",
+  "--retries",
+  "0",
 ] as const;
 
 export function isSupportedSourceUrl(provider: DownloaderProvider, sourceUrl: string) {
@@ -305,6 +372,135 @@ export function buildAssets(provider: DownloaderProvider, info: YtDlpInfo, sourc
   };
 }
 
+function firstNonEmpty(...values: Array<string | undefined>) {
+  return values.find((value) => value?.trim())?.trim();
+}
+
+export function parseTikTokApiData(raw: string, sourceUrl: string): DownloaderAnalysis | null {
+  let data: TikTokApiData;
+  try {
+    data = JSON.parse(raw) as TikTokApiData;
+  } catch {
+    return null;
+  }
+
+  const detail = data.videoDetail;
+  const item = detail?.itemInfo?.itemStruct;
+  if (!item || (detail?.statusCode != null && detail.statusCode !== 0)) return null;
+
+  const title = firstNonEmpty(
+    item.desc,
+    item.imagePost?.title,
+    detail?.shareMeta?.title,
+    item.author?.nickname,
+    item.author?.uniqueId,
+  ) ?? "TikTok download";
+  const author = firstNonEmpty(item.author?.nickname, item.author?.uniqueId);
+  const thumbnail = firstNonEmpty(
+    item.imagePost?.cover?.imageURL?.urlList?.[0],
+    item.video?.cover,
+    item.video?.originCover,
+    detail?.shareMeta?.cover_url,
+  );
+  const assets: DownloaderAsset[] = [];
+
+  for (const [index, image] of (item.imagePost?.images ?? []).entries()) {
+    const directUrl = image.imageURL?.urlList?.find(Boolean);
+    if (!directUrl) continue;
+    assets.push({
+      id: `image-${item.id ?? "tiktok"}-${index + 1}`,
+      kind: "image",
+      label: `Tải ảnh ${index + 1}`,
+      format: "jpeg",
+      width: image.imageWidth,
+      height: image.imageHeight,
+      directUrl,
+    });
+  }
+
+  const videoUrl = firstNonEmpty(item.video?.downloadAddr, item.video?.playAddr);
+  if (videoUrl) {
+    const quality = item.video?.height ? `${item.video.height}p` : undefined;
+    assets.push({
+      id: `video-${item.id ?? "tiktok"}`,
+      kind: "video",
+      label: `Tải video không watermark${quality ? ` ${quality}` : ""}`,
+      format: "mp4",
+      quality,
+      width: item.video?.width,
+      height: item.video?.height,
+      directUrl: videoUrl,
+    });
+  }
+
+  if (item.music?.playUrl) {
+    assets.push({
+      id: `audio-${item.id ?? "tiktok"}`,
+      kind: "audio",
+      label: item.music.title ? `Tải âm thanh - ${item.music.title}` : "Tải âm thanh",
+      format: "mp3",
+      quality: "MP3",
+      directUrl: item.music.playUrl,
+    });
+  }
+
+  if (!assets.length) return null;
+
+  return {
+    provider: "tiktok",
+    sourceUrl,
+    title,
+    author,
+    durationSeconds: item.video?.duration,
+    thumbnail,
+    assets,
+    warnings: item.imagePost?.images?.length
+      ? ["Bài ảnh TikTok được tách thành từng ảnh riêng để tải trực tiếp."]
+      : [],
+  };
+}
+
+function parseTikTokUniversalData(raw: string, sourceUrl: string) {
+  try {
+    const data = JSON.parse(raw) as TikTokUniversalData;
+    const detail = data.__DEFAULT_SCOPE__?.["webapp.reflow.video.detail"];
+    return detail ? parseTikTokApiData(JSON.stringify({ videoDetail: detail }), sourceUrl) : null;
+  } catch {
+    return null;
+  }
+}
+
+function extractJsonScript(html: string, id: string) {
+  const escapedId = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return html.match(new RegExp(`<script[^>]+id=["']${escapedId}["'][^>]*>([\\s\\S]*?)<\\/script>`, "i"))?.[1];
+}
+
+async function analyzeTikTokPage(sourceUrl: string) {
+  const response = await fetch(sourceUrl, {
+    redirect: "follow",
+    signal: AbortSignal.timeout(6_000),
+    headers: {
+      "user-agent": tiktokUserAgent,
+      "accept-language": "vi-VN,vi;q=0.9,en;q=0.8",
+    },
+  });
+  if (!response.ok) return null;
+
+  const finalUrl = response.url || sourceUrl;
+  const finalHost = new URL(finalUrl).hostname.toLowerCase();
+  if (!finalHost.endsWith("tiktok.com")) return null;
+
+  const html = await response.text();
+  const apiData = extractJsonScript(html, "api-data");
+  if (apiData) {
+    const analysis = parseTikTokApiData(apiData, sourceUrl);
+    if (analysis) return analysis;
+  }
+
+  const universalData = extractJsonScript(html, "__UNIVERSAL_DATA_FOR_REHYDRATION__");
+  return universalData ? parseTikTokUniversalData(universalData, sourceUrl) : null;
+}
+
 async function ensureBinaryPath() {
   if (!binaryReady) {
     binaryReady = (async () => {
@@ -335,6 +531,26 @@ async function getClient() {
 
 export async function analyzeMedia(provider: DownloaderProvider, sourceUrl: string): Promise<DownloaderAnalysis> {
   assertSupportedSourceUrl(provider, sourceUrl);
+  const cacheKey = `${provider}:${sourceUrl}`;
+  const cached = analysisCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
+  if (cached) analysisCache.delete(cacheKey);
+
+  if (provider === "tiktok") {
+    try {
+      const fastAnalysis = await analyzeTikTokPage(sourceUrl);
+      if (fastAnalysis) {
+        analysisCache.set(cacheKey, {
+          expiresAt: Date.now() + analysisCacheTtlMs,
+          value: fastAnalysis,
+        });
+        return fastAnalysis;
+      }
+    } catch (error) {
+      console.warn("[downloader:tiktok] fast analysis failed, falling back to yt-dlp", error);
+    }
+  }
+
   const client = await getClient();
   let info: YtDlpInfo;
   try {
@@ -342,7 +558,7 @@ export async function analyzeMedia(provider: DownloaderProvider, sourceUrl: stri
       sourceUrl,
       "--no-warnings",
       "--no-playlist",
-      ...ytDlpNetworkArgs,
+      ...ytDlpAnalyzeNetworkArgs,
     ]) as YtDlpInfo;
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
@@ -362,7 +578,7 @@ export async function analyzeMedia(provider: DownloaderProvider, sourceUrl: stri
   }
 
   const summary = buildAssets(provider, info, sourceUrl);
-  return {
+  const analysis = {
     provider,
     sourceUrl,
     title: summary.title,
@@ -372,6 +588,11 @@ export async function analyzeMedia(provider: DownloaderProvider, sourceUrl: stri
     assets: summary.assets,
     warnings: summary.warnings,
   };
+  analysisCache.set(cacheKey, {
+    expiresAt: Date.now() + analysisCacheTtlMs,
+    value: analysis,
+  });
+  return analysis;
 }
 
 function getContentType(extension: string) {

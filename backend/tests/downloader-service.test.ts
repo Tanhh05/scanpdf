@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildAssets, detectProvider, isSupportedSourceUrl, providerLabel } from "../src/services/downloader.service.js";
+import {
+  buildAssets,
+  detectProvider,
+  isSupportedSourceUrl,
+  parseTikTokApiData,
+  providerLabel,
+} from "../src/services/downloader.service.js";
 
 describe("downloader service", () => {
   it("detects supported providers from extractor metadata", () => {
@@ -44,5 +50,34 @@ describe("downloader service", () => {
     expect(isSupportedSourceUrl("tiktok", "https://vt.tiktok.com/ZSQ5UUxpt/")).toBe(true);
     expect(isSupportedSourceUrl("tiktok", "https://vm.tiktok.com/ZSQ5UUxpt/")).toBe(true);
     expect(isSupportedSourceUrl("tiktok", "https://www.tiktok.com/@scanpdf")).toBe(false);
+  });
+
+  it("parses TikTok photo posts without relying on yt-dlp", () => {
+    const result = parseTikTokApiData(JSON.stringify({
+      videoDetail: {
+        statusCode: 0,
+        itemInfo: {
+          itemStruct: {
+            id: "123",
+            desc: "Photo post",
+            author: { uniqueId: "scanpdf", nickname: "ScanPDF" },
+            imagePost: {
+              images: [
+                {
+                  imageURL: { urlList: ["https://cdn.example.com/photo.jpeg"] },
+                  imageWidth: 1080,
+                  imageHeight: 1920,
+                },
+              ],
+            },
+            music: { title: "Demo audio", playUrl: "https://cdn.example.com/audio.mp3" },
+          },
+        },
+      },
+    }), "https://vt.tiktok.com/example/");
+
+    expect(result?.provider).toBe("tiktok");
+    expect(result?.assets.some((asset) => asset.kind === "image")).toBe(true);
+    expect(result?.assets.some((asset) => asset.kind === "audio")).toBe(true);
   });
 });
