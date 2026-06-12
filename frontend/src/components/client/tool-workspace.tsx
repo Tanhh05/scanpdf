@@ -19,7 +19,6 @@ import {
   ScanText,
   Signature,
   Scissors,
-  type LucideIcon,
   UserRound,
   Video,
   WandSparkles,
@@ -123,13 +122,6 @@ const toolCategories = [
   },
 ] as const;
 
-type ToolItem = {
-  label: string;
-  icon: LucideIcon;
-  color: string;
-  href: string;
-};
-
 export function ToolWorkspace({
   title,
   children,
@@ -141,9 +133,9 @@ export function ToolWorkspace({
   const sidebarRef = useRef<HTMLElement | null>(null);
   const flyoutRef = useRef<HTMLDivElement | null>(null);
   const activeCategory = toolCategories.find((group) => group.items.some((item) => item.href === pathname))?.id ?? null;
+  const [mobileOpenCategory, setMobileOpenCategory] = useState<string | null>(activeCategory);
   const [previewCategory, setPreviewCategory] = useState<string | null>(null);
   const [pinnedCategory, setPinnedCategory] = useState<string | null>(null);
-  const mobileTools: ToolItem[] = toolCategories.flatMap((group) => [...group.items]);
   const openCategory = previewCategory ?? pinnedCategory;
   const highlightedCategory = openCategory ?? activeCategory;
   const openCategoryData = openCategory
@@ -165,6 +157,10 @@ export function ToolWorkspace({
     event.preventDefault();
     togglePinnedCategory(categoryId);
   }
+
+  useEffect(() => {
+    setMobileOpenCategory(activeCategory);
+  }, [activeCategory]);
 
   useEffect(() => {
     function closeOnOutsideInteraction(event: PointerEvent) {
@@ -307,27 +303,55 @@ export function ToolWorkspace({
             </div>
           </div>
 
-          <div className="border-y border-[#31507f] bg-[#08275f] text-white dark:border-slate-800 dark:bg-slate-950 md:hidden">
-            <nav
-              aria-label="Chọn công cụ"
-              className="mobile-tool-scroll flex snap-x gap-1 overflow-x-auto px-2"
-            >
-              {mobileTools.map((item) => {
-                const active = pathname === item.href;
+          <div className="border-b border-slate-200 bg-[#eef4ff] px-3 py-3 dark:border-slate-800 dark:bg-slate-950 md:hidden">
+            <nav aria-label="Chọn nhóm công cụ" className="space-y-2">
+              {toolCategories.map((group) => {
+                const active = activeCategory === group.id;
+                const open = mobileOpenCategory === group.id;
                 return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-current={active ? "page" : undefined}
-                    className={`flex min-w-[92px] snap-start flex-col items-center justify-center gap-1.5 border-t-2 px-2 py-2.5 text-center transition ${
-                      active
-                        ? "border-white bg-white/12 text-white"
-                        : "border-transparent text-white/85 hover:border-white hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    <item.icon size={18} strokeWidth={1.8} />
-                    <span className="line-clamp-1 text-[11px] leading-none">{item.label}</span>
-                  </Link>
+                  <div key={group.id}>
+                    <button
+                      type="button"
+                      onClick={() => setMobileOpenCategory((current) => current === group.id ? null : group.id)}
+                      aria-expanded={open}
+                      aria-current={active ? "page" : undefined}
+                      className={`flex w-full items-center gap-3 border border-[#c8dcff] bg-white px-3 py-3 text-left text-[15px] font-black text-slate-950 shadow-sm transition dark:border-slate-800 dark:bg-slate-900 dark:text-slate-50 ${
+                        active
+                          ? "border-[#7eabff] bg-blue-50 dark:border-indigo-500/60 dark:bg-indigo-500/15"
+                          : "hover:border-[#7eabff] hover:bg-blue-50 dark:hover:border-indigo-500/60 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <span className={`flex h-8 w-8 shrink-0 items-center justify-center ${active ? "bg-blue-600 text-white" : "bg-[#eef4ff] text-[#0b4dcc] dark:bg-slate-800 dark:text-indigo-300"}`}>
+                        <group.icon size={17} strokeWidth={2} />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate">{group.label}</span>
+                    </button>
+
+                    {open && (
+                      <div className="grid gap-2 border-x border-b border-[#c8dcff] bg-white px-3 py-3 dark:border-slate-800 dark:bg-slate-900">
+                        {group.items.map((item) => {
+                          const itemActive = pathname === item.href;
+                          return (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              aria-current={itemActive ? "page" : undefined}
+                              className={`flex min-w-0 items-center gap-3 border px-3 py-2.5 text-sm font-semibold transition ${
+                                itemActive
+                                  ? "border-[#7eabff] bg-blue-50 text-[#0b4dcc] dark:border-indigo-500/60 dark:bg-indigo-500/15 dark:text-indigo-200"
+                                  : "border-slate-200 text-slate-700 hover:border-[#7eabff] hover:bg-blue-50 dark:border-slate-800 dark:text-slate-200 dark:hover:border-indigo-500/60 dark:hover:bg-slate-800"
+                              }`}
+                            >
+                              <span className={`flex h-7 w-7 shrink-0 items-center justify-center text-white ${item.color}`}>
+                                <item.icon size={15} />
+                              </span>
+                              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </nav>

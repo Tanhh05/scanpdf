@@ -152,7 +152,7 @@ export default function HomePage() {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#eef2ff_0%,#f8fbff_45%,#ffffff_100%)] pb-24 pt-16 text-center dark:bg-[linear-gradient(180deg,#0b1120_0%,#0f172a_45%,#111827_100%)] sm:pb-28 sm:pt-24">
+      <section className="relative overflow-hidden bg-[linear-gradient(180deg,#eef2ff_0%,#f8fbff_45%,#ffffff_100%)] pb-14 pt-10 text-center dark:bg-[linear-gradient(180deg,#0b1120_0%,#0f172a_45%,#111827_100%)] sm:pb-28 sm:pt-24">
         <div className="hero-orb hero-orb-left" />
         <div className="hero-orb hero-orb-right" />
         <div className="absolute left-1/2 top-0 h-[520px] w-[760px] -translate-x-1/2 rounded-full bg-indigo-200/20 blur-3xl dark:bg-indigo-500/10" />
@@ -160,7 +160,7 @@ export default function HomePage() {
           <span className="glass-panel inline-flex items-center gap-2 rounded-full border border-white/80 px-4 py-2 text-xs font-black text-indigo-600 shadow-sm ring-1 ring-indigo-100/70 dark:border-slate-700 dark:text-indigo-300 dark:ring-slate-700">
             <Sparkles size={14} /> Mới: Trò chuyện với tài liệu PDF bằng AI
           </span>
-          <h1 className="mx-auto mt-8 max-w-4xl text-5xl font-black leading-[1.05] tracking-[-0.025em] text-slate-950 sm:text-6xl lg:text-7xl">
+          <h1 className="mx-auto mt-6 max-w-4xl text-4xl font-black leading-[1.08] tracking-[-0.025em] text-slate-950 min-[390px]:text-5xl sm:mt-8 sm:text-6xl lg:text-7xl">
             Xử lý PDF thông minh với{" "}
             <span className="text-indigo-600">tốc độ vượt trội</span>
           </h1>
@@ -169,14 +169,14 @@ export default function HomePage() {
             bảo mật và được hỗ trợ bởi trí tuệ nhân tạo.
           </p>
 
-          <div className="mx-auto mt-11 max-w-3xl rounded-[28px] border-2 border-dashed border-indigo-300 bg-white/55 p-5 shadow-[0_22px_70px_rgba(91,92,240,0.12)] backdrop-blur dark:border-indigo-500/45 dark:bg-slate-900/70 sm:p-8">
-            <div className="rounded-[22px] bg-[#f0f1ff] px-6 py-12 dark:bg-slate-800">
+          <div className="mx-auto mt-8 max-w-3xl border-2 border-dashed border-indigo-300 bg-white/55 p-3 shadow-[0_22px_70px_rgba(91,92,240,0.12)] backdrop-blur dark:border-indigo-500/45 dark:bg-slate-900/70 sm:mt-11 sm:rounded-[28px] sm:p-8">
+            <div className="bg-[#f0f1ff] px-4 py-8 dark:bg-slate-800 sm:rounded-[22px] sm:px-6 sm:py-12">
               <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none">
                 <UploadCloud size={28} />
               </span>
               <h2 className="mt-7 text-xl font-black text-slate-950">Tải tệp PDF lên tại đây</h2>
               <p className="mt-2 text-sm text-slate-500">hoặc kéo và thả tài liệu vào vùng này</p>
-              <Link href="/tools/word-to-pdf" className="mt-6 inline-flex items-center justify-center rounded-lg bg-indigo-600 px-7 py-3 text-sm font-black text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700 dark:shadow-none">
+              <Link href="/tools/word-to-pdf" className="mt-6 inline-flex w-full items-center justify-center bg-indigo-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-indigo-200 transition hover:bg-indigo-700 dark:shadow-none sm:w-auto sm:rounded-lg sm:px-7">
                 Chọn tệp từ thiết bị
               </Link>
               <div className="mt-5 flex items-center justify-center gap-4 text-slate-500">
@@ -189,12 +189,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section id="tools" className="bg-white py-16 dark:bg-slate-950 sm:py-20">
+      <section id="tools" className="bg-white py-12 dark:bg-slate-950 sm:py-20">
         <div className="container-page">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-indigo-600">Công cụ phổ biến</p>
-              <h2 className="mt-2 text-3xl font-black tracking-[-0.015em] text-slate-950 sm:text-4xl">
+              <h2 className="mt-2 text-2xl font-black tracking-[-0.015em] text-slate-950 sm:text-4xl">
                 Giải quyết mọi vấn đề về PDF
               </h2>
             </div>
@@ -208,14 +208,14 @@ export default function HomePage() {
             </button>
           </div>
 
-          <div id="all-tools" className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          <div id="all-tools" className="mt-7 grid gap-4 sm:mt-9 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
             {displayedTools.map(([name, description, href, Icon]) => (
-              <Link key={href} href={href} className="group rounded-[26px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-7 shadow-sm transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] dark:hover:border-indigo-500/60 dark:hover:shadow-none">
+              <Link key={href} href={href} className="group border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-5 shadow-sm transition hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_18px_45px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-[linear-gradient(180deg,#111827_0%,#0f172a_100%)] dark:hover:border-indigo-500/60 dark:hover:shadow-none sm:rounded-[26px] sm:p-7">
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
                   <Icon size={20} />
                 </span>
-                <h3 className="mt-7 text-xl font-black text-slate-950">{name}</h3>
-                <p className="mt-3 min-h-20 text-sm leading-6 text-slate-500">{description}</p>
+                <h3 className="mt-5 text-lg font-black text-slate-950 sm:mt-7 sm:text-xl">{name}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-500 sm:min-h-20">{description}</p>
                 <span className="mt-5 inline-flex items-center gap-1 text-xs font-black uppercase tracking-wide text-indigo-600">
                   Bắt đầu <ArrowRight size={14} className="transition group-hover:translate-x-1" />
                 </span>
@@ -236,8 +236,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#f4f6ff] py-16 dark:bg-slate-950 sm:py-24">
-        <div className="container-page grid items-center gap-14 lg:grid-cols-2">
+      <section className="bg-[#f4f6ff] py-12 dark:bg-slate-950 sm:py-24">
+        <div className="container-page grid items-center gap-10 sm:gap-14 lg:grid-cols-2">
           <div className="relative">
             <div className="overflow-hidden rounded-[30px] bg-slate-950 shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
               <Image
@@ -245,10 +245,10 @@ export default function HomePage() {
                 alt="AI PDF ScanPDF"
                 width={760}
                 height={680}
-                className="aspect-[1.1] w-full object-contain p-12 opacity-90"
+                className="aspect-[1.1] w-full object-contain p-7 opacity-90 sm:p-12"
               />
             </div>
-            <div className="absolute -bottom-8 right-10 rounded-[24px] bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.16)] dark:bg-slate-900 dark:shadow-none">
+            <div className="absolute -bottom-6 right-3 rounded-[20px] bg-white p-4 shadow-[0_18px_45px_rgba(15,23,42,0.16)] dark:bg-slate-900 dark:shadow-none sm:-bottom-8 sm:right-10 sm:rounded-[24px] sm:p-5">
               <div className="flex items-center gap-3">
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-600 text-white">
                   <Zap size={17} />
@@ -267,7 +267,7 @@ export default function HomePage() {
             <span className="rounded-full bg-indigo-100 px-3 py-1 text-xs font-black uppercase tracking-[0.16em] text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
               AI PDF Assistant
             </span>
-            <h2 className="mt-5 max-w-xl text-4xl font-black leading-tight tracking-[-0.018em] text-slate-950">
+            <h2 className="mt-5 max-w-xl text-3xl font-black leading-tight tracking-[-0.018em] text-slate-950 sm:text-4xl">
               Làm việc thông minh hơn với trợ lý AI tích hợp
             </h2>
             <p className="mt-5 max-w-xl text-sm leading-7 text-slate-500">
@@ -294,10 +294,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#eef3ff] py-16 dark:bg-slate-900 sm:py-24">
+      <section className="bg-[#eef3ff] py-12 dark:bg-slate-900 sm:py-24">
         <div className="container-page">
           <div className="mx-auto max-w-2xl text-center">
-            <h2 className="text-4xl font-black tracking-[-0.018em] text-slate-950">Gói dịch vụ linh hoạt</h2>
+            <h2 className="text-3xl font-black tracking-[-0.018em] text-slate-950 sm:text-4xl">Gói dịch vụ linh hoạt</h2>
             <p className="mt-4 text-sm leading-7 text-slate-500">
               Chọn gói phù hợp với nhu cầu của bạn, từ sử dụng cá nhân đến các giải pháp doanh nghiệp quy mô lớn.
             </p>
@@ -310,7 +310,7 @@ export default function HomePage() {
               return (
                 <article
                   key={plan.id}
-                  className={`relative rounded-2xl border bg-white p-8 dark:bg-slate-950 ${
+                  className={`relative border bg-white p-6 dark:bg-slate-950 sm:rounded-2xl sm:p-8 ${
                     recommended
                       ? "border-indigo-600 shadow-[0_22px_60px_rgba(91,92,240,0.2)] dark:shadow-none"
                       : "border-slate-200 dark:border-slate-800"
@@ -323,7 +323,7 @@ export default function HomePage() {
                   )}
                   <h3 className="text-xl font-black text-slate-950">{plan.name}</h3>
                   <p className="mt-2 text-sm text-slate-500">{planDescription(plan)}</p>
-                  <p className="mt-8 text-4xl font-black tracking-[-0.018em] text-slate-950">
+                  <p className="mt-8 text-3xl font-black tracking-[-0.018em] text-slate-950 sm:text-4xl">
                     {formatPlanPrice(plan.price)}
                     <span className="text-sm font-medium text-slate-500">/tháng</span>
                   </p>
@@ -356,8 +356,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-white py-14">
-        <div className="container-page grid gap-6 rounded-[28px] border border-slate-200 bg-white p-7 shadow-sm sm:grid-cols-3">
+      <section className="bg-white py-10 sm:py-14">
+        <div className="container-page grid gap-4 border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-3 sm:gap-6 sm:rounded-[28px] sm:p-7">
           {[
             [ShieldCheck, "Bảo mật SSL 256-bit"],
             [Download, "Tải kết quả nhanh"],

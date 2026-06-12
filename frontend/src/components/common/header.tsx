@@ -45,8 +45,8 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-950/90">
-      <div className="container-page flex h-[72px] items-center justify-between gap-5">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5 text-xl font-black tracking-tight text-slate-950 dark:text-slate-50">
+      <div className="container-page flex h-16 items-center justify-between gap-3 sm:h-[72px] sm:gap-5">
+        <Link href="/" className="flex min-w-0 shrink-0 items-center gap-2 text-lg font-black tracking-tight text-slate-950 dark:text-slate-50 sm:gap-2.5 sm:text-xl">
           <BrandLogo />
         </Link>
         <nav className="hidden min-w-0 flex-1 items-center justify-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200 lg:flex">
@@ -162,29 +162,29 @@ export function Header() {
         </button>
       </div>
       {menuOpen && (
-        <div className="border-t border-slate-100 bg-white/95 px-4 py-5 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 md:hidden">
+        <div className="border-t border-slate-100 bg-white/95 px-4 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 md:hidden">
           <nav className="mx-auto flex max-w-xl flex-col gap-1 text-sm font-bold">
-            <div className="mb-2 flex items-center justify-between rounded-lg px-3 py-2">
+            <div className="mb-2 flex items-center justify-between border border-slate-200 bg-slate-50 px-3 py-2 dark:border-slate-800 dark:bg-slate-900">
               <span>Giao diện</span>
               <ThemeToggle />
             </div>
-            <Link href="/#tools" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-900">Công cụ PDF</Link>
-            <Link href="/tiktok-downloader" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">TikTok Downloader</Link>
-            <Link href="/remove-watermark-image" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Remove Watermark</Link>
-            <Link href="/instagram-downloader" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Instagram Downloader</Link>
-            <Link href="/tools/compress-pdf" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Nén PDF</Link>
-            <Link href="/ai/chat-pdf" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">AI PDF</Link>
-            <Link href="/pricing" onClick={() => setMenuOpen(false)} className="rounded-lg px-3 py-3 hover:bg-slate-50">Bảng giá</Link>
-            <div className="mt-3 border-t border-slate-100 pt-3">
+            <Link href="/#tools" onClick={() => setMenuOpen(false)} className="px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-900">Công cụ PDF</Link>
+            <Link href="/tiktok-downloader" onClick={() => setMenuOpen(false)} className="px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-900">TikTok Downloader</Link>
+            <Link href="/remove-watermark-image" onClick={() => setMenuOpen(false)} className="px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-900">Remove Watermark</Link>
+            <Link href="/instagram-downloader" onClick={() => setMenuOpen(false)} className="px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-900">Instagram Downloader</Link>
+            <Link href="/tools/compress-pdf" onClick={() => setMenuOpen(false)} className="px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-900">Nén PDF</Link>
+            <Link href="/ai/chat-pdf" onClick={() => setMenuOpen(false)} className="px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-900">AI PDF</Link>
+            <Link href="/pricing" onClick={() => setMenuOpen(false)} className="px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-900">Bảng giá</Link>
+            <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800">
               {user ? (
-                <div className="flex gap-2">
-                  <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="flex-1 rounded-lg border border-slate-200 px-4 py-3 text-center">Tài khoản</Link>
-                  <button onClick={() => { logout(); setMenuOpen(false); }} className="flex-1 rounded-lg bg-slate-900 px-4 py-3 text-white">Đăng xuất</button>
+                <div className="grid gap-2 min-[380px]:grid-cols-2">
+                  <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="border border-slate-200 px-4 py-3 text-center dark:border-slate-700">Tài khoản</Link>
+                  <button onClick={() => { logout(); setMenuOpen(false); }} className="bg-slate-900 px-4 py-3 text-white dark:bg-slate-100 dark:text-slate-950">Đăng xuất</button>
                 </div>
               ) : (
-                <div className="flex gap-2">
-                  <Link href="/login" onClick={() => setMenuOpen(false)} className="flex-1 rounded-lg border border-slate-200 px-4 py-3 text-center">Đăng nhập</Link>
-                  <Link href="/register" onClick={() => setMenuOpen(false)} className="flex-1 rounded-lg bg-indigo-600 px-4 py-3 text-center text-white">Dùng miễn phí</Link>
+                <div className="grid gap-2 min-[380px]:grid-cols-2">
+                  <Link href="/login" onClick={() => setMenuOpen(false)} className="border border-slate-200 px-4 py-3 text-center dark:border-slate-700">Đăng nhập</Link>
+                  <Link href="/register" onClick={() => setMenuOpen(false)} className="bg-indigo-600 px-4 py-3 text-center text-white">Dùng miễn phí</Link>
                 </div>
               )}
             </div>
