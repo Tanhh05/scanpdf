@@ -21,9 +21,9 @@
     "desktop:build": "npm run build -w @scanpdf/desktop",
     "extension:build": "node apps/chrome-extension/scripts/build.mjs",
     "apps:build": "npm run extension:build && npm run export:android -w @scanpdf/mobile && npm run export:ios -w @scanpdf/mobile && npm run desktop:build",
-    "db:generate": "npm run db:generate -w backend",
-    "db:migrate": "npm run db:migrate -w backend",
-    "db:seed": "npm run db:seed -w backend"
+    "db:generate": "npx --no-install prisma generate --schema backend/prisma/schema.prisma",
+    "db:migrate": "npx --no-install prisma migrate dev --schema backend/prisma/schema.prisma",
+    "db:seed": "node --env-file=.env --import tsx backend/prisma/seed.ts"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

@@ -3,7 +3,7 @@ import path from "node:path";
 import { z } from "zod";
 
 config();
-config({ path: path.resolve(process.cwd(), "../.env"), override: false });
+config({ path: path.resolve(process.cwd(), "../.env"), override: true });
 
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),

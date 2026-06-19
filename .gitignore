@@ -11,9 +11,12 @@ apps/mobile/dist-android
 apps/mobile/dist-ios
 .env
 .env.local
+.env.backup-*
 *.log
 .DS_Store
 .idea
+.playwright-cli/
+output/
 *.tsbuildinfo
 storage/input/*
 storage/output/*

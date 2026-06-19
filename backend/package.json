@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "prisma generate && docker compose -f ../docker-compose.yml up -d --wait postgres redis && prisma migrate deploy",
     "dev": "concurrently -n api,worker -c blue,magenta \"tsx watch src/server.ts\" \"tsx watch src/workers/conversion.worker.ts\"",
     "worker:dev": "tsx watch src/workers/conversion.worker.ts",
     "build": "tsc -p tsconfig.json",
