@@ -66,10 +66,10 @@ export function BatchConverter() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <div className="app-card mx-auto max-w-6xl overflow-hidden">
       {!ids.length && (
         <>
-          <div className="grid gap-4 border-b border-slate-100 p-6 sm:grid-cols-2">
+          <div className="grid gap-4 border-b border-[#d8ded5] bg-[#f8faf7] p-5 dark:border-slate-800 dark:bg-slate-950 sm:grid-cols-2">
             <label className="text-sm font-bold text-slate-700">
               Công cụ
               <select value={tool} onChange={(event) => { setTool(event.target.value); setFiles([]); }} className="field mt-2">
@@ -87,9 +87,9 @@ export function BatchConverter() {
               />
             </label>
           </div>
-          <div className="p-6 text-center">
-            <Files className="mx-auto text-indigo-600" size={48} />
-            <h2 className="mt-4 text-2xl font-black">{files.length ? `${files.length} file đã chọn` : "Chuyển đổi nhiều file cùng lúc"}</h2>
+          <div className="p-8 text-center">
+            <Files className="mx-auto text-[#10aee8]" size={48} />
+            <h2 className="app-heading mt-4 text-2xl">{files.length ? `${files.length} file đã chọn` : "Chuyển đổi nhiều file cùng lúc"}</h2>
             <p className="mt-2 text-sm text-slate-500">Mỗi file tạo một kết quả riêng và được tính một lượt sử dụng.</p>
             <button disabled={!files.length || upload.isPending} onClick={() => upload.mutate()} className="btn-primary mt-6">
               {upload.isPending ? "Đang tải lên..." : "Bắt đầu batch convert"}
@@ -103,10 +103,10 @@ export function BatchConverter() {
         </>
       )}
       {ids.length > 0 && (
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-[#d8ded5] dark:divide-slate-800">
           <div className="flex items-center justify-between p-5">
-            <h2 className="text-xl font-black">Kết quả batch</h2>
-            <button onClick={() => { setIds([]); setFiles([]); setPage(1); }} className="rounded-lg border px-4 py-2 text-sm font-bold">Batch mới</button>
+            <h2 className="app-heading text-xl">Kết quả batch</h2>
+            <button onClick={() => { setIds([]); setFiles([]); setPage(1); }} className="rounded-lg border border-[#d8ded5] px-4 py-2 text-sm font-bold hover:bg-[#f2fbff] dark:border-slate-700">Batch mới</button>
           </div>
           {visibleResults.map((result, index) => {
             const resultIndex = firstResultIndex + index;
@@ -114,28 +114,28 @@ export function BatchConverter() {
             return (
               <div key={ids[resultIndex]} className="flex items-center justify-between gap-4 p-5">
                 <div>
-                  <p className="font-bold text-slate-900">{files[resultIndex]?.name ?? `File ${resultIndex + 1}`}</p>
+                  <p className="font-bold text-[#17201d] dark:text-slate-50">{files[resultIndex]?.name ?? `File ${resultIndex + 1}`}</p>
                   <p className="mt-1 text-xs text-slate-500">{item?.status ?? "Đang tải trạng thái..."}</p>
                   {item?.errorMessage && <p className="mt-1 text-xs text-red-600">{item.errorMessage}</p>}
                 </div>
                 {item?.status === "COMPLETED" ? (
-                  <button onClick={() => download(item)} className="rounded-xl bg-emerald-600 p-3 text-white"><Download size={18} /></button>
+                  <button onClick={() => download(item)} className="rounded-lg bg-emerald-600 p-3 text-white"><Download size={18} /></button>
                 ) : item?.status === "FAILED" ? (
                   <span className="text-sm font-bold text-red-600">Thất bại</span>
                 ) : (
-                  <LoaderCircle className="animate-spin text-indigo-600" />
+                  <LoaderCircle className="animate-spin text-[#10aee8]" />
                 )}
               </div>
             );
           })}
           {pages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
+            <div className="flex items-center justify-between border-t border-[#d8ded5] px-5 py-4 text-sm text-slate-500 dark:border-slate-800">
               <span>{results.length} kết quả</span>
               <Pagination page={page} pages={pages} onPageChange={setPage} />
             </div>
           )}
           {results.length > 0 && results.every((result) => result.data?.status === "COMPLETED") && (
-            <p className="flex items-center justify-center gap-2 bg-emerald-50 p-4 font-bold text-emerald-700">
+            <p className="flex items-center justify-center gap-2 bg-emerald-50 p-4 font-bold text-emerald-700 dark:bg-emerald-950/35 dark:text-emerald-300">
               <CheckCircle2 size={18} /> Tất cả file đã xử lý xong
             </p>
           )}

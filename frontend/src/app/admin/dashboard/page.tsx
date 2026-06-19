@@ -94,23 +94,23 @@ export default function AdminDashboardPage() {
         {cards.map((card) => (
           <article
             key={card.label}
-            className={`min-h-[142px] rounded-xl border p-4 shadow-[0_2px_6px_rgba(30,41,59,0.035)] ${
+            className={`min-h-[142px] rounded-lg border p-4 shadow-[0_2px_6px_rgba(30,41,59,0.035)] ${
               card.tone === "solid"
-                ? "border-[#0b4dcc] bg-[#0b4dcc] text-white"
-                : "border-[#d8dceb] bg-white text-[#111527] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                ? "border-[#10aee8] bg-[#10aee8] text-white"
+                : "border-[#d8ded5] bg-white text-[#17201d] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             }`}
           >
             <div className="flex items-start justify-between">
               <span className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-                card.tone === "solid" ? "bg-white/15" : card.tone === "green" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" : card.tone === "blue" ? "bg-[#e6eeff] text-[#0b4dcc] dark:bg-indigo-500/15 dark:text-indigo-300" : "bg-slate-100 text-slate-600 dark:bg-slate-950 dark:text-slate-300"
+                card.tone === "solid" ? "bg-white/15" : card.tone === "green" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300" : card.tone === "blue" ? "bg-[#e8f7fd] text-[#10aee8] dark:bg-[#10aee8]/15 dark:text-sky-300" : "bg-slate-100 text-slate-600 dark:bg-slate-950 dark:text-slate-300"
               }`}>
                 <card.icon size={20} />
               </span>
-              <span className={`text-xs font-semibold ${card.tone === "solid" ? "text-blue-100" : card.tone === "green" ? "text-emerald-700" : "text-[#0b4dcc]"}`}>
+              <span className={`text-xs font-semibold ${card.tone === "solid" ? "text-blue-100" : card.tone === "green" ? "text-emerald-700" : "text-[#10aee8]"}`}>
                 {card.note}
               </span>
             </div>
-            <p className={`mt-4 text-[11px] font-semibold uppercase tracking-wide ${card.tone === "solid" ? "text-blue-100" : "text-[#242b40] dark:text-slate-300"}`}>{card.label}</p>
+            <p className={`mt-4 text-[11px] font-semibold uppercase tracking-wide ${card.tone === "solid" ? "text-blue-100" : "text-[#34423e] dark:text-slate-300"}`}>{card.label}</p>
             <strong className="mt-1.5 block text-[23px] leading-none">{metrics.isLoading ? "..." : card.value}</strong>
           </article>
         ))}
@@ -121,26 +121,26 @@ export default function AdminDashboardPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold">Thống kê hoạt động</h2>
-              <p className="mt-1 text-sm text-[#586075]">Lượt chuyển đổi PDF trong 7 ngày qua</p>
+              <p className="mt-1 text-sm text-[#52615d]">Lượt chuyển đổi PDF trong 7 ngày qua</p>
             </div>
-            <span className="rounded-lg border border-[#bcc5df] bg-[#eef1ff] px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">7 ngày gần nhất</span>
+            <span className="rounded-lg border border-[#b8c8be] bg-[#eef8fd] px-4 py-2 text-sm dark:border-slate-700 dark:bg-slate-900">7 ngày gần nhất</span>
           </div>
           <div className="mt-5 h-[260px]">
             {statistics.isLoading ? (
-              <div className="h-full animate-pulse rounded-xl bg-slate-50 dark:bg-slate-800" />
+              <div className="h-full animate-pulse rounded-lg bg-slate-50 dark:bg-slate-800" />
             ) : points.length ? (
               <svg viewBox={`-10 -10 ${width + 20} ${height + 45}`} className="h-full w-full" preserveAspectRatio="none" aria-label="Biểu đồ chuyển đổi">
                 <defs>
                   <linearGradient id="adminDashboardArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2f67e9" stopOpacity=".22" />
-                    <stop offset="100%" stopColor="#2f67e9" stopOpacity=".01" />
+                    <stop offset="0%" stopColor="#10aee8" stopOpacity=".22" />
+                    <stop offset="100%" stopColor="#10aee8" stopOpacity=".01" />
                   </linearGradient>
                 </defs>
                 {[0, 1, 2, 3].map((item) => <line key={item} x1="0" x2={width} y1={item * 80} y2={item * 80} stroke="currentColor" className="text-slate-700 dark:text-slate-600" strokeDasharray="4 5" />)}
                 <path d={area} fill="url(#adminDashboardArea)" />
-                <path d={line} fill="none" stroke="#0b4dcc" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                <path d={line} fill="none" stroke="#10aee8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
                 {points.map(({ x, y, item }) => (
-                  <circle key={item.statDate} cx={x} cy={y} r="4" fill="#fff" stroke="#0b4dcc" strokeWidth="2" vectorEffect="non-scaling-stroke">
+                  <circle key={item.statDate} cx={x} cy={y} r="4" fill="#fff" stroke="#10aee8" strokeWidth="2" vectorEffect="non-scaling-stroke">
                     <title>{`${item.statDate}: ${item.totalConversions} lượt`}</title>
                   </circle>
                 ))}
@@ -149,48 +149,48 @@ export default function AdminDashboardPage() {
               <AdminEmpty>Chưa có dữ liệu chuyển đổi.</AdminEmpty>
             )}
           </div>
-          <div className="flex justify-between text-xs text-[#586075]">
+          <div className="flex justify-between text-xs text-[#52615d]">
             {daily.map((item) => <span key={item.statDate}>{new Date(`${item.statDate}T00:00:00`).toLocaleDateString("vi-VN", { weekday: "short" })}</span>)}
           </div>
         </article>
 
         <article className={`${adminPanelClass} overflow-hidden`}>
-          <div className="border-b border-[#d8dceb] px-5 py-4 dark:border-slate-800">
+          <div className="border-b border-[#d8ded5] px-5 py-4 dark:border-slate-800">
             <h2 className="text-lg font-bold">Trạng thái hệ thống</h2>
           </div>
           <div className="space-y-5 p-5">
             {[
-              { label: "Dung lượng ổ đĩa", value: 45, icon: Server, color: "bg-[#0b4dcc]" },
+              { label: "Dung lượng ổ đĩa", value: 45, icon: Server, color: "bg-[#10aee8]" },
               { label: "CPU Usage", value: 12, icon: Cpu, color: "bg-slate-600" },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-4">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e8efff] text-[#0b4dcc] dark:bg-indigo-500/15 dark:text-indigo-300"><item.icon size={22} /></span>
+                <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#e8f7fd] text-[#10aee8] dark:bg-[#10aee8]/15 dark:text-sky-300"><item.icon size={22} /></span>
                 <div className="min-w-0 flex-1">
                   <div className="mb-2 flex justify-between text-sm"><span>{item.label}</span><strong>{item.value}%</strong></div>
                   <div className="h-2 rounded-full bg-[#e7eaf4] dark:bg-slate-700"><div className={`h-full rounded-full ${item.color}`} style={{ width: `${item.value}%` }} /></div>
                 </div>
               </div>
             ))}
-            <div className="border-t border-[#d8dceb] pt-5 dark:border-slate-800">
+            <div className="border-t border-[#d8ded5] pt-5 dark:border-slate-800">
               <p className="text-xs font-semibold uppercase tracking-wide">Nhật ký gần đây</p>
               <div className="mt-5 space-y-5 text-sm">
                 <div><p className="flex items-center gap-3"><i className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Người dùng mới hôm nay: {data?.newUsers ?? 0}</p><span className="ml-5 mt-1 block text-xs text-slate-500">Dữ liệu trực tiếp</span></div>
-                <div><p className="flex items-center gap-3"><i className="h-2.5 w-2.5 rounded-full bg-[#0b4dcc]" /> Tỷ lệ thành công: {data?.successRate ?? 0}%</p><span className="ml-5 mt-1 block text-xs text-slate-500">Toàn hệ thống</span></div>
+                <div><p className="flex items-center gap-3"><i className="h-2.5 w-2.5 rounded-full bg-[#10aee8]" /> Tỷ lệ thành công: {data?.successRate ?? 0}%</p><span className="ml-5 mt-1 block text-xs text-slate-500">Toàn hệ thống</span></div>
               </div>
             </div>
           </div>
-          <Link href="/admin/logs" className="block bg-[#f0f3ff] px-6 py-4 text-center text-sm font-semibold text-[#0b4dcc] dark:bg-slate-800 dark:text-indigo-300">Xem tất cả hoạt động</Link>
+          <Link href="/admin/logs" className="block bg-[#f2fbff] px-6 py-4 text-center text-sm font-semibold text-[#10aee8] dark:bg-slate-800 dark:text-sky-300">Xem tất cả hoạt động</Link>
         </article>
       </div>
 
       <article className={`${adminPanelClass} mt-6 overflow-hidden`}>
-        <div className="flex items-center justify-between border-b border-[#d8dceb] px-5 py-4 dark:border-slate-800">
+        <div className="flex items-center justify-between border-b border-[#d8ded5] px-5 py-4 dark:border-slate-800">
           <h2 className="text-lg font-bold">Người dùng mới nhất</h2>
-          <Link href="/admin/users" className="text-sm font-semibold text-[#0b4dcc]">Quản lý tất cả →</Link>
+          <Link href="/admin/users" className="text-sm font-semibold text-[#10aee8]">Quản lý tất cả →</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-left">
-            <thead className="bg-[#f0f2ff] text-xs uppercase tracking-wide text-[#293047] dark:bg-slate-800 dark:text-slate-200">
+            <thead className="bg-[#f2fbff] text-xs uppercase tracking-wide text-[#34423e] dark:bg-slate-800 dark:text-slate-200">
               <tr><th className="px-7 py-4">Người dùng</th><th className="px-5 py-4">Trạng thái</th><th className="px-5 py-4">Ngày tham gia</th><th className="px-5 py-4">Gói</th><th className="px-5 py-4 text-center">Thao tác</th></tr>
             </thead>
             <tbody>
@@ -199,12 +199,12 @@ export default function AdminDashboardPage() {
                   <td className="px-7 py-4"><div className="flex items-center gap-3"><AdminAvatar name={user.fullName} /><div><strong className="block">{user.fullName}</strong><span className="text-xs text-slate-500">{user.email}</span></div></div></td>
                   <td className="px-5 py-4"><AdminStatusBadge status={user.status} /></td>
                   <td className="px-5 py-4">{new Date(user.createdAt).toLocaleDateString("vi-VN")}</td>
-                  <td className="px-5 py-4 font-medium text-[#0b4dcc]">{user.subscriptions[0]?.plan.name ?? "Free"}</td>
+                  <td className="px-5 py-4 font-medium text-[#10aee8]">{user.subscriptions[0]?.plan.name ?? "Free"}</td>
                   <td className="px-5 py-4 text-center">
                     <button
                       type="button"
                       onClick={() => setSelectedUser(user)}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#eef2ff] hover:text-[#0b4dcc] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-300"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#f2fbff] hover:text-[#10aee8] dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-sky-300"
                       title="Xem nhanh"
                     >
                       <EllipsisVertical size={18} />
@@ -232,28 +232,28 @@ export default function AdminDashboardPage() {
               <button
                 type="button"
                 onClick={() => navigator.clipboard.writeText(selectedUser.email)}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#bcc5df] px-4 text-sm font-semibold text-[#0b4dcc] hover:bg-[#eef2ff] dark:border-slate-700 dark:text-indigo-300 dark:hover:bg-slate-800"
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#b8c8be] px-4 text-sm font-semibold text-[#10aee8] hover:bg-[#f2fbff] dark:border-slate-700 dark:text-sky-300 dark:hover:bg-slate-800"
               >
                 <Eye size={17} />
                 Sao chép email
               </button>
-              <Link href="/admin/users" className="inline-flex h-10 items-center rounded-lg bg-[#0b4dcc] px-4 text-sm font-semibold text-white">
+              <Link href="/admin/users" className="inline-flex h-10 items-center rounded-lg bg-[#10aee8] px-4 text-sm font-semibold text-white">
                 Mở trang người dùng
               </Link>
             </div>
           </div>
           <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-            <div className="rounded-lg bg-[#f4f6fb] p-4 dark:bg-slate-800">
+            <div className="rounded-lg bg-[#f8faf7] p-4 dark:bg-slate-800">
               <p className="text-slate-500">Trạng thái</p>
               <div className="mt-2"><AdminStatusBadge status={selectedUser.status} /></div>
             </div>
-            <div className="rounded-lg bg-[#f4f6fb] p-4 dark:bg-slate-800">
+            <div className="rounded-lg bg-[#f8faf7] p-4 dark:bg-slate-800">
               <p className="text-slate-500">Ngày tham gia</p>
               <p className="mt-2 font-semibold">{new Date(selectedUser.createdAt).toLocaleString("vi-VN")}</p>
             </div>
-            <div className="rounded-lg bg-[#f4f6fb] p-4 dark:bg-slate-800">
+            <div className="rounded-lg bg-[#f8faf7] p-4 dark:bg-slate-800">
               <p className="text-slate-500">Gói hiện tại</p>
-              <p className="mt-2 font-semibold text-[#0b4dcc]">{selectedUser.subscriptions[0]?.plan.name ?? "Free"}</p>
+              <p className="mt-2 font-semibold text-[#10aee8]">{selectedUser.subscriptions[0]?.plan.name ?? "Free"}</p>
             </div>
           </div>
         </article>

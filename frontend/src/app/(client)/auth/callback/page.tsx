@@ -37,7 +37,7 @@ export default function OAuthCallbackPage() {
       <div className="card p-10 text-center">
         {profile.isError || token === null
           ? <p className="text-red-700">Không thể hoàn tất đăng nhập OAuth.</p>
-          : <p className="flex items-center gap-3 font-bold"><LoaderCircle className="animate-spin text-indigo-600" /> Đang hoàn tất đăng nhập...</p>}
+          : <p className="flex items-center gap-3 font-bold"><LoaderCircle className="animate-spin text-[#10aee8]" /> Đang hoàn tất đăng nhập...</p>}
       </div>
     </section>
   );

@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Manrope, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/common/providers";
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin", "vietnamese"],
   display: "swap",
   variable: "--font-app",
+});
+
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin", "vietnamese"],
+  display: "swap",
+  variable: "--font-display",
 });
 
 export const metadata: Metadata = {
@@ -35,7 +41,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           }}
         />
       </head>
-      <body className={inter.variable} suppressHydrationWarning>
+      <body className={`${manrope.variable} ${sourceSerif.variable}`} suppressHydrationWarning>
         <Providers>
           {children}
         </Providers>

@@ -24,15 +24,15 @@ function VerifyEmailContent() {
       <div className="card w-full max-w-lg p-8 text-center">
         {verify.isPending && (
           <>
-            <MailCheck className="mx-auto text-indigo-600" size={54} />
-            <h1 className="mt-5 text-3xl font-black">Đang xác thực email</h1>
+            <MailCheck className="mx-auto text-[#10aee8]" size={54} />
+            <h1 className="app-heading mt-5 text-3xl">Đang xác thực email</h1>
             <p className="mt-3 text-slate-500">Vui lòng chờ trong giây lát.</p>
           </>
         )}
         {verify.isSuccess && (
           <>
             <CheckCircle2 className="mx-auto text-emerald-600" size={54} />
-            <h1 className="mt-5 text-3xl font-black">Email đã được xác thực</h1>
+            <h1 className="app-heading mt-5 text-3xl">Email đã được xác thực</h1>
             <p className="mt-3 text-slate-500">Tài khoản của bạn đã sẵn sàng sử dụng đầy đủ.</p>
             <Link href="/dashboard" className="btn-primary mt-7">Vào dashboard</Link>
           </>
@@ -40,7 +40,7 @@ function VerifyEmailContent() {
         {verify.isError && (
           <>
             <XCircle className="mx-auto text-red-600" size={54} />
-            <h1 className="mt-5 text-3xl font-black">Không thể xác thực</h1>
+            <h1 className="app-heading mt-5 text-3xl">Không thể xác thực</h1>
             <p className="mt-3 text-red-600">
               {axios.isAxiosError(verify.error) ? verify.error.response?.data?.message : "Liên kết không hợp lệ"}
             </p>
@@ -49,8 +49,8 @@ function VerifyEmailContent() {
         )}
         {!token && (
           <>
-            <MailCheck className="mx-auto text-indigo-600" size={54} />
-            <h1 className="mt-5 text-3xl font-black">Kiểm tra hộp thư</h1>
+            <MailCheck className="mx-auto text-[#10aee8]" size={54} />
+            <h1 className="app-heading mt-5 text-3xl">Kiểm tra hộp thư</h1>
             <p className="mt-3 text-slate-500">Chúng tôi đã gửi liên kết xác thực tới email bạn đăng ký.</p>
             <Link href="/dashboard/profile" className="btn-primary mt-7">Vào hồ sơ</Link>
           </>

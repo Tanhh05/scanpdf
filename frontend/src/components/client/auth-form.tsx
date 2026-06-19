@@ -49,17 +49,26 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
 
   const isRegister = mode === "register";
   return (
-    <section className="container-page flex min-h-[75vh] items-center justify-center py-16">
-      <form onSubmit={handleSubmit(submit)} className="card w-full max-w-md p-8">
-        <h1 className="text-3xl font-black">{isRegister ? "Tạo tài khoản" : "Chào mừng trở lại"}</h1>
-        <p className="mt-2 text-slate-500">
+    <section className="container-page grid min-h-[75vh] items-center gap-8 py-16 lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="hidden lg:block">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-[#10aee8]">ScanPDF Workspace</p>
+        <h1 className="mt-4 max-w-lg font-[var(--font-display)] text-5xl font-black leading-tight text-[#17201d] dark:text-slate-50">
+          Vào hệ thống xử lý tài liệu của bạn
+        </h1>
+        <p className="mt-5 max-w-md leading-7 text-slate-500 dark:text-slate-400">
+          Quản lý lịch sử, gói dịch vụ, API key và các luồng chuyển đổi PDF trong một bảng điều khiển thống nhất.
+        </p>
+      </div>
+      <form onSubmit={handleSubmit(submit)} className="card w-full max-w-md justify-self-center p-8">
+        <h1 className="font-[var(--font-display)] text-3xl font-black text-[#17201d] dark:text-slate-50">{isRegister ? "Tạo tài khoản" : "Chào mừng trở lại"}</h1>
+        <p className="mt-2 text-slate-500 dark:text-slate-400">
           {isRegister ? "Bắt đầu chuyển đổi tài liệu miễn phí." : "Đăng nhập để xem lịch sử chuyển đổi."}
         </p>
         <div className="mt-7 grid grid-cols-2 gap-3">
-          <a href={`${API_BASE_URL}/auth/google`} className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold hover:border-indigo-400">
-            <span className="text-lg font-black text-blue-600">G</span> Google
+          <a href={`${API_BASE_URL}/auth/google`} className="flex items-center justify-center gap-2 rounded-lg border border-[#cbd5c7] bg-white px-4 py-3 text-sm font-bold hover:border-[#10aee8] dark:border-slate-700 dark:bg-slate-900">
+            <span className="text-lg font-black text-[#10aee8]">G</span> Google
           </a>
-          <a href={`${API_BASE_URL}/auth/github`} className="flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold hover:border-indigo-400">
+          <a href={`${API_BASE_URL}/auth/github`} className="flex items-center justify-center gap-2 rounded-lg border border-[#cbd5c7] bg-white px-4 py-3 text-sm font-bold hover:border-[#10aee8] dark:border-slate-700 dark:bg-slate-900">
             <Github size={19} /> GitHub
           </a>
         </div>
@@ -80,7 +89,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           </label>
           {!isRegister && (
             <div className="text-right">
-              <Link href="/forgot-password" className="text-sm font-bold text-indigo-600">Quên mật khẩu?</Link>
+              <Link href="/forgot-password" className="text-sm font-bold text-[#10aee8]">Quên mật khẩu?</Link>
             </div>
           )}
           {!isRegister && requiresTwoFactor && (
@@ -88,14 +97,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
               <input {...register("otp")} inputMode="numeric" maxLength={6} className="field mt-2" placeholder="123456" />
             </label>
           )}
-          {errors.root && <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{errors.root.message}</p>}
+          {errors.root && <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{errors.root.message}</p>}
           <button disabled={isSubmitting} className="btn-primary w-full">
             {isSubmitting ? "Đang xử lý..." : isRegister ? "Đăng ký" : "Đăng nhập"}
           </button>
         </div>
         <p className="mt-6 text-center text-sm text-slate-500">
           {isRegister ? "Đã có tài khoản?" : "Chưa có tài khoản?"}{" "}
-          <Link className="font-bold text-indigo-600" href={isRegister ? "/login" : "/register"}>
+          <Link className="font-bold text-[#10aee8]" href={isRegister ? "/login" : "/register"}>
             {isRegister ? "Đăng nhập" : "Đăng ký"}
           </Link>
         </p>

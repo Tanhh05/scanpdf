@@ -56,12 +56,12 @@ export default function ApiKeysPage() {
     <AccountLayout>
       <div className="space-y-7">
         <div>
-          <p className="text-sm font-bold text-indigo-600">BUSINESS API</p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Public API</h1>
+          <p className="text-sm font-bold text-[#10aee8]">BUSINESS API</p>
+          <h1 className="mt-2 app-heading text-3xl sm:text-4xl">Public API</h1>
           <p className="mt-2 text-slate-500">Tạo API key để tích hợp ScanPDF vào hệ thống của bạn. Tính năng dành cho gói Business.</p>
         </div>
 
-        <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-6">
+        <form onSubmit={submit} className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-6">
           <h2 className="text-xl font-black">Tạo API key</h2>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <input value={name} onChange={(event) => setName(event.target.value)} className="field flex-1" placeholder="Ví dụ: Production server" minLength={2} required />
@@ -77,23 +77,23 @@ export default function ApiKeysPage() {
         </form>
 
         {newKey && (
-          <article className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
+          <article className="rounded-lg border border-emerald-200 bg-emerald-50 p-6">
             <h2 className="font-black text-emerald-950">Lưu API key ngay bây giờ</h2>
             <p className="mt-1 text-sm text-emerald-800">Key này sẽ không được hiển thị lại.</p>
             <div className="mt-4 flex gap-2">
-              <code className="min-w-0 flex-1 overflow-x-auto rounded-xl bg-slate-950 p-3 text-sm text-white">{newKey}</code>
-              <button type="button" onClick={copyKey} className="rounded-xl bg-emerald-700 px-4 text-white">
+              <code className="min-w-0 flex-1 overflow-x-auto rounded-lg bg-slate-950 p-3 text-sm text-white">{newKey}</code>
+              <button type="button" onClick={copyKey} className="rounded-lg bg-emerald-700 px-4 text-white">
                 {copied ? <Check size={19} /> : <Copy size={19} />}
               </button>
             </div>
           </article>
         )}
 
-        <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-          <div className="border-b border-slate-100 p-5">
+        <article className="overflow-hidden rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820]">
+          <div className="border-b border-[#d8ded5] dark:border-slate-800 p-5">
             <h2 className="text-xl font-black">API key của bạn</h2>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-[#d8ded5] dark:divide-slate-800">
             {keys.data?.items.map((key) => (
               <div key={key.id} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -111,7 +111,7 @@ export default function ApiKeysPage() {
                     type="button"
                     disabled={revokeKey.isPending}
                     onClick={() => window.confirm("Thu hồi API key này?") && revokeKey.mutate(key.id)}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 px-4 py-2 text-sm font-bold text-red-600 hover:bg-red-50"
                   >
                     <Trash2 size={16} /> Thu hồi
                   </button>
@@ -121,16 +121,16 @@ export default function ApiKeysPage() {
             {!keys.data?.items.length && <p className="p-8 text-center text-slate-500">Chưa có API key.</p>}
           </div>
           {keys.data && keys.data.pages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
+            <div className="flex items-center justify-between border-t border-[#d8ded5] dark:border-slate-800 px-5 py-4 text-sm text-slate-500">
               <span>{keys.data.total} API key</span>
               <Pagination page={page} pages={keys.data.pages} onPageChange={setPage} />
             </div>
           )}
         </article>
 
-        <article className="rounded-2xl bg-slate-950 p-6 text-white">
+        <article className="rounded-lg border border-[#1f3b4d] bg-[#17201d] p-6 text-white">
           <h2 className="text-xl font-black">Ví dụ sử dụng</h2>
-          <pre className="mt-4 overflow-x-auto rounded-xl bg-black/30 p-4 text-xs leading-6 text-slate-200">{`curl -X POST http://localhost:4000/api/v1/convert/compress-pdf \\
+          <pre className="mt-4 overflow-x-auto rounded-lg bg-black/30 p-4 text-xs leading-6 text-slate-200">{`curl -X POST http://localhost:4000/api/v1/convert/compress-pdf \\
   -H "X-API-Key: sp_live_..." \\
   -F "file=@document.pdf"`}</pre>
         </article>

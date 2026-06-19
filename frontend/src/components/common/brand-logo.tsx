@@ -20,10 +20,10 @@ export function BrandLogo({
         priority
       />
       <span className="leading-none">
-        <span className={`block font-black tracking-[-0.04em] ${compact ? "text-[17px]" : "text-xl"} ${inverse ? "text-white" : "text-[#111827]"}`}>
+        <span className={`block font-black tracking-[-0.02em] ${compact ? "text-[17px]" : "text-xl"} ${inverse ? "text-white" : "text-[#17201d] dark:text-slate-50"}`}>
           <span className="text-[#10aee8]">Scan</span><span className="text-[#f3263e]">PDF</span>
         </span>
-        {admin && <span className={`mt-1 block text-[10px] font-semibold uppercase tracking-[0.14em] ${inverse ? "text-white/65" : "text-slate-500"}`}>Admin</span>}
+        {admin && <span className={`mt-1 block text-[10px] font-semibold uppercase tracking-[0.14em] ${inverse ? "text-white/65" : "text-slate-500 dark:text-slate-400"}`}>Admin</span>}
       </span>
     </span>
   );

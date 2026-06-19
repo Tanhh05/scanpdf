@@ -49,7 +49,7 @@ export function AccountLayout({ children }: { children: ReactNode }) {
   if (!token) {
     return (
       <div className="container-page py-24 text-center">
-        <h1 className="text-3xl font-black">Đăng nhập để xem tài khoản</h1>
+        <h1 className="font-[var(--font-display)] text-3xl font-black text-[#17201d] dark:text-slate-50">Đăng nhập để xem tài khoản</h1>
         <p className="mt-3 text-slate-500">Quản lý gói dịch vụ, lượt sử dụng và lịch sử tài liệu của bạn.</p>
         <Link href="/login" className="btn-primary mt-6">Đăng nhập</Link>
       </div>
@@ -57,12 +57,12 @@ export function AccountLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <section className="bg-[#f7f8fc] py-8 sm:py-12">
+    <section className="min-h-[calc(100vh-72px)] bg-[#f3f7fb] py-8 dark:bg-[#07131a] sm:py-12">
       <div className="container-page grid gap-7 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-3 lg:sticky lg:top-24">
-          <div className="border-b border-slate-100 px-3 pb-4 pt-2">
+        <aside className="h-fit rounded-lg border border-[#d8ded5] bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-[#101820] lg:sticky lg:top-24">
+          <div className="border-b border-[#d8ded5] px-3 pb-4 pt-2 dark:border-slate-800">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">Tài khoản</p>
-            <p className="mt-2 truncate font-black text-slate-900">{user?.fullName}</p>
+            <p className="mt-2 truncate font-black text-[#17201d] dark:text-slate-50">{user?.fullName}</p>
           </div>
           <nav className="mt-3 space-y-1 text-sm font-bold">
             {navigation.map((item) => {
@@ -73,8 +73,8 @@ export function AccountLayout({ children }: { children: ReactNode }) {
                   href={item.href}
                   onMouseEnter={() => prefetchDashboardItem(item.href)}
                   onFocus={() => prefetchDashboardItem(item.href)}
-                  className={`flex items-center gap-3 rounded-xl px-3 py-3 transition ${
-                    active ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-50"
+                  className={`flex items-center gap-3 rounded-md px-3 py-3 transition ${
+                    active ? "bg-[#dff4fc] text-[#10aee8] dark:bg-sky-500/15 dark:text-sky-300" : "text-slate-600 hover:bg-[#f2fbff] dark:text-slate-300 dark:hover:bg-slate-900"
                   }`}
                 >
                   <item.icon size={18} /> {item.label}

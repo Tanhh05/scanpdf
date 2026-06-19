@@ -110,12 +110,12 @@ export default function TeamsPage() {
     <AccountLayout>
       <div className="space-y-7">
         <div>
-          <p className="text-sm font-bold text-indigo-600">BUSINESS</p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Team workspace</h1>
+          <p className="text-sm font-bold text-[#10aee8]">BUSINESS</p>
+          <h1 className="mt-2 app-heading text-3xl sm:text-4xl">Team workspace</h1>
           <p className="mt-2 text-slate-500">Mời thành viên, phân quyền và dùng quota theo team Business.</p>
         </div>
 
-        <form onSubmit={submitTeam} className="rounded-2xl border border-slate-200 bg-white p-5">
+        <form onSubmit={submitTeam} className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-5">
           <h2 className="text-xl font-black">Tạo team</h2>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <input value={teamName} onChange={(event) => setTeamName(event.target.value)} className="field flex-1" placeholder="Tên team" minLength={2} required />
@@ -125,7 +125,7 @@ export default function TeamsPage() {
         </form>
 
         {teams.data && teams.data.length > 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-5">
             <label className="text-sm font-bold text-slate-700">
               Chọn team
               <select value={activeTeam?.id ?? ""} onChange={(event) => { setSelectedTeamId(event.target.value); setMemberPage(1); setInvitePage(1); }} className="field mt-2 max-w-sm">
@@ -144,14 +144,14 @@ export default function TeamsPage() {
                 ["Còn lại", usage.data?.remainingToday ?? "-"],
                 ["Tổng convert", usage.data?.totalConversions ?? "-"],
               ].map(([label, value]) => (
-                <article key={label} className="rounded-2xl border border-slate-200 bg-white p-5">
+                <article key={label} className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-5">
                   <p className="text-sm text-slate-500">{label}</p>
-                  <strong className="mt-2 block text-2xl text-slate-950">{value}</strong>
+                  <strong className="mt-2 block text-2xl text-[#17201d] dark:text-slate-50">{value}</strong>
                 </article>
               ))}
             </div>
 
-            <form onSubmit={submitInvite} className="rounded-2xl border border-slate-200 bg-white p-5">
+            <form onSubmit={submitInvite} className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-5">
               <h2 className="text-xl font-black">Mời thành viên</h2>
               <div className="mt-4 grid gap-3 md:grid-cols-[1fr_180px_auto]">
                 <input value={inviteEmail} onChange={(event) => setInviteEmail(event.target.value)} type="email" className="field" placeholder="member@example.com" required />
@@ -161,15 +161,15 @@ export default function TeamsPage() {
                 </select>
                 <button disabled={invite.isPending} className="btn-primary">{invite.isPending ? "Đang gửi..." : "Gửi lời mời"}</button>
               </div>
-              {notice && <p className="mt-3 text-sm font-bold text-indigo-700">{notice}</p>}
+              {notice && <p className="mt-3 text-sm font-bold text-[#0789c5]">{notice}</p>}
               {invite.isError && <p className="mt-3 text-sm font-bold text-red-600">{message(invite.error)}</p>}
             </form>
 
-            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="border-b border-slate-100 p-5">
+            <article className="overflow-hidden rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820]">
+              <div className="border-b border-[#d8ded5] dark:border-slate-800 p-5">
                 <h2 className="text-xl font-black">Thành viên</h2>
               </div>
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-[#d8ded5] dark:divide-slate-800">
                 {visibleMembers.map((member) => (
                   <div key={member.id} className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
                     <div>
@@ -200,18 +200,18 @@ export default function TeamsPage() {
                 ))}
               </div>
               {memberPages > 1 && (
-                <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
+                <div className="flex items-center justify-between border-t border-[#d8ded5] dark:border-slate-800 px-5 py-4 text-sm text-slate-500">
                   <span>{activeTeam.members.length} thành viên</span>
                   <Pagination page={memberPage} pages={memberPages} onPageChange={setMemberPage} />
                 </div>
               )}
             </article>
 
-            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-              <div className="border-b border-slate-100 p-5">
+            <article className="overflow-hidden rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820]">
+              <div className="border-b border-[#d8ded5] dark:border-slate-800 p-5">
                 <h2 className="text-xl font-black">Lời mời đang chờ</h2>
               </div>
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-[#d8ded5] dark:divide-slate-800">
                 {visibleInvites.map((item) => (
                   <div key={item.id} className="flex items-center justify-between gap-3 p-5">
                     <div>
@@ -223,7 +223,7 @@ export default function TeamsPage() {
                 {!activeTeam.invites.length && <p className="p-8 text-center text-slate-500">Không có lời mời đang chờ.</p>}
               </div>
               {invitePages > 1 && (
-                <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm text-slate-500">
+                <div className="flex items-center justify-between border-t border-[#d8ded5] dark:border-slate-800 px-5 py-4 text-sm text-slate-500">
                   <span>{activeTeam.invites.length} lời mời</span>
                   <Pagination page={invitePage} pages={invitePages} onPageChange={setInvitePage} />
                 </div>

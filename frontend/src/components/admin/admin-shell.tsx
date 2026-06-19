@@ -46,24 +46,24 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const { user, token, hasHydrated, logout } = useAdminAuthStore();
   const isLoginPage = pathname === "/admin/login";
 
-  if (isLoginPage) return <main className="min-h-screen bg-slate-950">{children}</main>;
+  if (isLoginPage) return <main className="min-h-screen bg-[#07131a]">{children}</main>;
 
   if (!hasHydrated) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f9f8ff]">
-        <div className="h-9 w-9 animate-spin rounded-full border-4 border-[#0b4dcc]/20 border-t-[#0b4dcc]" aria-label="Đang tải phiên đăng nhập" />
+      <main className="flex min-h-screen items-center justify-center bg-[#f3f7fb]">
+        <div className="h-9 w-9 animate-spin rounded-full border-4 border-[#10aee8]/20 border-t-[#10aee8]" aria-label="Đang tải phiên đăng nhập" />
       </main>
     );
   }
 
   if (!token) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#f9f8ff] p-6 text-[#111527]">
-        <div className="w-full max-w-md rounded-2xl border border-[#d8dceb] bg-white p-8 text-center shadow-xl">
-          <Shield className="mx-auto text-[#0b4dcc]" size={48} />
+      <main className="flex min-h-screen items-center justify-center bg-[#f3f7fb] p-6 text-[#17201d]">
+        <div className="w-full max-w-md rounded-lg border border-[#d8ded5] bg-white p-8 text-center shadow-xl">
+          <Shield className="mx-auto text-[#10aee8]" size={48} />
           <h1 className="mt-5 text-3xl font-bold">ScanPDF Admin</h1>
           <p className="mt-3 text-sm text-slate-500">Đăng nhập bằng tài khoản quản trị để tiếp tục.</p>
-          <Link href="/admin/login" className="mt-7 inline-flex rounded-xl bg-[#0b4dcc] px-6 py-3 font-bold text-white">
+          <Link href="/admin/login" className="mt-7 inline-flex rounded-lg bg-[#10aee8] px-6 py-3 font-bold text-white">
             Đăng nhập admin
           </Link>
         </div>
@@ -77,7 +77,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   const sidebar = (
-    <div className="flex h-full flex-col bg-[#fbfaff] text-[#20263a] dark:bg-slate-950 dark:text-slate-100">
+    <div className="flex h-full flex-col bg-[#17201d] text-white dark:bg-slate-950 dark:text-slate-100">
       <div className="flex h-[76px] items-center px-5">
         <BrandLogo compact admin />
       </div>
@@ -92,8 +92,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               onClick={() => setMobileOpen(false)}
               className={`flex h-11 items-center gap-3 rounded-lg px-4 text-sm font-medium transition ${
                 active
-                  ? "bg-[#2f67e9] text-white shadow-[0_5px_12px_rgba(47,103,233,0.2)] dark:bg-blue-600"
-                  : "text-[#252b40] hover:bg-[#edf2ff] hover:text-[#0b4dcc] dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
+                  ? "bg-[#10aee8] text-white shadow-[0_5px_12px_rgba(16,174,232,0.24)]"
+                  : "text-white/78 hover:bg-white/10 hover:text-white dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white"
               }`}
             >
               <item.icon size={19} strokeWidth={2} />
@@ -103,11 +103,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         })}
       </nav>
 
-      <div className="border-t border-[#d8dceb] px-3 pb-4 pt-3 dark:border-slate-800">
-        <Link href="/admin/users" className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#edf2ff] dark:hover:bg-slate-900">
+      <div className="border-t border-white/10 px-3 pb-4 pt-3 dark:border-slate-800">
+        <Link href="/admin/users" className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-white/78 hover:bg-white/10 hover:text-white dark:hover:bg-slate-900">
           <CircleUserRound size={19} /> Hồ sơ
         </Link>
-        <Link href="/admin/plans" className="mt-1 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-[#edf2ff] dark:hover:bg-slate-900">
+        <Link href="/admin/plans" className="mt-1 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-white/78 hover:bg-white/10 hover:text-white dark:hover:bg-slate-900">
           <Settings size={19} /> Cài đặt
         </Link>
         <button
@@ -122,8 +122,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <main className="min-h-screen bg-[#f9f8ff] text-[#111527] dark:bg-slate-950 dark:text-slate-100">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-[#cfd4e4] dark:border-slate-800 lg:block">
+    <main className="min-h-screen bg-[#f3f7fb] text-[#17201d] dark:bg-[#07131a] dark:text-slate-100">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[248px] border-r border-[#1f3b4d] dark:border-slate-800 lg:block">
         {sidebar}
       </aside>
 
@@ -143,19 +143,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <header className="h-[72px] px-4 sm:px-6 lg:px-7">
           <div className="mx-auto flex h-full max-w-[1440px] items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
-              <button type="button" onClick={() => setMobileOpen(true)} className="rounded-xl border border-[#cfd4e4] bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900 lg:hidden">
+              <button type="button" onClick={() => setMobileOpen(true)} className="rounded-lg border border-[#d8ded5] bg-white p-2.5 dark:border-slate-700 dark:bg-slate-900 lg:hidden">
                 <Menu size={21} />
               </button>
               <h1 className="truncate text-[22px] font-bold tracking-[-0.02em]">{pageTitles[pathname] ?? "ScanPDF Admin"}</h1>
             </div>
             <div className="flex items-center gap-3 sm:gap-5">
-              <ThemeToggle className="!border-0 !bg-transparent hover:!bg-[#edf2ff] dark:hover:!bg-slate-800" />
-              <span className="hidden h-8 w-px bg-[#cfd4e4] dark:bg-slate-800 sm:block" />
+              <ThemeToggle className="!border-0 !bg-transparent hover:!bg-[#dff4fc] dark:hover:!bg-slate-800" />
+              <span className="hidden h-8 w-px bg-[#d8ded5] dark:bg-slate-800 sm:block" />
               <div className="hidden text-right sm:block">
                 <p className="max-w-40 truncate text-sm font-semibold">{user?.fullName || "Quản trị viên"}</p>
-                <p className="text-[11px] uppercase tracking-wide text-[#586075] dark:text-slate-400">Super Admin</p>
+                <p className="text-[11px] uppercase tracking-wide text-[#52615d] dark:text-slate-400">Super Admin</p>
               </div>
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-[#0b4dcc] bg-[#dce6ff] text-xs font-bold text-[#0b4dcc] dark:border-blue-400 dark:bg-slate-900 dark:text-blue-300">
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-md border-2 border-[#10aee8] bg-[#dff4fc] text-xs font-bold text-[#10aee8] dark:border-sky-400 dark:bg-slate-900 dark:text-sky-300">
                 {(user?.fullName || user?.email || "A").charAt(0).toUpperCase()}
               </div>
             </div>
@@ -165,7 +165,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto min-h-[calc(100vh-124px)] max-w-[1440px] px-4 pb-8 sm:px-6 lg:px-7">
           {children}
         </div>
-        <footer className="border-t border-[#d8dceb] px-6 py-4 text-center text-[11px] text-[#737b90] dark:border-slate-800 dark:text-slate-400 lg:text-left">
+        <footer className="border-t border-[#d8ded5] px-6 py-4 text-center text-[11px] text-[#6b7773] dark:border-slate-800 dark:text-slate-400 lg:text-left">
           <div className="mx-auto flex max-w-[1380px] flex-wrap items-center justify-between gap-3">
             <span>© 2026 ScanPDF Admin. All rights reserved.</span>
             <span>Version 2.1.0-stable</span>

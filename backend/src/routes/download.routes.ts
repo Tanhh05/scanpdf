@@ -15,7 +15,7 @@ const providerSchema = z.enum(["tiktok", "facebook", "instagram", "youtube"]);
 
 router.post("/:provider/analyze", asyncHandler(async (req, res) => {
   const provider = providerSchema.parse(req.params.provider) as DownloaderProvider;
-  const { url } = z.object({ url: z.url() }).parse(req.body);
+  const { url } = z.object({ url: z.preprocess((value) => typeof value === "string" ? value.trim() : value, z.url()) }).parse(req.body);
   const data = await analyzeMedia(provider, url);
   res.json(data);
 }));
@@ -23,7 +23,7 @@ router.post("/:provider/analyze", asyncHandler(async (req, res) => {
 router.get("/file", asyncHandler(async (req, res) => {
   const query = z.object({
     provider: providerSchema,
-    source: z.url(),
+    source: z.preprocess((value) => typeof value === "string" ? value.trim() : value, z.url()),
     mode: z.enum(["video", "audio"]),
     formatId: z.string().min(1).optional(),
     filename: z.string().min(1).max(160).default("scanpdf-download.bin"),

@@ -21,7 +21,7 @@ const statuses = [
 
 const statusStyles: Record<string, string> = {
   COMPLETED: "bg-emerald-50 text-emerald-700",
-  PROCESSING: "bg-blue-50 text-blue-700",
+  PROCESSING: "bg-[#eef5f7] text-[#0b8fc7]",
   QUEUED: "bg-amber-50 text-amber-700",
   FAILED: "bg-red-50 text-red-700",
 };
@@ -117,14 +117,14 @@ export default function HistoryPage() {
       <div className="space-y-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm font-bold text-indigo-600">LỊCH SỬ</p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Lịch sử chuyển đổi</h1>
+            <p className="text-sm font-bold text-[#10aee8]">LỊCH SỬ</p>
+            <h1 className="mt-2 app-heading text-3xl sm:text-4xl">Lịch sử chuyển đổi</h1>
             <p className="mt-2 text-slate-500">Tìm kiếm, tải xuống hoặc xóa các tài liệu đã xử lý.</p>
           </div>
           <Link href="/tools/word-to-pdf" className="btn-primary !py-2.5">Chuyển đổi mới</Link>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-4">
           <div className="flex flex-col gap-3 sm:flex-row">
             <form onSubmit={submitSearch} className="flex min-w-0 flex-1 gap-2">
               <label className="relative min-w-0 flex-1">
@@ -136,7 +136,7 @@ export default function HistoryPage() {
                   placeholder="Tìm theo tên file..."
                 />
               </label>
-              <button className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white hover:bg-slate-700">Tìm</button>
+              <button className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-bold text-white hover:bg-slate-700">Tìm</button>
             </form>
             <select
               value={status}
@@ -150,12 +150,12 @@ export default function HistoryPage() {
             </select>
           </div>
         </div>
-        {notice && <p className="rounded-xl bg-indigo-50 p-3 text-sm font-bold text-indigo-700">{notice}</p>}
+        {notice && <p className="rounded-lg bg-[#e8f7fd] p-3 text-sm font-bold text-[#0789c5]">{notice}</p>}
 
-        <article className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <article className="overflow-hidden rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820]">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[880px] text-left text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-400">
+              <thead className="bg-[#eef8fd] text-xs uppercase tracking-wide text-[#34423e] dark:bg-slate-800 dark:text-slate-200">
                 <tr>
                   <th className="p-4 sm:px-6">Tài liệu</th>
                   <th>Công cụ</th>
@@ -166,10 +166,10 @@ export default function HistoryPage() {
               </thead>
               <tbody>
                 {history.data?.items.map((item) => (
-                  <tr key={item.id} className="border-t border-slate-100">
+                  <tr key={item.id} className="border-t border-[#d8ded5] dark:border-slate-800">
                     <td className="p-4 sm:px-6">
                       <span className="flex max-w-xs items-center gap-3 font-bold text-slate-900">
-                        <FileText size={18} className="shrink-0 text-indigo-500" />
+                        <FileText size={18} className="shrink-0 text-[#10aee8]" />
                         <span className="truncate" title={item.inputFile.originalName}>{item.inputFile.originalName}</span>
                       </span>
                       {item.status === "FAILED" && item.errorMessage && (
@@ -178,7 +178,7 @@ export default function HistoryPage() {
                     </td>
                     <td className="text-slate-600">{toolNames[item.tool] ?? item.tool.replaceAll("_", " ")}</td>
                     <td>
-                      <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusStyles[item.status] ?? "bg-slate-100 text-slate-700"}`}>
+                      <span className={`rounded-md px-3 py-1 text-xs font-bold ${statusStyles[item.status] ?? "bg-slate-100 text-slate-700"}`}>
                         {statusNames[item.status] ?? item.status}
                       </span>
                     </td>
@@ -190,7 +190,7 @@ export default function HistoryPage() {
                           disabled={!item.canDownload || createShare.isPending}
                           onClick={() => share(item)}
                           title="Tạo liên kết chia sẻ"
-                          className="rounded-lg border border-slate-200 p-2 text-sky-600 transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:text-slate-300"
+                          className="rounded-lg border border-[#d8ded5] p-2 dark:border-slate-700 text-[#0b8fc7] transition hover:bg-[#eef5f7] disabled:cursor-not-allowed disabled:text-slate-300"
                         >
                           <Share2 size={17} />
                         </button>
@@ -199,7 +199,7 @@ export default function HistoryPage() {
                           disabled={!item.canDownload}
                           onClick={() => download(item)}
                           title={item.canDownload ? "Tải kết quả" : "File không còn khả dụng"}
-                          className="rounded-lg border border-slate-200 p-2 text-indigo-600 transition hover:bg-indigo-50 disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-white"
+                          className="rounded-lg border border-[#d8ded5] p-2 dark:border-slate-700 text-[#10aee8] transition hover:bg-[#e8f7fd] disabled:cursor-not-allowed disabled:text-slate-300 disabled:hover:bg-white"
                         >
                           <Download size={17} />
                         </button>
@@ -208,7 +208,7 @@ export default function HistoryPage() {
                           disabled={removeConversion.isPending}
                           onClick={() => confirmDelete(item)}
                           title="Xóa lịch sử"
-                          className="rounded-lg border border-slate-200 p-2 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                          className="rounded-lg border border-[#d8ded5] p-2 dark:border-slate-700 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
                         >
                           <Trash2 size={17} />
                         </button>
@@ -226,7 +226,7 @@ export default function HistoryPage() {
             </table>
           </div>
           {history.data && history.data.pages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-100 px-5 py-4 text-sm">
+            <div className="flex items-center justify-between border-t border-[#d8ded5] dark:border-slate-800 px-5 py-4 text-sm">
               <span className="text-slate-500">{history.data.total} kết quả</span>
               <Pagination page={page} pages={history.data.pages} onPageChange={setPage} />
             </div>

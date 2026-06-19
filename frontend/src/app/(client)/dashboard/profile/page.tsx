@@ -111,19 +111,19 @@ export default function ProfilePage() {
     <AccountLayout>
       <div className="space-y-7">
         <div>
-          <p className="text-sm font-bold text-indigo-600">HỒ SƠ CỦA TÔI</p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">Thông tin cá nhân</h1>
+          <p className="text-sm font-bold text-[#10aee8]">HỒ SƠ CỦA TÔI</p>
+          <h1 className="mt-2 app-heading text-3xl sm:text-4xl">Thông tin cá nhân</h1>
           <p className="mt-2 text-slate-500">Thông tin được sử dụng cho tài khoản ScanPDF của bạn.</p>
         </div>
-        <article className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
-          <div className="flex flex-col gap-5 border-b border-slate-100 pb-7 sm:flex-row sm:items-center">
-            <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-2xl font-black text-white">
+        <article className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-6 sm:p-8">
+          <div className="flex flex-col gap-5 border-b border-[#d8ded5] pb-7 dark:border-slate-800 sm:flex-row sm:items-center">
+            <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-[#10aee8] text-2xl font-black text-white">
               {getInitials(user?.fullName, user?.email)}
             </span>
             <div className="min-w-0">
-              <h2 className="truncate text-2xl font-black text-slate-950">{user?.fullName}</h2>
+              <h2 className="truncate text-2xl font-black text-[#17201d] dark:text-slate-50">{user?.fullName}</h2>
               <p className="mt-1 flex items-center gap-2 truncate text-sm text-slate-500"><Mail size={15} /> {user?.email}</p>
-              <span className="mt-3 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">Tài khoản đang hoạt động</span>
+              <span className="mt-3 inline-flex rounded-md bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">Tài khoản đang hoạt động</span>
             </div>
           </div>
           <div className="grid gap-7 pt-7 sm:grid-cols-2">
@@ -147,7 +147,7 @@ export default function ProfilePage() {
         </article>
 
         {profile.data && !profile.data.user.emailVerifiedAt && (
-          <article className="flex flex-col gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <article className="flex flex-col gap-4 rounded-lg border border-amber-200 bg-amber-50 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-black text-amber-950">Email chưa được xác thực</h2>
               <p className="mt-1 text-sm text-amber-800">Xác thực email để bảo vệ tài khoản và sử dụng Public API.</p>
@@ -156,7 +156,7 @@ export default function ProfilePage() {
               type="button"
               disabled={resendVerification.isPending}
               onClick={() => resendVerification.mutate()}
-              className="rounded-xl bg-amber-950 px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+              className="rounded-lg bg-amber-950 px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
             >
               {resendVerification.isPending ? "Đang gửi..." : resendVerification.isSuccess ? "Đã gửi" : "Gửi lại email"}
             </button>
@@ -164,13 +164,13 @@ export default function ProfilePage() {
         )}
 
         <div className="grid gap-5 lg:grid-cols-2">
-          <form onSubmit={submitProfile} className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+          <form onSubmit={submitProfile} className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-6 sm:p-8">
             <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[#e8f7fd] text-[#10aee8]">
                 <Save size={21} />
               </span>
               <div>
-                <h2 className="text-xl font-black text-slate-950">Cập nhật hồ sơ</h2>
+                <h2 className="text-xl font-black text-[#17201d] dark:text-slate-50">Cập nhật hồ sơ</h2>
                 <p className="mt-1 text-sm text-slate-500">Tên này được hiển thị trong dashboard và avatar chữ cái.</p>
               </div>
             </div>
@@ -197,13 +197,13 @@ export default function ProfilePage() {
             </button>
           </form>
 
-          <form onSubmit={submitPassword} className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+          <form onSubmit={submitPassword} className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-6 sm:p-8">
             <div className="flex items-start gap-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
                 <KeyRound size={21} />
               </span>
               <div>
-                <h2 className="text-xl font-black text-slate-950">Đổi mật khẩu</h2>
+                <h2 className="text-xl font-black text-[#17201d] dark:text-slate-50">Đổi mật khẩu</h2>
                 <p className="mt-1 text-sm text-slate-500">
                   {profile.data?.user.hasPassword ? "Nhập mật khẩu hiện tại để đổi mật khẩu mới." : "Tài khoản OAuth có thể đặt mật khẩu để đăng nhập bằng email."}
                 </p>
@@ -245,17 +245,17 @@ export default function ProfilePage() {
         </div>
 
         {user?.role === "ADMIN" ? (
-          <article className="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+          <article className="rounded-lg border border-amber-200 bg-amber-50 p-6">
             <h2 className="text-xl font-black text-amber-950">Xác thực hai lớp (2FA)</h2>
             <p className="mt-2 text-sm text-amber-800">2FA cho tài khoản quản trị đang tạm thời bị tắt.</p>
           </article>
         ) : (
-        <article className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8">
+        <article className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-6 sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h2 className="text-xl font-black text-slate-950">Xác thực hai lớp (2FA)</h2>
+              <h2 className="text-xl font-black text-[#17201d] dark:text-slate-50">Xác thực hai lớp (2FA)</h2>
               <p className="mt-1 text-sm text-slate-500">Dùng Google Authenticator, Microsoft Authenticator hoặc ứng dụng TOTP tương thích.</p>
-              <span className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+              <span className={`mt-3 inline-flex rounded-md px-3 py-1 text-xs font-bold ${
                 profile.data?.user.twoFactorEnabled ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"
               }`}>
                 {profile.data?.user.twoFactorEnabled ? "Đang bật" : "Chưa bật"}
@@ -273,16 +273,16 @@ export default function ProfilePage() {
             )}
           </div>
           {twoFactorSetup && (
-            <div className="mt-6 grid gap-6 border-t border-slate-100 pt-6 md:grid-cols-[180px_1fr]">
-              <img src={twoFactorSetup.qrCode} alt="QR thiết lập 2FA" className="h-44 w-44 rounded-xl border bg-white p-2" />
+            <div className="mt-6 grid gap-6 border-t border-[#d8ded5] pt-6 dark:border-slate-800 md:grid-cols-[180px_1fr]">
+              <img src={twoFactorSetup.qrCode} alt="QR thiết lập 2FA" className="h-44 w-44 rounded-lg border bg-white p-2" />
               <div>
                 <p className="text-sm font-bold text-slate-700">Quét QR hoặc nhập secret:</p>
-                <code className="mt-2 block break-all rounded-xl bg-slate-950 p-3 text-sm text-white">{twoFactorSetup.secret}</code>
+                <code className="mt-2 block break-all rounded-lg bg-slate-950 p-3 text-sm text-white">{twoFactorSetup.secret}</code>
                 {twoFactorSetup.debugToken && (
                   <button
                     type="button"
                     onClick={() => setTwoFactorToken(twoFactorSetup.debugToken ?? "")}
-                    className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-left text-sm font-bold text-emerald-700"
+                    className="mt-3 rounded-lg bg-emerald-50 px-4 py-3 text-left text-sm font-bold text-emerald-700"
                   >
                     Mã test local hiện tại: {twoFactorSetup.debugToken}
                   </button>
@@ -306,7 +306,7 @@ export default function ProfilePage() {
                   Xác nhận bật 2FA
                 </button>
                 {enableTwoFactor.isError && (
-                  <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-600">
+                  <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">
                     {getErrorMessage(enableTwoFactor.error)}
                   </p>
                 )}
@@ -314,12 +314,12 @@ export default function ProfilePage() {
             </div>
           )}
           {setupTwoFactor.isError && (
-            <p className="mt-5 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-600">
+            <p className="mt-5 rounded-lg bg-red-50 p-3 text-sm font-bold text-red-600">
               {getErrorMessage(setupTwoFactor.error)}
             </p>
           )}
           {profile.data?.user.twoFactorEnabled && (
-            <div className="mt-6 flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row">
+            <div className="mt-6 flex flex-col gap-3 border-t border-[#d8ded5] pt-6 dark:border-slate-800 sm:flex-row">
               <input
                 value={twoFactorToken}
                 onChange={(event) => setTwoFactorToken(event.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -331,7 +331,7 @@ export default function ProfilePage() {
                 type="button"
                 disabled={twoFactorToken.length !== 6 || disableTwoFactor.isPending}
                 onClick={() => window.confirm("Tắt xác thực hai lớp?") && disableTwoFactor.mutate()}
-                className="rounded-xl border border-red-200 px-5 py-3 font-bold text-red-600 hover:bg-red-50"
+                className="rounded-lg border border-red-200 px-5 py-3 font-bold text-red-600 hover:bg-red-50"
               >
                 Tắt 2FA
               </button>

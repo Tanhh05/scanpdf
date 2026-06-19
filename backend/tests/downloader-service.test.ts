@@ -52,6 +52,21 @@ describe("downloader service", () => {
     expect(isSupportedSourceUrl("tiktok", "https://www.tiktok.com/@scanpdf")).toBe(false);
   });
 
+  it("accepts common short URLs for downloader providers", () => {
+    expect(isSupportedSourceUrl("youtube", "https://youtu.be/dQw4w9WgXcQ")).toBe(true);
+    expect(isSupportedSourceUrl("youtube", "https://www.youtube.com/shorts/dQw4w9WgXcQ")).toBe(true);
+    expect(isSupportedSourceUrl("facebook", "https://fb.watch/demo123/")).toBe(true);
+    expect(isSupportedSourceUrl("facebook", "https://www.facebook.com/share/v/demo123/")).toBe(true);
+    expect(isSupportedSourceUrl("instagram", "https://instagr.am/p/demo123/")).toBe(true);
+    expect(isSupportedSourceUrl("instagram", "https://www.instagram.com/tv/demo123/")).toBe(true);
+    expect(isSupportedSourceUrl("tiktok", "https://bit.ly/demo-short-link")).toBe(true);
+  });
+
+  it("accepts shared Instagram and YouTube URLs with tracking parameters", () => {
+    expect(isSupportedSourceUrl("instagram", "https://www.instagram.com/p/DZrCalMxQQz/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==")).toBe(true);
+    expect(isSupportedSourceUrl("youtube", "https://www.youtube.com/watch?v=QosfTa3FZZ0&list=RDQosfTa3FZZ0&start_radio=1")).toBe(true);
+  });
+
   it("parses TikTok photo posts without relying on yt-dlp", () => {
     const result = parseTikTokApiData(JSON.stringify({
       videoDetail: {

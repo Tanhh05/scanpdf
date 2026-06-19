@@ -50,15 +50,15 @@ export default function AdminLoginPage() {
     : "";
 
   return (
-    <section className="flex min-h-screen items-center justify-center bg-[#faf8ff] px-4 py-5 text-[#172033]">
+    <section className="flex min-h-screen items-center justify-center bg-[#f3f7fb] px-4 py-5 text-[#17201d]">
       <form
         onSubmit={submit}
-        className="w-full max-w-[420px] rounded-xl border border-[#dde0e8] bg-white p-6 shadow-[0_12px_36px_rgba(38,42,58,0.10)] sm:p-8"
+        className="w-full max-w-[420px] rounded-lg border border-[#dde0e8] bg-white p-6 shadow-[0_12px_36px_rgba(38,42,58,0.10)] sm:p-8"
       >
           <h1 className="text-2xl font-bold leading-8 tracking-[-0.02em]">Đăng nhập hệ thống</h1>
 
-          <div className="mt-5 flex items-start gap-3 rounded-lg border border-[#b8c7ff] bg-[#f4f5ff] px-4 py-3.5 text-sm font-medium leading-5 text-[#4c5260]">
-            <ShieldCheck className="mt-0.5 shrink-0 text-[#2162e8]" size={17} />
+          <div className="mt-5 flex items-start gap-3 rounded-lg border border-[#b8c7ff] bg-[#f2fbff] px-4 py-3.5 text-sm font-medium leading-5 text-[#4c5260]">
+            <ShieldCheck className="mt-0.5 shrink-0 text-[#10aee8]" size={17} />
             <p>Đây là khu vực quản trị riêng. Vui lòng không chia sẻ thông tin đăng nhập.</p>
           </div>
 
@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
                   type="email"
                   autoComplete="username"
                   placeholder="admin@scanpdf.vn"
-                  className="h-12 w-full rounded-lg border border-[#d9dde6] bg-white pl-11 pr-4 text-sm font-normal outline-none transition placeholder:text-[#687083] focus:border-[#2864e8] focus:ring-2 focus:ring-[#2864e8]/10"
+                  className="h-12 w-full rounded-lg border border-[#d9dde6] bg-white pl-11 pr-4 text-sm font-normal outline-none transition placeholder:text-[#687083] focus:border-[#10aee8] focus:ring-2 focus:ring-[#10aee8]/10"
                   required
                 />
               </span>
@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
             <label className="block text-sm font-semibold leading-5">
               <span className="flex items-center justify-between gap-4">
                 Mật khẩu
-                <Link href="/forgot-password" className="font-semibold text-[#1757d4] hover:underline">Quên mật khẩu?</Link>
+                <Link href="/forgot-password" className="font-semibold text-[#10aee8] hover:underline">Quên mật khẩu?</Link>
               </span>
               <span className="relative mt-2 block">
                 <LockKeyhole className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8e96a8]" size={17} />
@@ -91,7 +91,7 @@ export default function AdminLoginPage() {
                   onChange={(event) => setPassword(event.target.value)}
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
-                  className="h-12 w-full rounded-lg border border-[#d9dde6] bg-white pl-11 pr-11 text-sm font-normal outline-none transition focus:border-[#2864e8] focus:ring-2 focus:ring-[#2864e8]/10"
+                  className="h-12 w-full rounded-lg border border-[#d9dde6] bg-white pl-11 pr-11 text-sm font-normal outline-none transition focus:border-[#10aee8] focus:ring-2 focus:ring-[#10aee8]/10"
                   required
                 />
                 <button
@@ -109,7 +109,7 @@ export default function AdminLoginPage() {
 
             <button
               disabled={login.isPending}
-              className="flex h-[50px] w-full items-center justify-center gap-2 rounded-lg bg-[#2d66e8] text-sm font-bold text-white transition hover:bg-[#2458ce] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex h-[50px] w-full items-center justify-center gap-2 rounded-lg bg-[#10aee8] text-sm font-bold text-white transition hover:bg-[#0789c5] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {login.isPending ? "Đang đăng nhập..." : "Đăng nhập"}
               {!login.isPending && <ArrowRight size={18} />}

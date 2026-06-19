@@ -86,11 +86,11 @@ export function ToolUploader({
 
   if (!token) {
     return (
-      <div className="mx-auto flex min-h-[420px] max-w-6xl flex-col items-center justify-center border border-slate-200 bg-white p-6 text-center shadow-[0_18px_60px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none sm:min-h-[560px] sm:rounded-3xl sm:p-10">
-        <span className="flex h-16 w-16 items-center justify-center bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300 sm:h-20 sm:w-20 sm:rounded-3xl">
+      <div className="mx-auto flex min-h-[420px] max-w-6xl flex-col items-center justify-center rounded-lg border border-[#d8ded5] bg-white p-6 text-center shadow-[0_18px_60px_rgba(23,32,29,0.06)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none sm:min-h-[520px] sm:p-10">
+        <span className="flex h-16 w-16 items-center justify-center rounded-lg bg-[#e8f7fd] text-[#10aee8] dark:bg-[#10aee8]/15 dark:text-sky-300 sm:h-20 sm:w-20">
           <FileUp size={34} />
         </span>
-        <h2 className="mt-5 text-xl font-black text-slate-950 sm:mt-6 sm:text-2xl">Đăng nhập để tải file lên</h2>
+        <h2 className="mt-5 text-xl font-black tracking-normal text-[#17201d] dark:text-slate-50 sm:mt-6 sm:text-2xl">Đăng nhập để tải file lên</h2>
         <p className="mt-2 text-slate-500">Đăng nhập để sử dụng công cụ và lưu lịch sử chuyển đổi.</p>
         <button onClick={() => router.push("/login")} className="btn-primary mt-6 !px-7">Đăng nhập</button>
       </div>
@@ -99,18 +99,18 @@ export function ToolUploader({
 
   const status = conversion.data?.status;
   return (
-    <div className="mx-auto max-w-6xl overflow-hidden border border-slate-200 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.07)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none sm:rounded-3xl">
-      <label className="m-3 flex min-h-[340px] cursor-pointer flex-col items-center justify-center border-2 border-dashed border-indigo-200 bg-gradient-to-b from-indigo-50/80 to-blue-50/50 p-5 text-center transition hover:border-indigo-400 hover:from-indigo-50 hover:to-blue-50 dark:border-indigo-500/45 dark:from-slate-800 dark:to-slate-900 dark:hover:border-indigo-400 dark:hover:from-slate-800 dark:hover:to-slate-800 sm:m-6 sm:min-h-[470px] sm:rounded-2xl sm:p-8">
-        <span className="flex h-16 w-16 items-center justify-center bg-white text-[#08275f] shadow-[0_12px_35px_rgba(79,70,229,0.12)] dark:bg-slate-950 dark:text-indigo-300 dark:shadow-none sm:h-20 sm:w-20 sm:rounded-3xl">
+    <div className="mx-auto max-w-6xl overflow-hidden rounded-lg border border-[#d8ded5] bg-white shadow-[0_18px_60px_rgba(23,32,29,0.07)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+      <label className="m-3 flex min-h-[320px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#10aee8]/45 bg-gradient-to-b from-[#eef8fd]/80 to-[#f8faf7]/50 p-5 text-center transition hover:border-[#10aee8] hover:from-[#eef8fd] hover:to-[#f8faf7] dark:border-sky-500/45 dark:from-slate-800 dark:to-slate-900 dark:hover:border-[#10aee8] dark:hover:from-slate-800 dark:hover:to-slate-800 sm:m-5 sm:min-h-[420px] sm:p-8">
+        <span className="flex h-16 w-16 items-center justify-center rounded-lg bg-white text-[#10aee8] shadow-[0_12px_35px_rgba(16,174,232,0.12)] dark:bg-slate-950 dark:text-sky-300 dark:shadow-none sm:h-20 sm:w-20">
           <CloudUpload size={36} strokeWidth={1.6} />
         </span>
-        <h2 className="mt-5 text-xl font-black text-slate-950 sm:mt-6 sm:text-2xl">
+        <h2 className="mt-5 text-2xl font-black tracking-normal text-[#17201d] sm:mt-6 sm:text-3xl dark:text-slate-50">
           {multiple ? "Chọn các file cần xử lý" : "Chọn file cần xử lý"}
         </h2>
         <p className="mt-2 text-sm text-slate-500">
           Kéo thả {multiple ? "các file" : "file"} vào đây hoặc chọn từ thiết bị của bạn
         </p>
-        <span className="mt-6 inline-flex max-w-full overflow-hidden bg-[#1262e8] text-white shadow-lg shadow-blue-200 transition hover:bg-[#0756d4] sm:rounded-xl">
+        <span className="mt-6 inline-flex max-w-full overflow-hidden rounded-lg bg-[#10aee8] text-white shadow-lg shadow-sky-100 transition hover:bg-[#0789c5] dark:shadow-none">
           <strong className="flex min-w-0 items-center gap-2 px-5 py-3 text-sm sm:px-7 sm:py-3.5 sm:text-base">
             <FileUp size={18} /> {files.length ? `${files.length} file đã chọn` : "Chọn file"}
           </strong>
@@ -123,7 +123,7 @@ export function ToolUploader({
         )}
         <div className="mt-6 flex flex-wrap justify-center gap-2 text-[11px] font-black">
           {accept.split(",").map((format) => (
-            <span key={format} className="rounded-full border border-indigo-100 bg-white px-3 py-1 uppercase text-indigo-600 dark:border-indigo-500/40 dark:bg-slate-950 dark:text-indigo-300">
+            <span key={format} className="rounded-md border border-[#d8ded5] bg-white px-3 py-1 uppercase text-[#10aee8] dark:border-sky-500/40 dark:bg-slate-950 dark:text-sky-300">
               {format.replace(".", "")}
             </span>
           ))}
@@ -133,7 +133,7 @@ export function ToolUploader({
       </label>
 
       {(fields.length > 0 || Boolean(teams.data?.length)) && !status && (
-        <div className="grid gap-4 border-t border-slate-100 bg-white px-4 py-5 dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-2 sm:px-6">
+        <div className="grid gap-4 border-t border-[#d8ded5] bg-white px-4 py-5 dark:border-slate-800 dark:bg-slate-900 sm:grid-cols-2 sm:px-6">
           {Boolean(teams.data?.length) && (
             <label className="block text-sm font-bold text-slate-800">
               Workspace
@@ -173,24 +173,24 @@ export function ToolUploader({
       )}
 
       {!status && (
-        <div className="flex flex-col items-stretch justify-between gap-3 border-t border-slate-100 bg-white px-4 py-5 dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:px-6">
+        <div className="flex flex-col items-stretch justify-between gap-3 border-t border-[#d8ded5] bg-white px-4 py-5 dark:border-slate-800 dark:bg-slate-900 sm:flex-row sm:items-center sm:px-6">
           <p className="text-sm text-slate-500">
             {files.length < minimumFiles
               ? `Vui lòng chọn ít nhất ${minimumFiles} file để tiếp tục`
               : `${files.length} file đã sẵn sàng để xử lý`}
           </p>
-          <button disabled={files.length < minimumFiles || upload.isPending} onClick={() => upload.mutate()} className="btn-primary w-full !bg-[#1262e8] !py-3.5 hover:!bg-[#0756d4] sm:min-w-56 sm:w-auto">
+          <button disabled={files.length < minimumFiles || upload.isPending} onClick={() => upload.mutate()} className="btn-primary w-full !py-3.5 sm:min-w-56 sm:w-auto">
             {upload.isPending ? "Đang tải lên..." : "Bắt đầu chuyển đổi"}
           </button>
         </div>
       )}
       {(status === "QUEUED" || status === "PROCESSING") && (
-        <div className="flex items-center justify-center gap-3 border-t border-slate-100 bg-blue-50 p-5 font-semibold text-blue-700 dark:border-slate-800 dark:bg-blue-950/35 dark:text-blue-300">
+        <div className="flex items-center justify-center gap-3 border-t border-[#d8ded5] bg-[#eef5f7] p-5 font-semibold text-[#0b8fc7] dark:border-slate-800 dark:bg-slate-800 dark:text-sky-300">
           <LoaderCircle className="animate-spin" /> {status === "QUEUED" ? "Đang chờ xử lý..." : "Đang chuyển đổi..."}
         </div>
       )}
       {status === "COMPLETED" && (
-        <div className="border-t border-slate-100 bg-emerald-50 p-5 text-center dark:border-slate-800 dark:bg-emerald-950/35">
+        <div className="border-t border-[#d8ded5] bg-emerald-50 p-5 text-center dark:border-slate-800 dark:bg-emerald-950/35">
           <p className="flex items-center justify-center gap-2 font-bold text-emerald-700"><CheckCircle2 /> Hoàn tất</p>
           <button onClick={download} className="btn-primary mt-4"><Download size={18} /> Tải file</button>
         </div>

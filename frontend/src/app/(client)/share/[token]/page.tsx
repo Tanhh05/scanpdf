@@ -69,7 +69,7 @@ export default function SharedFilePage() {
   return (
     <section className="container-page flex min-h-[72vh] items-center justify-center py-16">
       <div className="card w-full max-w-lg p-8 text-center">
-        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+        <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-lg bg-[#e8f7fd] text-[#10aee8]">
           <FileText size={32} />
         </span>
         <h1 className="mt-5 text-3xl font-black">Tài liệu được chia sẻ</h1>
@@ -101,7 +101,7 @@ export default function SharedFilePage() {
             </button>
           </>
         )}
-        {error && <p className="mt-5 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">{error}</p>}
+        {error && <p className="mt-5 rounded-lg bg-red-50 p-3 text-sm font-bold text-red-700">{error}</p>}
       </div>
     </section>
   );

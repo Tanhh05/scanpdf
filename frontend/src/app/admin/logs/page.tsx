@@ -49,8 +49,8 @@ export default function AdminLogsPage() {
 
   function actionStyle(value: string) {
     if (value.includes("DELETED") || value.includes("SUSPENDED")) return "bg-red-100 text-red-700";
-    if (value.includes("PAYMENT")) return "bg-[#dce6ff] text-[#0b4dcc]";
-    return "bg-[#2f67e9] text-white";
+    if (value.includes("PAYMENT")) return "bg-[#dff4fc] text-[#10aee8]";
+    return "bg-[#10aee8] text-white";
   }
 
   return (
@@ -68,19 +68,19 @@ export default function AdminLogsPage() {
           <option value="PLAN">PLAN</option>
           <option value="PAYMENT">PAYMENT</option>
         </select>
-        <label className="flex h-10 items-center gap-3 rounded-lg border border-[#bcc5df] bg-white px-3"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Tìm kiếm Admin hoặc ID..." /></label>
-        <button type="button" onClick={exportCsv} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#0b4dcc] px-4 text-sm font-semibold text-white shadow-md"><Download size={18} /> Xuất báo cáo</button>
+        <label className="flex h-10 items-center gap-3 rounded-lg border border-[#b8c8be] bg-white px-3"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Tìm kiếm Admin hoặc ID..." /></label>
+        <button type="button" onClick={exportCsv} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#10aee8] px-4 text-sm font-semibold text-white shadow-md"><Download size={18} /> Xuất báo cáo</button>
       </div>
 
       <article className={`${adminPanelClass} mt-5 overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px] text-left">
-            <thead className="bg-[#eef1ff] text-xs uppercase tracking-wide text-[#293047]"><tr><th className="px-5 py-3.5">Quản trị viên</th><th className="px-4 py-3.5">Thao tác</th><th className="px-4 py-3.5">Đối tượng</th><th className="px-4 py-3.5">ID đối tượng</th><th className="px-4 py-3.5">Thời gian</th><th className="px-4 py-3.5 text-center">Chi tiết</th></tr></thead>
+            <thead className="bg-[#eef8fd] text-xs uppercase tracking-wide text-[#34423e] dark:bg-slate-800 dark:text-slate-200"><tr><th className="px-5 py-3.5">Quản trị viên</th><th className="px-4 py-3.5">Thao tác</th><th className="px-4 py-3.5">Đối tượng</th><th className="px-4 py-3.5">ID đối tượng</th><th className="px-4 py-3.5">Thời gian</th><th className="px-4 py-3.5 text-center">Chi tiết</th></tr></thead>
             <tbody>
               {visibleItems.map((item) => (
-                <tr key={item.id} className="border-t border-[#dfe3ee] text-sm">
+                <tr key={item.id} className="border-t border-[#d8ded5] dark:border-slate-800 text-sm">
                   <td className="px-5 py-3.5"><div className="flex items-center gap-3"><AdminAvatar name={item.admin.fullName} size="sm" /><div><strong className="block">{item.admin.fullName}</strong><span className="text-xs text-slate-500">{item.admin.email}</span></div></div></td>
-                  <td className="px-4 py-3.5"><span className={`rounded-full px-3 py-1 text-xs font-medium ${actionStyle(item.action)}`}>{item.action}</span></td>
+                  <td className="px-4 py-3.5"><span className={`rounded-md px-3 py-1 text-xs font-medium ${actionStyle(item.action)}`}>{item.action}</span></td>
                   <td className="px-4 py-3.5 font-semibold tracking-wide">{item.targetType}</td>
                   <td className="px-4 py-3.5"><span className="rounded-md bg-slate-600 px-2.5 py-1 font-mono text-xs text-white">{item.targetId ? `#${item.targetId.slice(0, 8)}` : "-"}</span></td>
                   <td className="px-4 py-3.5">{new Date(item.createdAt).toLocaleString("vi-VN")}</td>
@@ -88,7 +88,7 @@ export default function AdminLogsPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedLog(item)}
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#eef2ff] hover:text-[#0b4dcc]"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#f2fbff] hover:text-[#10aee8]"
                       title="Xem chi tiết"
                     >
                       <Eye size={18} />
@@ -100,7 +100,7 @@ export default function AdminLogsPage() {
             </tbody>
           </table>
         </div>
-        <div className="flex flex-col items-center justify-between gap-3 bg-[#eef1ff] px-5 py-3.5 text-sm sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-3 bg-[#eef8fd] px-5 py-3.5 text-sm sm:flex-row">
           <span>Hiển thị {visibleItems.length} trong số {logs.data?.total ?? 0} nhật ký</span>
           <AdminPagination page={page} pages={logs.data?.pages ?? 1} onPageChange={setPage} />
         </div>
@@ -108,13 +108,13 @@ export default function AdminLogsPage() {
 
       <div className="mt-5 grid gap-4 md:grid-cols-3">
         {[
-          { label: "Thao tác/giờ", value: visibleItems.length, icon: Zap, tone: "bg-[#e7efff] text-[#0b4dcc]" },
+          { label: "Thao tác/giờ", value: visibleItems.length, icon: Zap, tone: "bg-[#e7efff] text-[#10aee8]" },
           { label: "Cảnh báo bảo mật", value: 0, icon: AlertTriangle, tone: "bg-red-100 text-red-700" },
           { label: "Admin hoạt động", value: activeAdmins, icon: ShieldCheck, tone: "bg-slate-100 text-slate-600" },
         ].map((item) => (
           <article key={item.label} className={`${adminPanelClass} flex items-center gap-4 p-5`}>
-            <span className={`flex h-11 w-11 items-center justify-center rounded-full ${item.tone}`}><item.icon size={22} /></span>
-            <div><p className="text-sm text-[#586075]">{item.label}</p><strong className="mt-1 block text-2xl">{item.value}</strong></div>
+            <span className={`flex h-11 w-11 items-center justify-center rounded-lg ${item.tone}`}><item.icon size={22} /></span>
+            <div><p className="text-sm text-[#52615d]">{item.label}</p><strong className="mt-1 block text-2xl">{item.value}</strong></div>
           </article>
         ))}
       </div>
@@ -130,16 +130,16 @@ export default function AdminLogsPage() {
               type="button"
               onClick={() => selectedLog.targetId && navigator.clipboard.writeText(selectedLog.targetId)}
               disabled={!selectedLog.targetId}
-              className="inline-flex h-10 items-center rounded-lg border border-[#bcc5df] px-4 text-sm font-semibold text-[#0b4dcc] disabled:cursor-not-allowed disabled:text-slate-400"
+              className="inline-flex h-10 items-center rounded-lg border border-[#b8c8be] px-4 text-sm font-semibold text-[#10aee8] disabled:cursor-not-allowed disabled:text-slate-400"
             >
               Sao chép target ID
             </button>
           </div>
           <div className="mt-4 grid gap-3 text-sm md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Admin</p><p className="mt-2 font-semibold">{selectedLog.admin.fullName}</p><p className="text-slate-500">{selectedLog.admin.email}</p></div>
-            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Thao tác</p><p className="mt-2 font-semibold">{selectedLog.action}</p></div>
-            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Đối tượng</p><p className="mt-2 font-semibold">{selectedLog.targetType}</p></div>
-            <div className="rounded-lg bg-[#f4f6fb] p-4"><p className="text-slate-500">Thời gian</p><p className="mt-2 font-semibold">{new Date(selectedLog.createdAt).toLocaleString("vi-VN")}</p></div>
+            <div className="rounded-lg bg-[#f8faf7] p-4 dark:bg-slate-900"><p className="text-slate-500">Admin</p><p className="mt-2 font-semibold">{selectedLog.admin.fullName}</p><p className="text-slate-500">{selectedLog.admin.email}</p></div>
+            <div className="rounded-lg bg-[#f8faf7] p-4 dark:bg-slate-900"><p className="text-slate-500">Thao tác</p><p className="mt-2 font-semibold">{selectedLog.action}</p></div>
+            <div className="rounded-lg bg-[#f8faf7] p-4 dark:bg-slate-900"><p className="text-slate-500">Đối tượng</p><p className="mt-2 font-semibold">{selectedLog.targetType}</p></div>
+            <div className="rounded-lg bg-[#f8faf7] p-4 dark:bg-slate-900"><p className="text-slate-500">Thời gian</p><p className="mt-2 font-semibold">{new Date(selectedLog.createdAt).toLocaleString("vi-VN")}</p></div>
           </div>
         </article>
       )}

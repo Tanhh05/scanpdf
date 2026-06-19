@@ -30,7 +30,7 @@ function AcceptTeamInviteContent() {
           </>
         )}
         {accept.isError && (
-          <p className="mt-3 rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">
+          <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm font-bold text-red-700">
             {axios.isAxiosError(accept.error) ? accept.error.response?.data?.message : "Không thể chấp nhận lời mời"}
           </p>
         )}

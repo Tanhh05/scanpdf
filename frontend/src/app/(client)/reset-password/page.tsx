@@ -27,13 +27,13 @@ function ResetPasswordForm() {
           Mật khẩu mới
           <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" className="field mt-2" placeholder="Tối thiểu 8 ký tự" />
         </label>
-        {!token && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">Thiếu token đặt lại mật khẩu.</p>}
-        {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-        {reset.data && <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-700">{reset.data.message}</p>}
+        {!token && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">Thiếu token đặt lại mật khẩu.</p>}
+        {error && <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+        {reset.data && <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{reset.data.message}</p>}
         <button disabled={reset.isPending || !token || password.length < 8} onClick={() => reset.mutate()} className="btn-primary mt-6 w-full">
           {reset.isPending ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
         </button>
-        <Link href="/login" className="mt-5 block text-center text-sm font-bold text-indigo-600">Đăng nhập</Link>
+        <Link href="/login" className="mt-5 block text-center text-sm font-bold text-[#10aee8]">Đăng nhập</Link>
       </div>
     </section>
   );

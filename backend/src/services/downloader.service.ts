@@ -1,6 +1,8 @@
 import { access, chmod, mkdir, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
+import { execFile } from "node:child_process";
 import path from "node:path";
+import { promisify } from "node:util";
 import { HttpError } from "../utils/http-error.js";
 
 export type DownloaderProvider = "tiktok" | "facebook" | "instagram" | "youtube";
@@ -137,9 +139,12 @@ export type PreparedDownload = {
   cleanup: () => Promise<void>;
 };
 
-const binaryPath = process.env.YT_DLP_PATH
+const configuredBinaryPath = process.env.YT_DLP_PATH
   ? path.resolve(process.env.YT_DLP_PATH)
   : path.resolve(process.cwd(), ".cache", "bin", process.platform === "win32" ? "yt-dlp.exe" : "yt-dlp");
+const standaloneBinaryPath = path.resolve(process.cwd(), ".cache", "bin", process.platform === "win32" ? "yt-dlp-standalone.exe" : "yt-dlp-standalone");
+let activeBinaryPath = configuredBinaryPath;
+const execFileAsync = promisify(execFile);
 let binaryReady: Promise<string> | null = null;
 type YtDlpClient = {
   getVideoInfo(args: string[]): Promise<YtDlpInfo>;
@@ -148,12 +153,82 @@ type YtDlpClient = {
 };
 type YtDlpRuntime = {
   new(binaryPath?: string): YtDlpClient;
+  downloadFile(fileURL: string, filePath: string): Promise<unknown>;
+  getGithubReleases(page?: number, perPage?: number): Promise<Array<{ tag_name?: string }>>;
   downloadFromGithub(filePath?: string, version?: string, platform?: NodeJS.Platform): Promise<void>;
 };
 let ytDlpWrapClassPromise: Promise<YtDlpRuntime> | null = null;
 const analysisCache = new Map<string, { expiresAt: number; value: DownloaderAnalysis }>();
+const inFlightAnalysis = new Map<string, Promise<DownloaderAnalysis>>();
 const analysisCacheTtlMs = 5 * 60 * 1000;
 const tiktokUserAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1";
+const genericShortLinkHosts = new Set([
+  "bit.ly",
+  "tinyurl.com",
+  "t.co",
+  "goo.gl",
+  "is.gd",
+  "cutt.ly",
+  "shorturl.at",
+  "rebrand.ly",
+  "lnkd.in",
+]);
+
+function ytDlpReleaseAssetName() {
+  if (process.platform === "win32") return "yt-dlp.exe";
+  if (process.platform === "darwin") return "yt-dlp_macos";
+  if (process.platform === "linux") return "yt-dlp_linux";
+  return "yt-dlp";
+}
+
+async function downloadStandaloneYtDlp(YTDlpWrap: YtDlpRuntime) {
+  await mkdir(path.dirname(standaloneBinaryPath), { recursive: true });
+  const version = (await YTDlpWrap.getGithubReleases(1, 1))[0]?.tag_name;
+  if (!version) throw new Error("Không lấy được phiên bản yt-dlp mới nhất từ GitHub");
+  const fileURL = `https://github.com/yt-dlp/yt-dlp/releases/download/${version}/${ytDlpReleaseAssetName()}`;
+  await YTDlpWrap.downloadFile(fileURL, standaloneBinaryPath);
+  await chmod(standaloneBinaryPath, 0o755);
+  activeBinaryPath = standaloneBinaryPath;
+}
+
+async function assertYtDlpExecutable() {
+  try {
+    await execFileAsync(activeBinaryPath, ["--version"], { timeout: 30_000 });
+  } catch (error) {
+    throw new Error("yt-dlp binary hiện tại không chạy được", { cause: error });
+  }
+}
+
+function normalizeHostname(hostname: string) {
+  return hostname.toLowerCase().replace(/^www\./, "");
+}
+
+function normalizeSourceUrl(sourceUrl: string) {
+  const parsed = new URL(sourceUrl.trim());
+  parsed.hash = "";
+  const hostname = normalizeHostname(parsed.hostname);
+
+  for (const key of [...parsed.searchParams.keys()]) {
+    if (
+      key.toLowerCase().startsWith("utm_")
+      || ["fbclid", "igsh", "si", "feature", "pp", "source", "start_radio"].includes(key.toLowerCase())
+    ) {
+      parsed.searchParams.delete(key);
+    }
+  }
+
+  if ((hostname === "youtube.com" || hostname === "m.youtube.com") && parsed.pathname.toLowerCase() === "/watch") {
+    const videoId = parsed.searchParams.get("v");
+    parsed.search = "";
+    if (videoId) parsed.searchParams.set("v", videoId);
+  }
+
+  if (parsed.hostname === "m.youtube.com") parsed.hostname = "www.youtube.com";
+  if (parsed.hostname === "mobile.facebook.com" || parsed.hostname === "m.facebook.com") parsed.hostname = "www.facebook.com";
+  if (parsed.hostname === "instagr.am") parsed.hostname = "www.instagram.com";
+  parsed.pathname = parsed.pathname.replace(/\/+$/, "") || "/";
+  return parsed.toString();
+}
 
 async function loadYtDlpWrap() {
   if (!ytDlpWrapClassPromise) {
@@ -191,30 +266,36 @@ function normalizeProvider(value: string) {
 function assertSupportedSourceUrl(provider: DownloaderProvider, sourceUrl: string) {
   let pathname = "";
   let hostname = "";
+  let searchParams = new URLSearchParams();
   try {
     const parsed = new URL(sourceUrl);
     pathname = parsed.pathname.toLowerCase();
-    hostname = parsed.hostname.toLowerCase();
+    hostname = normalizeHostname(parsed.hostname);
+    searchParams = parsed.searchParams;
   } catch {
     throw new HttpError(400, "URL không hợp lệ");
   }
 
+  const isGenericShortLink = genericShortLinkHosts.has(hostname);
   const isTikTokShortLink = ["vt.tiktok.com", "vm.tiktok.com"].includes(hostname);
+  const isFacebookShortLink = hostname === "fb.watch" || pathname.includes("/share/r/") || pathname.includes("/share/v/");
+  const isInstagramShortLink = hostname === "instagr.am";
+  const isYouTubeShortLink = hostname === "youtu.be" || hostname === "youtube.com" && pathname.includes("/shorts/");
   const matchers: Record<DownloaderProvider, { ok: boolean; message: string }> = {
     tiktok: {
-      ok: isTikTokShortLink || pathname.includes("/video/") || pathname.includes("/photo/"),
+      ok: isGenericShortLink || isTikTokShortLink || hostname.endsWith("tiktok.com") && (pathname.includes("/video/") || pathname.includes("/photo/") || pathname.includes("/t/")),
       message: "Hãy dán URL video hoặc slideshow TikTok cụ thể, không dùng URL hồ sơ.",
     },
     facebook: {
-      ok: pathname.includes("/reel/") || pathname.includes("/watch/") || pathname.includes("/videos/"),
+      ok: isGenericShortLink || isFacebookShortLink || hostname.endsWith("facebook.com") && (pathname.includes("/reel/") || pathname.includes("/watch/") || pathname.includes("/videos/") || pathname.includes("/share/")),
       message: "Hãy dán URL reel hoặc video Facebook công khai cụ thể.",
     },
     instagram: {
-      ok: pathname.includes("/reel/") || pathname.includes("/p/") || pathname.includes("/stories/"),
+      ok: isGenericShortLink || isInstagramShortLink || hostname.endsWith("instagram.com") && (pathname.includes("/reel/") || pathname.includes("/p/") || pathname.includes("/stories/") || pathname.includes("/tv/")),
       message: "Hãy dán URL reel, post, carousel hoặc story Instagram cụ thể.",
     },
     youtube: {
-      ok: hostname === "youtu.be" || pathname === "/watch" || pathname.includes("/shorts/") || pathname.includes("/live/"),
+      ok: isGenericShortLink || isYouTubeShortLink || hostname.endsWith("youtube.com") && ((pathname === "/watch" && Boolean(searchParams.get("v"))) || pathname.includes("/shorts/") || pathname.includes("/live/") || pathname.includes("/embed/")),
       message: "Hãy dán URL video hoặc Shorts YouTube cụ thể.",
     },
   };
@@ -235,12 +316,21 @@ const ytDlpNetworkArgs = [
 
 const ytDlpAnalyzeNetworkArgs = [
   "--socket-timeout",
-  "8",
+  process.env.DOWNLOADER_ANALYZE_TIMEOUT_SECONDS ?? "4",
   "--extractor-retries",
   "0",
   "--retries",
   "0",
 ] as const;
+
+function ytDlpProviderArgs(provider: DownloaderProvider) {
+  const browserUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
+  const args = ["--user-agent", browserUserAgent];
+  if (provider === "instagram") return [...args, "--referer", "https://www.instagram.com/"];
+  if (provider === "facebook") return [...args, "--referer", "https://www.facebook.com/"];
+  if (provider === "youtube") return [...args, "--referer", "https://www.youtube.com/"];
+  return args;
+}
 
 export function isSupportedSourceUrl(provider: DownloaderProvider, sourceUrl: string) {
   try {
@@ -504,18 +594,17 @@ async function analyzeTikTokPage(sourceUrl: string) {
 async function ensureBinaryPath() {
   if (!binaryReady) {
     binaryReady = (async () => {
+      const YTDlpWrap = await loadYtDlpWrap();
       try {
-        await access(binaryPath);
+        activeBinaryPath = configuredBinaryPath;
+        await access(activeBinaryPath);
+        await chmod(activeBinaryPath, 0o755);
+        await assertYtDlpExecutable();
       } catch (error) {
-        if (process.env.YT_DLP_PATH) {
-          throw new Error(`Không tìm thấy yt-dlp tại ${binaryPath}`, { cause: error });
-        }
-        const YTDlpWrap = await loadYtDlpWrap();
-        await mkdir(path.dirname(binaryPath), { recursive: true });
-        await YTDlpWrap.downloadFromGithub(binaryPath);
+        await downloadStandaloneYtDlp(YTDlpWrap);
+        await assertYtDlpExecutable();
       }
-      await chmod(binaryPath, 0o755);
-      return binaryPath;
+      return activeBinaryPath;
     })().catch((error) => {
       binaryReady = null;
       throw error;
@@ -530,22 +619,36 @@ async function getClient() {
 }
 
 export async function analyzeMedia(provider: DownloaderProvider, sourceUrl: string): Promise<DownloaderAnalysis> {
-  assertSupportedSourceUrl(provider, sourceUrl);
-  const cacheKey = `${provider}:${sourceUrl}`;
+  const normalizedUrl = normalizeSourceUrl(sourceUrl);
+  assertSupportedSourceUrl(provider, normalizedUrl);
+  const cacheKey = `${provider}:${normalizedUrl}`;
   const cached = analysisCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) return cached.value;
   if (cached) analysisCache.delete(cacheKey);
 
+  const inFlight = inFlightAnalysis.get(cacheKey);
+  if (inFlight) return inFlight;
+
+  const promise = analyzeMediaUncached(provider, normalizedUrl)
+    .then((analysis) => {
+      analysisCache.set(cacheKey, {
+        expiresAt: Date.now() + analysisCacheTtlMs,
+        value: analysis,
+      });
+      return analysis;
+    })
+    .finally(() => {
+      inFlightAnalysis.delete(cacheKey);
+    });
+  inFlightAnalysis.set(cacheKey, promise);
+  return promise;
+}
+
+async function analyzeMediaUncached(provider: DownloaderProvider, sourceUrl: string): Promise<DownloaderAnalysis> {
   if (provider === "tiktok") {
     try {
       const fastAnalysis = await analyzeTikTokPage(sourceUrl);
-      if (fastAnalysis) {
-        analysisCache.set(cacheKey, {
-          expiresAt: Date.now() + analysisCacheTtlMs,
-          value: fastAnalysis,
-        });
-        return fastAnalysis;
-      }
+      if (fastAnalysis) return fastAnalysis;
     } catch (error) {
       console.warn("[downloader:tiktok] fast analysis failed, falling back to yt-dlp", error);
     }
@@ -559,10 +662,23 @@ export async function analyzeMedia(provider: DownloaderProvider, sourceUrl: stri
       "--no-warnings",
       "--no-playlist",
       ...ytDlpAnalyzeNetworkArgs,
+      ...ytDlpProviderArgs(provider),
     ]) as YtDlpInfo;
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     console.error(`[downloader:${provider}] analyze failed`, error);
+    if (provider === "instagram" && message.includes("There is no video in this post")) {
+      const shortcode = new URL(sourceUrl).pathname.split("/").filter(Boolean).at(1);
+      return {
+        provider,
+        sourceUrl,
+        title: shortcode ? `Instagram post ${shortcode}` : "Instagram post",
+        assets: [],
+        warnings: [
+          "Bài Instagram này là post ảnh không có video. Instagram hiện không trả link ảnh trực tiếp ổn định cho nguồn này; hãy thử Reels/video công khai hoặc carousel có media public.",
+        ],
+      };
+    }
     if (message.includes("Unable to extract")) {
       throw new HttpError(422, `Không thể đọc nội dung từ URL ${providerLabel(provider)} này lúc này. Hãy thử một bài đăng công khai khác.`);
     }
@@ -578,7 +694,7 @@ export async function analyzeMedia(provider: DownloaderProvider, sourceUrl: stri
   }
 
   const summary = buildAssets(provider, info, sourceUrl);
-  const analysis = {
+  return {
     provider,
     sourceUrl,
     title: summary.title,
@@ -588,11 +704,6 @@ export async function analyzeMedia(provider: DownloaderProvider, sourceUrl: stri
     assets: summary.assets,
     warnings: summary.warnings,
   };
-  analysisCache.set(cacheKey, {
-    expiresAt: Date.now() + analysisCacheTtlMs,
-    value: analysis,
-  });
-  return analysis;
 }
 
 function getContentType(extension: string) {
@@ -606,7 +717,7 @@ function getContentType(extension: string) {
 
 async function readPreparedOutput(tempDir: string, preferredName: string, fallbackExtension: string) {
   const files = await readdir(tempDir);
-  const picked = files.find((item) => item !== path.basename(binaryPath)) ?? files[0];
+  const picked = files.find((item) => item !== path.basename(activeBinaryPath)) ?? files[0];
   if (!picked) {
     throw new HttpError(503, "Không tạo được file tải xuống");
   }
