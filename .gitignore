@@ -17,6 +17,7 @@ apps/mobile/dist-ios
 .idea
 .playwright-cli/
 output/
+skills/
 *.tsbuildinfo
 storage/input/*
 storage/output/*
