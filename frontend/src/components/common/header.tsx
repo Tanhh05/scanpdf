@@ -1,12 +1,14 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, CreditCard, LayoutDashboard, LogOut, Menu, UserRound, X } from "lucide-react";
+import { Bell, ChevronDown, CreditCard, LayoutDashboard, LogOut, Menu, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/auth.store";
 import { ThemeToggle } from "@/components/common/theme-toggle";
 import { BrandLogo } from "@/components/common/brand-logo";
+import { api } from "@/services/api";
 
 function getInitials(fullName?: string, email?: string) {
   const words = fullName?.trim().split(/\s+/).filter(Boolean) ?? [];
@@ -30,6 +32,36 @@ const downloaderLinks = [
   ["Instagram", "/instagram-downloader"],
 ] as const;
 
+function ClientAnnouncementBanner() {
+  const announcement = useQuery<{ announcement: string }>({
+    queryKey: ["public-announcement"],
+    queryFn: async () => (await api.get("/public/announcement")).data,
+    staleTime: 30_000,
+    retry: 1,
+  });
+  const message = announcement.data?.announcement?.trim();
+
+  if (!message) return null;
+
+  return (
+    <div className="border-b border-[#b8e7f6] bg-[#e9f9ff] text-[#17201d] dark:border-sky-900 dark:bg-[#07131a] dark:text-slate-100">
+      <div className="container-page flex h-9 items-center gap-3 overflow-hidden">
+        <span className="inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md bg-[#f3263e] px-2.5 text-[11px] font-black uppercase tracking-normal text-white">
+          <Bell size={13} />
+          Thông báo
+        </span>
+        <div className="min-w-0 flex-1 overflow-hidden">
+          <div className="announcement-marquee flex w-max items-center gap-8 whitespace-nowrap text-sm font-bold">
+            <span>{message}</span>
+            <span aria-hidden="true">{message}</span>
+            <span aria-hidden="true">{message}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Header() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -45,6 +77,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#d8ded5] bg-white/92 backdrop-blur-xl dark:border-slate-800 dark:bg-[#07131a]/92">
+      <ClientAnnouncementBanner />
       <div className="container-page flex h-16 items-center justify-between gap-3 sm:h-[72px] sm:gap-5">
         <Link href="/" className="flex min-w-0 shrink-0 items-center gap-2 text-lg font-black tracking-normal text-[#17201d] dark:text-slate-50 sm:gap-2.5 sm:text-xl">
           <BrandLogo />

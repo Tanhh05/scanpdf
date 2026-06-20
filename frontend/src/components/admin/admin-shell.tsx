@@ -37,6 +37,8 @@ const pageTitles: Record<string, string> = {
   "/admin/payments": "Thanh toán",
   "/admin/statistics": "Thống kê 30 ngày qua",
   "/admin/logs": "Nhật ký hệ thống",
+  "/admin/profile": "Hồ sơ admin",
+  "/admin/settings": "Cài đặt hệ thống",
 };
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -104,10 +106,26 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </nav>
 
       <div className="border-t border-white/10 px-3 pb-4 pt-3 dark:border-slate-800">
-        <Link href="/admin/users" className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-white/78 hover:bg-white/10 hover:text-white dark:hover:bg-slate-900">
+        <Link
+          href="/admin/profile"
+          onClick={() => setMobileOpen(false)}
+          className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+            pathname === "/admin/profile"
+              ? "bg-[#10aee8] text-white shadow-[0_5px_12px_rgba(16,174,232,0.24)]"
+              : "text-white/78 hover:bg-white/10 hover:text-white dark:hover:bg-slate-900"
+          }`}
+        >
           <CircleUserRound size={19} /> Hồ sơ
         </Link>
-        <Link href="/admin/plans" className="mt-1 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-white/78 hover:bg-white/10 hover:text-white dark:hover:bg-slate-900">
+        <Link
+          href="/admin/settings"
+          onClick={() => setMobileOpen(false)}
+          className={`mt-1 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+            pathname === "/admin/settings"
+              ? "bg-[#10aee8] text-white shadow-[0_5px_12px_rgba(16,174,232,0.24)]"
+              : "text-white/78 hover:bg-white/10 hover:text-white dark:hover:bg-slate-900"
+          }`}
+        >
           <Settings size={19} /> Cài đặt
         </Link>
         <button
@@ -154,9 +172,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <div className="hidden text-right sm:block">
                 <p className="max-w-40 truncate text-sm font-semibold">{user?.fullName || "Quản trị viên"}</p>
                 <p className="text-[11px] uppercase tracking-wide text-[#52615d] dark:text-slate-400">Super Admin</p>
-              </div>
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-md border-2 border-[#10aee8] bg-[#dff4fc] text-xs font-bold text-[#10aee8] dark:border-sky-400 dark:bg-slate-900 dark:text-sky-300">
-                {(user?.fullName || user?.email || "A").charAt(0).toUpperCase()}
               </div>
             </div>
           </div>

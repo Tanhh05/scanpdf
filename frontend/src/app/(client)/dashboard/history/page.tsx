@@ -118,7 +118,7 @@ export default function HistoryPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-bold text-[#10aee8]">LỊCH SỬ</p>
-            <h1 className="mt-2 app-heading text-3xl sm:text-4xl">Lịch sử chuyển đổi</h1>
+            <h1 className="mt-2 font-[var(--font-display)] text-3xl font-black tracking-normal text-[#17201d] dark:text-slate-50 sm:text-4xl">Lịch sử chuyển đổi</h1>
             <p className="mt-2 text-slate-500">Tìm kiếm, tải xuống hoặc xóa các tài liệu đã xử lý.</p>
           </div>
           <Link href="/tools/word-to-pdf" className="btn-primary !py-2.5">Chuyển đổi mới</Link>

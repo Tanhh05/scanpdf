@@ -1,7 +1,13 @@
 import { Router } from "express";
+import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../config/prisma.js";
 import { requireAdmin, requireAuth } from "../middleware/auth.js";
+import {
+  adminSettingsSchema,
+  getAdminSettings,
+  invalidateAdminSettingsCache,
+} from "../services/admin-settings.service.js";
 import { cleanupExpiredFiles } from "../services/cleanup.service.js";
 import { startOfDay } from "../utils/date.js";
 import { asyncHandler } from "../utils/async-handler.js";
@@ -10,8 +16,133 @@ import { HttpError } from "../utils/http-error.js";
 const router = Router();
 router.use(requireAuth, requireAdmin);
 
+const adminProfileSchema = z.object({
+  fullName: z.string().trim().min(2).max(100),
+  email: z.email().transform((value) => value.toLowerCase()),
+});
+
+const adminPasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).max(100),
+});
+
 router.post("/cleanup/expired-files", asyncHandler(async (_req, res) => {
   res.json(await cleanupExpiredFiles());
+}));
+
+router.get("/profile", asyncHandler(async (req, res) => {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.id },
+    select: {
+      id: true,
+      email: true,
+      fullName: true,
+      role: true,
+      status: true,
+      emailVerifiedAt: true,
+      createdAt: true,
+      passwordHash: true,
+    },
+  });
+  if (!user || user.status !== "ACTIVE") throw new HttpError(401, "Tài khoản quản trị không khả dụng");
+  const { passwordHash: _passwordHash, ...safeUser } = user;
+  res.json({ ...safeUser, hasPassword: Boolean(user.passwordHash) });
+}));
+
+router.patch("/profile", asyncHandler(async (req, res) => {
+  const input = adminProfileSchema.parse(req.body);
+  const existing = await prisma.user.findFirst({
+    where: {
+      email: input.email,
+      id: { not: req.user!.id },
+    },
+    select: { id: true },
+  });
+  if (existing) throw new HttpError(409, "Email đã được sử dụng");
+
+  const user = await prisma.$transaction(async (tx) => {
+    const updated = await tx.user.update({
+      where: { id: req.user!.id },
+      data: {
+        fullName: input.fullName,
+        email: input.email,
+      },
+      select: {
+        id: true,
+        email: true,
+        fullName: true,
+        role: true,
+        status: true,
+        emailVerifiedAt: true,
+        createdAt: true,
+      },
+    });
+    await tx.adminLog.create({
+      data: {
+        adminId: req.user!.id,
+        action: "ADMIN_PROFILE_UPDATED",
+        targetType: "ADMIN_PROFILE",
+        targetId: req.user!.id,
+      },
+    });
+    return updated;
+  });
+  res.json(user);
+}));
+
+router.patch("/profile/password", asyncHandler(async (req, res) => {
+  const input = adminPasswordSchema.parse(req.body);
+  const user = await prisma.user.findUnique({
+    where: { id: req.user!.id },
+    select: { id: true, passwordHash: true, status: true },
+  });
+  if (!user || user.status !== "ACTIVE") throw new HttpError(401, "Tài khoản quản trị không khả dụng");
+  if (!user.passwordHash || !(await bcrypt.compare(input.currentPassword, user.passwordHash))) {
+    throw new HttpError(400, "Mật khẩu hiện tại không đúng");
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: { passwordHash: await bcrypt.hash(input.newPassword, 12) },
+    }),
+    prisma.adminLog.create({
+      data: {
+        adminId: req.user!.id,
+        action: "ADMIN_PASSWORD_CHANGED",
+        targetType: "ADMIN_PROFILE",
+        targetId: req.user!.id,
+      },
+    }),
+  ]);
+  res.json({ message: "Mật khẩu admin đã được cập nhật" });
+}));
+
+router.get("/settings", asyncHandler(async (_req, res) => {
+  res.json(await getAdminSettings());
+}));
+
+router.patch("/settings", asyncHandler(async (req, res) => {
+  const input = adminSettingsSchema.parse(req.body);
+  const saved = await prisma.$transaction(async (tx) => {
+    await Promise.all(Object.entries(input).map(([key, value]) =>
+      tx.adminSetting.upsert({
+        where: { key },
+        update: { value, updatedBy: req.user!.id },
+        create: { key, value, updatedBy: req.user!.id },
+      }),
+    ));
+    await tx.adminLog.create({
+      data: {
+        adminId: req.user!.id,
+        action: "ADMIN_SETTINGS_UPDATED",
+        targetType: "ADMIN_SETTINGS",
+      },
+    });
+    return input;
+  });
+  invalidateAdminSettingsCache();
+  res.json(saved);
 }));
 
 router.get("/dashboard", asyncHandler(async (_req, res) => {

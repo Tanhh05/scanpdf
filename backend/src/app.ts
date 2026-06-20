@@ -3,6 +3,7 @@ import express from "express";
 import helmet from "helmet";
 import { env } from "./config/env.js";
 import { initMonitoring } from "./config/monitoring.js";
+import { adminSettingsGuard } from "./middleware/admin-settings-guard.js";
 import { errorHandler } from "./middleware/error-handler.js";
 import { apiRateLimit, authRateLimit, publicApiRateLimit } from "./middleware/rate-limit.js";
 import { requestLogger } from "./middleware/request-logger.js";
@@ -15,6 +16,7 @@ import fileRoutes from "./routes/file.routes.js";
 import healthRoutes from "./routes/health.routes.js";
 import planRoutes from "./routes/plan.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
+import publicRoutes from "./routes/public.routes.js";
 import teamRoutes from "./routes/team.routes.js";
 import userRoutes from "./routes/user.routes.js";
 
@@ -44,6 +46,7 @@ app.use(cors({
 app.use(express.json({ limit: "1mb" }));
 app.use(requestLogger);
 app.use("/api", apiRateLimit);
+app.use("/api", adminSettingsGuard);
 
 app.use("/health", healthRoutes);
 app.use("/api/auth", authRateLimit, authRoutes);
@@ -55,6 +58,7 @@ app.use("/api/plans", planRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/public", publicRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api", userRoutes);
 app.use(errorHandler);

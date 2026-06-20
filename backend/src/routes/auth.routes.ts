@@ -8,6 +8,7 @@ import { prisma } from "../config/prisma.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { HttpError } from "../utils/http-error.js";
 import { requireAuth } from "../middleware/auth.js";
+import { getFreePlan } from "../services/plan.service.js";
 import { sendEmailVerification, sendPasswordResetEmail } from "../services/mail.service.js";
 import {
   createOAuthState,
@@ -58,7 +59,12 @@ async function createEmailVerification(user: { id: string; email: string }) {
     },
   });
   const verifyUrl = `${env.FRONTEND_URL}/verify-email?token=${encodeURIComponent(token)}`;
-  const sent = await sendEmailVerification(user.email, verifyUrl);
+  let sent = false;
+  try {
+    sent = await sendEmailVerification(user.email, verifyUrl);
+  } catch (error) {
+    console.error("Email verification failed", error);
+  }
   if (!sent && env.NODE_ENV !== "production") console.log(`Email verification URL for ${user.email}: ${verifyUrl}`);
   return verifyUrl;
 }
@@ -69,8 +75,7 @@ router.post("/register", asyncHandler(async (req, res) => {
     throw new HttpError(409, "Email đã được sử dụng");
   }
 
-  const freePlan = await prisma.plan.findUnique({ where: { name: "Free" } });
-  if (!freePlan) throw new HttpError(503, "Hệ thống chưa khởi tạo gói dịch vụ");
+  const freePlan = await getFreePlan();
 
   const user = await prisma.user.create({
     data: {
@@ -203,7 +208,12 @@ router.post("/forgot-password", asyncHandler(async (req, res) => {
       },
     });
     resetUrl = `${env.FRONTEND_URL}/reset-password?token=${encodeURIComponent(token)}`;
-    const sent = await sendPasswordResetEmail(user.email, resetUrl);
+    let sent = false;
+    try {
+      sent = await sendPasswordResetEmail(user.email, resetUrl);
+    } catch (error) {
+      console.error("Password reset email failed", error);
+    }
     if (!sent && env.NODE_ENV !== "production") {
       console.log(`Password reset URL for ${user.email}: ${resetUrl}`);
     }
@@ -211,6 +221,7 @@ router.post("/forgot-password", asyncHandler(async (req, res) => {
 
   res.status(202).json({
     message: "Nếu email tồn tại, hướng dẫn đặt lại mật khẩu sẽ được gửi.",
+    resetUrl: env.NODE_ENV === "production" ? undefined : resetUrl,
   });
 }));
 

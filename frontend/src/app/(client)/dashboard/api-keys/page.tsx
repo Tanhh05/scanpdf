@@ -57,7 +57,7 @@ export default function ApiKeysPage() {
       <div className="space-y-7">
         <div>
           <p className="text-sm font-bold text-[#10aee8]">BUSINESS API</p>
-          <h1 className="mt-2 app-heading text-3xl sm:text-4xl">Public API</h1>
+          <h1 className="mt-2 font-[var(--font-display)] text-3xl font-black tracking-normal text-[#17201d] dark:text-slate-50 sm:text-4xl">Public API</h1>
           <p className="mt-2 text-slate-500">Tạo API key để tích hợp ScanPDF vào hệ thống của bạn. Tính năng dành cho gói Business.</p>
         </div>
 

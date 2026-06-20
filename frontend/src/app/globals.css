@@ -124,6 +124,21 @@ a { color: inherit; text-decoration: none; }
   transform: translateY(-1px);
 }
 
+.announcement-marquee {
+  animation: announcement-marquee 22s linear infinite;
+}
+
+@keyframes announcement-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.333%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announcement-marquee {
+    animation: none;
+  }
+}
+
 .dark .theme-toggle:hover {
   background: #0b3f56;
   color: #bae6fd;

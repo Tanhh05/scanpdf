@@ -1,6 +1,22 @@
 import { endOfDay, startOfDay } from "../utils/date.js";
 import { prisma } from "../config/prisma.js";
 
+const defaultFreePlan = {
+  name: "Free",
+  price: 0,
+  dailyLimit: 5,
+  maxFileSizeMb: 10,
+  storageDays: 1,
+};
+
+export async function getFreePlan() {
+  return prisma.plan.upsert({
+    where: { name: defaultFreePlan.name },
+    update: {},
+    create: defaultFreePlan,
+  });
+}
+
 export async function getUserPlan(userId: string) {
   const subscription = await prisma.subscription.findFirst({
     where: {
@@ -13,9 +29,7 @@ export async function getUserPlan(userId: string) {
   });
   if (subscription) return subscription.plan;
 
-  const freePlan = await prisma.plan.findUnique({ where: { name: "Free" } });
-  if (!freePlan) throw new Error("Chưa khởi tạo gói Free. Hãy chạy db:seed.");
-  return freePlan;
+  return getFreePlan();
 }
 
 export async function getDailyUsage(userId: string) {

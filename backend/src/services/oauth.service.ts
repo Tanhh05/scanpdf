@@ -2,6 +2,7 @@ import type { OAuthProvider, User } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { prisma } from "../config/prisma.js";
+import { getFreePlan } from "./plan.service.js";
 import { HttpError } from "../utils/http-error.js";
 
 type OAuthProfile = {
@@ -23,14 +24,14 @@ export function getOAuthConfig(provider: "google" | "github") {
         clientId: env.GOOGLE_CLIENT_ID,
         clientSecret: env.GOOGLE_CLIENT_SECRET,
         authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
-        callbackUrl: `${env.API_URL}/auth/google/callback`,
+        callbackUrl: env.GOOGLE_CALLBACK_URL || `${env.API_URL}/auth/google/callback`,
         scope: "openid email profile",
       }
     : {
         clientId: env.GITHUB_CLIENT_ID,
         clientSecret: env.GITHUB_CLIENT_SECRET,
         authorizationUrl: "https://github.com/login/oauth/authorize",
-        callbackUrl: `${env.API_URL}/auth/github/callback`,
+        callbackUrl: env.GITHUB_CALLBACK_URL || `${env.API_URL}/auth/github/callback`,
         scope: "read:user user:email",
       };
   if (!config.clientId || !config.clientSecret) {
@@ -154,8 +155,7 @@ export async function findOrCreateOAuthUser(profile: OAuthProfile): Promise<User
     });
   }
 
-  const freePlan = await prisma.plan.findUnique({ where: { name: "Free" } });
-  if (!freePlan) throw new HttpError(503, "Hệ thống chưa khởi tạo gói Free");
+  const freePlan = await getFreePlan();
   return prisma.user.create({
     data: {
       email: profile.email,

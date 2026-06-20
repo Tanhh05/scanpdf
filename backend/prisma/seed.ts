@@ -1,6 +1,14 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import { config } from "dotenv";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const backendEnvPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../.env");
+config({ path: backendEnvPath });
 
 const prisma = new PrismaClient();
+const defaultAdminPassword = "Admin@123456";
 
 const plans = [
   { name: "Free", price: 0, dailyLimit: 5, maxFileSizeMb: 10, storageDays: 1 },
@@ -19,11 +27,38 @@ async function main() {
 
   const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   if (adminEmail) {
-    const admin = await prisma.user.updateMany({
+    const adminPassword = process.env.ADMIN_PASSWORD || defaultAdminPassword;
+    const freePlan = await prisma.plan.findUniqueOrThrow({ where: { name: "Free" } });
+    const admin = await prisma.user.upsert({
       where: { email: adminEmail },
-      data: { role: "ADMIN" },
+      update: {
+        role: "ADMIN",
+        status: "ACTIVE",
+        passwordHash: await bcrypt.hash(adminPassword, 12),
+        emailVerifiedAt: new Date(),
+      },
+      create: {
+        email: adminEmail,
+        fullName: process.env.ADMIN_NAME?.trim() || "ScanPDF Admin",
+        role: "ADMIN",
+        status: "ACTIVE",
+        passwordHash: await bcrypt.hash(adminPassword, 12),
+        emailVerifiedAt: new Date(),
+        subscriptions: {
+          create: { planId: freePlan.id },
+        },
+      },
     });
-    console.log(admin.count ? `Promoted admin user: ${adminEmail}` : `ADMIN_EMAIL user not found: ${adminEmail}`);
+    const activeSubscription = await prisma.subscription.findFirst({
+      where: { userId: admin.id, status: "ACTIVE" },
+    });
+    if (!activeSubscription) {
+      await prisma.subscription.create({ data: { userId: admin.id, planId: freePlan.id } });
+    }
+    console.log(`Seeded admin user: ${adminEmail}`);
+    if (!process.env.ADMIN_PASSWORD) {
+      console.log(`Using default development admin password: ${defaultAdminPassword}`);
+    }
   }
 }
 

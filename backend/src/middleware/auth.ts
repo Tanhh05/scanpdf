@@ -8,11 +8,9 @@ import { HttpError } from "../utils/http-error.js";
 
 type TokenPayload = {
   sub: string;
-  email: string;
-  role: "USER" | "ADMIN";
 };
 
-export function requireAuth(req: Request, _res: Response, next: NextFunction) {
+export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "");
   if (!token) {
     throw new HttpError(401, "Bạn cần đăng nhập");
@@ -20,9 +18,18 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
 
   try {
     const payload = jwt.verify(token, env.JWT_SECRET) as TokenPayload;
-    req.user = { id: payload.sub, email: payload.email, role: payload.role };
+    if (!payload.sub) throw new Error("Missing token subject");
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { id: true, email: true, role: true, status: true },
+    });
+    if (!user || user.status !== "ACTIVE") {
+      throw new HttpError(401, "Tài khoản không khả dụng");
+    }
+    req.user = { id: user.id, email: user.email, role: user.role };
     next();
-  } catch {
+  } catch (error) {
+    if (error instanceof HttpError) throw error;
     throw new HttpError(401, "Phiên đăng nhập không hợp lệ hoặc đã hết hạn");
   }
 }
@@ -30,7 +37,7 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
 export async function requireAuthOrApiKey(req: Request, res: Response, next: NextFunction) {
   const apiKey = String(req.headers["x-api-key"] ?? "");
   if (!apiKey) {
-    requireAuth(req, res, next);
+    await requireAuth(req, res, next);
     return;
   }
   const record = await prisma.apiKey.findUnique({

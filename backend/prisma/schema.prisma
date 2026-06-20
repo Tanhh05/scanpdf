@@ -110,6 +110,7 @@ model User {
   ownedTeams    Team[]       @relation("TeamOwner")
   teamMemberships TeamMember[]
   sentTeamInvites TeamInvite[] @relation("TeamInviteSender")
+  updatedAdminSettings AdminSetting[]
 
   @@map("users")
 }
@@ -386,6 +387,18 @@ model ToolStatistic {
 
   @@unique([statDate, tool])
   @@map("tool_statistics")
+}
+
+model AdminSetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedBy String?  @map("updated_by") @db.Uuid
+  admin     User?    @relation(fields: [updatedBy], references: [id], onDelete: SetNull)
+
+  @@index([updatedBy])
+  @@map("admin_settings")
 }
 
 model AdminLog {

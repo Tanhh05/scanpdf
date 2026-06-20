@@ -111,7 +111,7 @@ export default function TeamsPage() {
       <div className="space-y-7">
         <div>
           <p className="text-sm font-bold text-[#10aee8]">BUSINESS</p>
-          <h1 className="mt-2 app-heading text-3xl sm:text-4xl">Team workspace</h1>
+          <h1 className="mt-2 font-[var(--font-display)] text-3xl font-black tracking-normal text-[#17201d] dark:text-slate-50 sm:text-4xl">Team workspace</h1>
           <p className="mt-2 text-slate-500">Mời thành viên, phân quyền và dùng quota theo team Business.</p>
         </div>
 

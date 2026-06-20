@@ -112,7 +112,7 @@ export default function ProfilePage() {
       <div className="space-y-7">
         <div>
           <p className="text-sm font-bold text-[#10aee8]">HỒ SƠ CỦA TÔI</p>
-          <h1 className="mt-2 app-heading text-3xl sm:text-4xl">Thông tin cá nhân</h1>
+          <h1 className="mt-2 font-[var(--font-display)] text-3xl font-black tracking-normal text-[#17201d] dark:text-slate-50 sm:text-4xl">Thông tin cá nhân</h1>
           <p className="mt-2 text-slate-500">Thông tin được sử dụng cho tài khoản ScanPDF của bạn.</p>
         </div>
         <article className="rounded-lg border border-[#d8ded5] bg-white dark:border-slate-800 dark:bg-[#101820] p-6 sm:p-8">
