@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { CheckCircle2, ChevronDown, CloudUpload, Download, FileUp, LoaderCircle, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { DragEvent, useState } from "react";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -40,6 +40,7 @@ export function ToolUploader({
   const router = useRouter();
   const token = useAuthStore((state) => state.token);
   const [files, setFiles] = useState<File[]>([]);
+  const [dragActive, setDragActive] = useState(false);
   const [teamId, setTeamId] = useState("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(() => Object.fromEntries(
     fields.map((field) => [field.name, field.defaultValue ?? ""]),
@@ -84,6 +85,27 @@ export function ToolUploader({
     URL.revokeObjectURL(url);
   }
 
+  function setPickedFiles(nextFiles: File[]) {
+    setFiles(multiple ? nextFiles : nextFiles.slice(0, 1));
+    setConversionId(null);
+  }
+
+  function handleDrag(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.type === "dragenter" || event.type === "dragover") setDragActive(true);
+    if (event.type === "dragleave") setDragActive(false);
+  }
+
+  function handleDrop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(false);
+    const droppedFiles = Array.from(event.dataTransfer.files ?? []);
+    if (!droppedFiles.length) return;
+    setPickedFiles(droppedFiles);
+  }
+
   if (!token) {
     return (
       <div className="mx-auto flex min-h-[420px] max-w-6xl flex-col items-center justify-center rounded-lg border border-[#d8ded5] bg-white p-6 text-center shadow-[0_18px_60px_rgba(23,32,29,0.06)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none sm:min-h-[520px] sm:p-10">
@@ -100,7 +122,17 @@ export function ToolUploader({
   const status = conversion.data?.status;
   return (
     <div className="mx-auto max-w-6xl overflow-hidden rounded-lg border border-[#d8ded5] bg-white shadow-[0_18px_60px_rgba(23,32,29,0.07)] dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
-      <label className="m-3 flex min-h-[320px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#10aee8]/45 bg-gradient-to-b from-[#eef8fd]/80 to-[#f8faf7]/50 p-5 text-center transition hover:border-[#10aee8] hover:from-[#eef8fd] hover:to-[#f8faf7] dark:border-sky-500/45 dark:from-slate-800 dark:to-slate-900 dark:hover:border-[#10aee8] dark:hover:from-slate-800 dark:hover:to-slate-800 sm:m-5 sm:min-h-[420px] sm:p-8">
+      <label
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+        className={`m-3 flex min-h-[320px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-5 text-center transition sm:m-5 sm:min-h-[420px] sm:p-8 ${
+          dragActive
+            ? "border-[#10aee8] bg-[#e8f7fd] shadow-[inset_0_0_0_1px_rgba(16,174,232,0.22)] dark:border-sky-300 dark:bg-sky-950/30"
+            : "border-[#10aee8]/45 bg-gradient-to-b from-[#eef8fd]/80 to-[#f8faf7]/50 hover:border-[#10aee8] hover:from-[#eef8fd] hover:to-[#f8faf7] dark:border-sky-500/45 dark:from-slate-800 dark:to-slate-900 dark:hover:border-[#10aee8] dark:hover:from-slate-800 dark:hover:to-slate-800"
+        }`}
+      >
         <span className="flex h-16 w-16 items-center justify-center rounded-lg bg-white text-[#10aee8] shadow-[0_12px_35px_rgba(16,174,232,0.12)] dark:bg-slate-950 dark:text-sky-300 dark:shadow-none sm:h-20 sm:w-20">
           <CloudUpload size={36} strokeWidth={1.6} />
         </span>
@@ -108,7 +140,7 @@ export function ToolUploader({
           {multiple ? "Chọn các file cần xử lý" : "Chọn file cần xử lý"}
         </h2>
         <p className="mt-2 text-sm text-slate-500">
-          Kéo thả {multiple ? "các file" : "file"} vào đây hoặc chọn từ thiết bị của bạn
+          Kéo thả {multiple ? "các file" : "file"} từ Finder, ảnh, tài liệu hoặc chọn từ thiết bị của bạn
         </p>
         <span className="mt-6 inline-flex max-w-full overflow-hidden rounded-lg bg-[#10aee8] text-white shadow-lg shadow-sky-100 transition hover:bg-[#0789c5] dark:shadow-none">
           <strong className="flex min-w-0 items-center gap-2 px-5 py-3 text-sm sm:px-7 sm:py-3.5 sm:text-base">
@@ -129,7 +161,7 @@ export function ToolUploader({
           ))}
         </div>
         <p className="mt-5 text-xs text-slate-500">File được bảo vệ và tự động xóa theo thời hạn gói của bạn</p>
-        <input type="file" accept={accept} multiple={multiple} className="hidden" onChange={(e) => setFiles(Array.from(e.target.files ?? []))} />
+        <input type="file" accept={accept} multiple={multiple} className="hidden" onChange={(e) => setPickedFiles(Array.from(e.target.files ?? []))} />
       </label>
 
       {(fields.length > 0 || Boolean(teams.data?.length)) && !status && (

@@ -3,7 +3,7 @@
 import { useMutation, useQueries } from "@tanstack/react-query";
 import axios from "axios";
 import { CheckCircle2, Download, Files, LoaderCircle } from "lucide-react";
-import { useState } from "react";
+import { DragEvent, useState } from "react";
 import { Pagination } from "@/components/common/pagination";
 import { api } from "@/services/api";
 
@@ -25,6 +25,7 @@ const options = [
 export function BatchConverter() {
   const [tool, setTool] = useState(options[0]!.value);
   const [files, setFiles] = useState<File[]>([]);
+  const [dragActive, setDragActive] = useState(false);
   const [ids, setIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const selected = options.find((item) => item.value === tool)!;
@@ -65,6 +66,28 @@ export function BatchConverter() {
     URL.revokeObjectURL(url);
   }
 
+  function setPickedFiles(nextFiles: File[]) {
+    setFiles(nextFiles.slice(0, 20));
+    setIds([]);
+    setPage(1);
+  }
+
+  function handleDrag(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.type === "dragenter" || event.type === "dragover") setDragActive(true);
+    if (event.type === "dragleave") setDragActive(false);
+  }
+
+  function handleDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(false);
+    const droppedFiles = Array.from(event.dataTransfer.files ?? []);
+    if (!droppedFiles.length) return;
+    setPickedFiles(droppedFiles);
+  }
+
   return (
     <div className="app-card mx-auto max-w-6xl overflow-hidden">
       {!ids.length && (
@@ -82,15 +105,30 @@ export function BatchConverter() {
                 type="file"
                 multiple
                 accept={selected.accept}
-                onChange={(event) => setFiles(Array.from(event.target.files ?? []).slice(0, 20))}
+                onChange={(event) => setPickedFiles(Array.from(event.target.files ?? []))}
                 className="field mt-2"
               />
             </label>
           </div>
-          <div className="p-8 text-center">
+          <div
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            className={`m-5 rounded-lg border-2 border-dashed p-8 text-center transition ${
+              dragActive
+                ? "border-[#10aee8] bg-[#e8f7fd] dark:border-sky-300 dark:bg-sky-950/30"
+                : "border-[#d8ded5] bg-white hover:border-[#10aee8] hover:bg-[#f2fbff] dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800"
+            }`}
+          >
             <Files className="mx-auto text-[#10aee8]" size={48} />
             <h2 className="app-heading mt-4 text-2xl">{files.length ? `${files.length} file đã chọn` : "Chuyển đổi nhiều file cùng lúc"}</h2>
-            <p className="mt-2 text-sm text-slate-500">Mỗi file tạo một kết quả riêng và được tính một lượt sử dụng.</p>
+            <p className="mt-2 text-sm text-slate-500">Kéo thả tối đa 20 file vào đây. Mỗi file tạo một kết quả riêng và được tính một lượt sử dụng.</p>
+            {files.length > 0 && (
+              <p className="mx-auto mt-4 max-w-2xl truncate rounded-lg bg-white/80 px-4 py-2 text-sm font-bold text-slate-700 shadow-sm dark:bg-slate-950/80 dark:text-slate-200 dark:shadow-none">
+                {files.map((file) => file.name).join(", ")}
+              </p>
+            )}
             <button disabled={!files.length || upload.isPending} onClick={() => upload.mutate()} className="btn-primary mt-6">
               {upload.isPending ? "Đang tải lên..." : "Bắt đầu batch convert"}
             </button>

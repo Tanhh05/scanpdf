@@ -409,11 +409,11 @@ export default function HomePage() {
             [Download, "Tải kết quả nhanh"],
             [Edit3, "Công cụ dễ sử dụng"],
           ].map(([Icon, label]) => (
-            <div key={label as string} className="flex items-center justify-center gap-3 text-sm font-black text-slate-700 dark:text-slate-200">
-              <span className="flex h-10 w-10 items-center justify-center rounded-md bg-[#dff4fc] text-[#10aee8] dark:bg-sky-500/15 dark:text-sky-300">
+            <div key={label as string} className="flex w-full items-center justify-start gap-3 text-sm font-black text-slate-700 dark:text-slate-200 sm:justify-center">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#dff4fc] text-[#10aee8] dark:bg-sky-500/15 dark:text-sky-300">
                 <Icon size={18} />
               </span>
-              {label as string}
+              <span className="min-w-0">{label as string}</span>
             </div>
           ))}
         </div>

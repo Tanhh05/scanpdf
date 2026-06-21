@@ -138,7 +138,7 @@ export default function AdminPlansPage() {
               setMessage("");
               setShowCreateForm((value) => !value);
             }}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#10aee8] px-4 text-sm font-semibold text-white shadow-md"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#2563eb] px-4 text-sm font-semibold text-white shadow-md"
           >
             {showCreateForm ? <X size={19} /> : <CirclePlus size={19} />}
             {showCreateForm ? "Đóng biểu mẫu" : "Thêm gói dịch vụ"}
@@ -146,16 +146,16 @@ export default function AdminPlansPage() {
         }
       />
 
-      {message && <p className="fixed bottom-6 right-6 z-50 rounded-lg bg-[#242c42] px-6 py-4 text-sm font-semibold text-white shadow-2xl">{message}</p>}
+      {message && <p className="fixed bottom-6 right-6 z-50 rounded-lg bg-[#0f172a] px-6 py-4 text-sm font-semibold text-white shadow-2xl">{message}</p>}
 
       {showCreateForm && (
-        <form onSubmit={submitCreate} className={`${adminPanelClass} mt-5 border-[#b8c8be] bg-[#eef8fd] p-5`}>
+        <form onSubmit={submitCreate} className={`${adminPanelClass} mt-5 border-[#cbd5e1] bg-[#f8fafc] p-5`}>
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#10aee8] text-white">
+            <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#2563eb] text-white">
               <PackagePlus size={21} />
             </span>
             <div>
-              <h2 className="text-xl font-black text-[#17201d] dark:text-slate-50">Tạo gói dịch vụ mới</h2>
+              <h2 className="text-xl font-black text-[#0f172a] dark:text-slate-50">Tạo gói dịch vụ mới</h2>
               <p className="text-sm text-slate-500">Gói mới sẽ xuất hiện ngay trên bảng giá công khai.</p>
             </div>
           </div>
@@ -170,7 +170,7 @@ export default function AdminPlansPage() {
             <NumberField name="storageDays" label="Lưu file (ngày)" defaultValue={7} />
           </div>
           <div className="mt-4 flex justify-end">
-            <button disabled={createPlan.isPending} className="h-10 rounded-lg bg-[#10aee8] px-5 text-sm font-semibold text-white disabled:opacity-50">
+            <button disabled={createPlan.isPending} className="h-10 rounded-lg bg-[#2563eb] px-5 text-sm font-semibold text-white disabled:opacity-50">
               {createPlan.isPending ? "Đang tạo..." : "Tạo gói dịch vụ"}
             </button>
           </div>
@@ -196,17 +196,17 @@ export default function AdminPlansPage() {
             <form
               key={plan.id}
               onSubmit={(event) => submitUpdate(event, plan.id)}
-              className={`relative flex min-h-[540px] flex-col rounded-lg border bg-white p-6 shadow-[0_2px_10px_rgba(23,32,29,0.045)] dark:bg-[#101820] ${isPopular ? "border-2 border-[#9fc8bd]" : "border-[#d8ded5] dark:border-slate-800"}`}
+              className={`relative flex min-h-[540px] flex-col rounded-lg border bg-white p-6 shadow-[0_2px_10px_rgba(23,32,29,0.045)] dark:bg-[#101820] ${isPopular ? "border-2 border-[#9fc8bd]" : "border-[#e2e8f0] dark:border-slate-800"}`}
             >
               <input type="hidden" name="name" value={plan.name} />
-              {isPopular && <span className="absolute right-6 top-0 rounded-b-lg bg-[#10aee8] px-4 py-1.5 text-xs font-semibold text-white">PHỔ BIẾN</span>}
+              {isPopular && <span className="absolute right-6 top-0 rounded-b-lg bg-[#2563eb] px-4 py-1.5 text-xs font-semibold text-white">PHỔ BIẾN</span>}
               <div>
-                <span className={`flex h-11 w-11 items-center justify-center rounded-lg ${isPopular ? "bg-[#dff4fc] text-[#10aee8]" : "bg-[#e8f7fd] text-slate-600"}`}>
+                <span className={`flex h-11 w-11 items-center justify-center rounded-lg ${isPopular ? "bg-[#dbeafe] text-[#2563eb]" : "bg-[#eff6ff] text-slate-600"}`}>
                   {index === 0 ? <Medal size={23} /> : index === 1 ? <Star size={23} /> : <BriefcaseBusiness size={23} />}
                 </span>
                 <div>
-                  <h2 className={`mt-4 text-[23px] font-semibold ${isPopular ? "text-[#10aee8]" : "text-[#17201d]"}`}>{plan.name}</h2>
-                  <p className="mt-1 text-sm text-[#52615d]">{isFree ? "Dành cho cá nhân trải nghiệm" : isPopular ? "Dành cho chuyên gia" : "Dành cho tổ chức, doanh nghiệp"}</p>
+                  <h2 className={`mt-4 text-[23px] font-semibold ${isPopular ? "text-[#2563eb]" : "text-[#0f172a]"}`}>{plan.name}</h2>
+                  <p className="mt-1 text-sm text-[#64748b]">{isFree ? "Dành cho cá nhân trải nghiệm" : isPopular ? "Dành cho chuyên gia" : "Dành cho tổ chức, doanh nghiệp"}</p>
                 </div>
               </div>
               <div className="mt-5 grid gap-4">
@@ -216,7 +216,7 @@ export default function AdminPlansPage() {
                 <NumberField name="storageDays" label="Thời gian lưu file (ngày)" defaultValue={plan.storageDays} />
               </div>
               <div className="mt-auto pt-6">
-              <button disabled={updatePlan.isPending} className={`h-11 w-full rounded-lg text-sm font-semibold text-white disabled:opacity-50 ${isPopular ? "bg-[#10aee8]" : index === 0 ? "bg-slate-500" : "bg-[#17201d]"}`}>
+              <button disabled={updatePlan.isPending} className={`h-11 w-full rounded-lg text-sm font-semibold text-white disabled:opacity-50 ${isPopular ? "bg-[#2563eb]" : index === 0 ? "bg-slate-500" : "bg-[#0f172a]"}`}>
                 {updatePlan.isPending ? "Đang lưu..." : "Lưu cấu hình"}
               </button>
               <button
@@ -242,11 +242,11 @@ export default function AdminPlansPage() {
         </div>
       )}
 
-      <div className={`${adminPanelClass} mt-7 flex gap-3 bg-[#eef8fd] p-5`}>
-        <Info className="mt-0.5 shrink-0 text-[#10aee8]" size={23} />
+      <div className={`${adminPanelClass} mt-7 flex gap-3 bg-[#f8fafc] p-5`}>
+        <Info className="mt-0.5 shrink-0 text-[#2563eb]" size={23} />
         <div>
           <h3 className="font-semibold">Lưu ý quản trị</h3>
-          <p className="mt-2 text-sm leading-6 text-[#4f586e]">
+          <p className="mt-2 text-sm leading-6 text-[#64748b]">
             Mọi thay đổi đối với các gói dịch vụ được ghi lại trong nhật ký hệ thống. Gói Free là gói mặc định và không thể xóa; các gói đã có đăng ký hoặc thanh toán cũng được bảo vệ để giữ toàn vẹn dữ liệu.
           </p>
         </div>

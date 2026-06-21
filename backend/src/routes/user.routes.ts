@@ -48,6 +48,12 @@ router.get("/profile", asyncHandler(async (req, res) => {
         twoFactorEnabled: true,
         createdAt: true,
         passwordHash: true,
+        oauthAccounts: {
+          select: {
+            provider: true,
+            createdAt: true,
+          },
+        },
       },
     }),
     getUserPlan(req.user!.id),
@@ -298,7 +304,7 @@ router.get("/shares", asyncHandler(async (req, res) => {
   const [shares, total] = await Promise.all([
     prisma.fileShare.findMany({
       where,
-      include: { file: { select: { originalName: true } } },
+      include: { file: { select: { originalName: true, fileSize: true, fileType: true, expiredAt: true } } },
       orderBy: { createdAt: "desc" },
       skip: (query.page - 1) * query.limit,
       take: query.limit,

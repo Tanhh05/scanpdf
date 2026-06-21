@@ -57,7 +57,7 @@ export default function StatisticsPage() {
   const toolPages = Math.max(1, Math.ceil(tools.length / toolLimit));
   const visibleTools = tools.slice((toolPage - 1) * toolLimit, toolPage * toolLimit);
   const metrics = [
-    { label: "Tổng lượt chuyển đổi", value: total.toLocaleString("vi-VN"), note: "30 ngày gần nhất", icon: TrendingUp, color: "text-[#10aee8]" },
+    { label: "Tổng lượt chuyển đổi", value: total.toLocaleString("vi-VN"), note: "30 ngày gần nhất", icon: TrendingUp, color: "text-[#2563eb]" },
     { label: "Tỷ lệ thành công", value: `${successRate}%`, note: "Ổn định", icon: CheckCircle2, color: "text-emerald-700" },
     { label: "Lượt thất bại", value: failed.toLocaleString("vi-VN"), note: "Cần theo dõi", icon: TrendingDown, color: "text-red-600" },
     { label: "Thời gian TB", value: "N/A", note: "Chưa thu thập", icon: Clock3, color: "text-slate-600" },
@@ -67,8 +67,8 @@ export default function StatisticsPage() {
     <section>
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {metrics.map((item, index) => (
-          <article key={item.label} className={`${adminPanelClass} min-h-[112px] p-5 ${index === 1 ? "border-l-4 border-l-[#10aee8]" : ""}`}>
-            <p className="text-sm text-[#464e63]">{item.label}</p>
+          <article key={item.label} className={`${adminPanelClass} min-h-[112px] p-5 ${index === 1 ? "border-l-4 border-l-[#2563eb]" : ""}`}>
+            <p className="text-sm text-[#475569]">{item.label}</p>
             <strong className={`mt-2 block text-[23px] ${item.color}`}>{isLoading ? "..." : item.value}</strong>
             <p className={`mt-2 flex items-center gap-2 text-xs ${item.color}`}><item.icon size={14} /> {item.note}</p>
           </article>
@@ -77,17 +77,17 @@ export default function StatisticsPage() {
 
       <article className={`${adminPanelClass} mt-6 p-5`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div><h2 className="text-xl font-bold">Số lượt chuyển đổi theo ngày</h2><p className="mt-1 text-sm text-[#52615d]">Dữ liệu tổng hợp từ 30 ngày gần nhất</p></div>
-          <span className="rounded-lg bg-[#10aee8] px-4 py-2 text-sm font-semibold text-white">30 ngày qua</span>
+          <div><h2 className="text-xl font-bold">Số lượt chuyển đổi theo ngày</h2><p className="mt-1 text-sm text-[#64748b]">Dữ liệu tổng hợp từ 30 ngày gần nhất</p></div>
+          <span className="rounded-lg bg-[#2563eb] px-4 py-2 text-sm font-semibold text-white">30 ngày qua</span>
         </div>
         <div className="mt-5 h-[300px]">
           {isLoading ? <div className="h-full animate-pulse rounded-lg bg-slate-50" /> : points.length ? (
             <svg viewBox={`-15 -10 ${width + 30} ${height + 35}`} className="h-full w-full" preserveAspectRatio="none">
-              <defs><linearGradient id="statisticsArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10aee8" stopOpacity=".2" /><stop offset="100%" stopColor="#10aee8" stopOpacity="0" /></linearGradient></defs>
+              <defs><linearGradient id="statisticsArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2563eb" stopOpacity=".2" /><stop offset="100%" stopColor="#2563eb" stopOpacity="0" /></linearGradient></defs>
               {[0, 1, 2, 3, 4].map((item) => <line key={item} x1="0" x2={width} y1={item * 78} y2={item * 78} stroke="#e1e5ef" />)}
               <path d={area} fill="url(#statisticsArea)" />
-              <path d={line} fill="none" stroke="#10aee8" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-              {points.map(({ x, y, item }) => <circle key={item.statDate} cx={x} cy={y} r="3.5" fill="#fff" stroke="#10aee8" strokeWidth="2" vectorEffect="non-scaling-stroke"><title>{`${item.statDate}: ${item.totalConversions}`}</title></circle>)}
+              <path d={line} fill="none" stroke="#2563eb" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+              {points.map(({ x, y, item }) => <circle key={item.statDate} cx={x} cy={y} r="3.5" fill="#fff" stroke="#2563eb" strokeWidth="2" vectorEffect="non-scaling-stroke"><title>{`${item.statDate}: ${item.totalConversions}`}</title></circle>)}
             </svg>
           ) : <AdminEmpty>Chưa có dữ liệu thống kê.</AdminEmpty>}
         </div>
@@ -97,28 +97,28 @@ export default function StatisticsPage() {
       </article>
 
       <article className={`${adminPanelClass} mt-6 overflow-hidden`}>
-        <div className="flex flex-col gap-3 border-b border-[#d8ded5] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-b border-[#e2e8f0] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-bold">Thống kê theo công cụ</h2>
-          <label className="flex h-10 items-center gap-3 rounded-lg border border-[#b8c8be] bg-[#eef8fd] px-3 sm:w-64"><Search size={18} /><input value={search} onChange={(event) => { setSearch(event.target.value); setToolPage(1); }} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Tìm kiếm công cụ..." /></label>
+          <label className="flex h-10 items-center gap-3 rounded-lg border border-[#cbd5e1] bg-[#f8fafc] px-3 sm:w-64"><Search size={18} /><input value={search} onChange={(event) => { setSearch(event.target.value); setToolPage(1); }} className="min-w-0 flex-1 bg-transparent text-sm outline-none" placeholder="Tìm kiếm công cụ..." /></label>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[850px] text-left">
-            <thead className="bg-[#eef8fd] text-xs uppercase tracking-wide text-[#34423e] dark:bg-slate-800 dark:text-slate-200"><tr><th className="px-5 py-3.5">Công cụ</th><th className="px-4 py-3.5">Tổng lượt</th><th className="px-4 py-3.5">Thành công</th><th className="px-4 py-3.5">Thất bại</th><th className="px-4 py-3.5">Tỷ lệ thành công</th><th className="px-4 py-3.5 text-center">Hành động</th></tr></thead>
+            <thead className="bg-[#f8fafc] text-xs uppercase tracking-wide text-[#475569] dark:bg-slate-800 dark:text-slate-200"><tr><th className="px-5 py-3.5">Công cụ</th><th className="px-4 py-3.5">Tổng lượt</th><th className="px-4 py-3.5">Thành công</th><th className="px-4 py-3.5">Thất bại</th><th className="px-4 py-3.5">Tỷ lệ thành công</th><th className="px-4 py-3.5 text-center">Hành động</th></tr></thead>
             <tbody>
               {visibleTools.map((item) => {
                 const rate = item.totalUsage ? Math.round((item.successCount / item.totalUsage) * 1000) / 10 : 0;
                 return (
-                  <tr key={item.tool} className="border-t border-[#d8ded5] dark:border-slate-800 text-sm">
+                  <tr key={item.tool} className="border-t border-[#e2e8f0] dark:border-slate-800 text-sm">
                     <td className="px-5 py-3.5"><strong>{toolLabel(item.tool)}</strong></td>
                     <td className="px-4 py-3.5">{item.totalUsage.toLocaleString("vi-VN")}</td>
-                    <td className="px-4 py-3.5 font-semibold text-[#10aee8]">{item.successCount.toLocaleString("vi-VN")}</td>
+                    <td className="px-4 py-3.5 font-semibold text-[#2563eb]">{item.successCount.toLocaleString("vi-VN")}</td>
                     <td className="px-4 py-3.5 font-semibold text-red-600">{item.failedCount.toLocaleString("vi-VN")}</td>
-                    <td className="px-4 py-3.5"><div className="flex items-center gap-3"><div className="h-2 w-24 rounded-full bg-[#e3e7f2]"><div className="h-full rounded-full bg-[#10aee8]" style={{ width: `${rate}%` }} /></div><span>{rate}%</span></div></td>
+                    <td className="px-4 py-3.5"><div className="flex items-center gap-3"><div className="h-2 w-24 rounded-full bg-[#e3e7f2]"><div className="h-full rounded-full bg-[#2563eb]" style={{ width: `${rate}%` }} /></div><span>{rate}%</span></div></td>
                     <td className="px-4 py-3.5 text-center">
                       <button
                         type="button"
                         onClick={() => setSelectedTool(item)}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#f2fbff] hover:text-[#10aee8]"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-[#eff6ff] hover:text-[#2563eb]"
                         title="Xem chi tiết công cụ"
                       >
                         <Eye size={18} />
@@ -132,7 +132,7 @@ export default function StatisticsPage() {
           </table>
         </div>
         {toolPages > 1 && (
-          <div className="flex items-center justify-between border-t border-[#d8ded5] px-5 py-3.5 text-sm text-slate-500">
+          <div className="flex items-center justify-between border-t border-[#e2e8f0] px-5 py-3.5 text-sm text-slate-500">
             <span>{tools.length} công cụ</span>
             <AdminPagination page={toolPage} pages={toolPages} onPageChange={setToolPage} />
           </div>
@@ -149,15 +149,15 @@ export default function StatisticsPage() {
             <button
               type="button"
               onClick={() => navigator.clipboard.writeText(selectedTool.tool)}
-              className="inline-flex h-10 items-center rounded-lg border border-[#b8c8be] px-4 text-sm font-semibold text-[#10aee8]"
+              className="inline-flex h-10 items-center rounded-lg border border-[#cbd5e1] px-4 text-sm font-semibold text-[#2563eb]"
             >
               Sao chép mã công cụ
             </button>
           </div>
           <div className="mt-4 grid gap-3 text-sm md:grid-cols-3">
-            <div className="rounded-lg bg-[#f8faf7] p-4 dark:bg-slate-900"><p className="text-slate-500">Tổng lượt</p><p className="mt-2 text-xl font-semibold">{selectedTool.totalUsage.toLocaleString("vi-VN")}</p></div>
-            <div className="rounded-lg bg-[#f8faf7] p-4 dark:bg-slate-900"><p className="text-slate-500">Thành công</p><p className="mt-2 text-xl font-semibold text-[#10aee8]">{selectedTool.successCount.toLocaleString("vi-VN")}</p></div>
-            <div className="rounded-lg bg-[#f8faf7] p-4 dark:bg-slate-900"><p className="text-slate-500">Thất bại</p><p className="mt-2 text-xl font-semibold text-red-600">{selectedTool.failedCount.toLocaleString("vi-VN")}</p></div>
+            <div className="rounded-lg bg-[#f8fafc] p-4 dark:bg-slate-900"><p className="text-slate-500">Tổng lượt</p><p className="mt-2 text-xl font-semibold">{selectedTool.totalUsage.toLocaleString("vi-VN")}</p></div>
+            <div className="rounded-lg bg-[#f8fafc] p-4 dark:bg-slate-900"><p className="text-slate-500">Thành công</p><p className="mt-2 text-xl font-semibold text-[#2563eb]">{selectedTool.successCount.toLocaleString("vi-VN")}</p></div>
+            <div className="rounded-lg bg-[#f8fafc] p-4 dark:bg-slate-900"><p className="text-slate-500">Thất bại</p><p className="mt-2 text-xl font-semibold text-red-600">{selectedTool.failedCount.toLocaleString("vi-VN")}</p></div>
           </div>
         </article>
       )}

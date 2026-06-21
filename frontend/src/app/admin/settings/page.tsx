@@ -64,12 +64,12 @@ function SettingCard({
   return (
     <section className={`${adminPanelClass} p-5`}>
       <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#dff4fc] text-[#10aee8]">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#dbeafe] text-[#2563eb]">
           <Icon size={20} />
         </span>
         <div>
-          <h2 className="text-[17px] font-black text-[#17201d] dark:text-slate-50">{title}</h2>
-          <p className="mt-1 text-sm leading-5 text-[#52615d] dark:text-slate-400">{description}</p>
+          <h2 className="text-[17px] font-black text-[#0f172a] dark:text-slate-50">{title}</h2>
+          <p className="mt-1 text-sm leading-5 text-[#64748b] dark:text-slate-400">{description}</p>
         </div>
       </div>
       <div className="mt-5">{children}</div>
@@ -94,17 +94,17 @@ function ToggleField({
       onClick={() => onChange(!checked)}
       className={`flex min-h-[86px] w-full items-center justify-between gap-4 rounded-lg border px-4 py-3 text-left transition ${
         checked
-          ? "border-[#10aee8]/40 bg-[#eef8fd] dark:border-sky-500/40 dark:bg-sky-950/20"
-          : "border-[#d8ded5] bg-white hover:border-[#b8c8be] dark:border-slate-800 dark:bg-slate-950"
+          ? "border-[#2563eb]/40 bg-[#f8fafc] dark:border-sky-500/40 dark:bg-sky-950/20"
+          : "border-[#e2e8f0] bg-white hover:border-[#cbd5e1] dark:border-slate-800 dark:bg-slate-950"
       }`}
     >
       <span className="min-w-0">
-        <span className="block text-sm font-bold text-[#17201d] dark:text-slate-100">{label}</span>
-        <span className="mt-1 block text-xs leading-5 text-[#52615d] dark:text-slate-400">{description}</span>
+        <span className="block text-sm font-bold text-[#0f172a] dark:text-slate-100">{label}</span>
+        <span className="mt-1 block text-xs leading-5 text-[#64748b] dark:text-slate-400">{description}</span>
       </span>
       <span
         className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-          checked ? "bg-[#10aee8]" : "bg-slate-300 dark:bg-slate-700"
+          checked ? "bg-[#2563eb]" : "bg-slate-300 dark:bg-slate-700"
         }`}
         aria-hidden="true"
       >
@@ -134,9 +134,9 @@ function NumberField({
   onChange: (value: number) => void;
 }) {
   return (
-    <label className="text-sm font-bold text-[#17201d] dark:text-slate-100">
+    <label className="text-sm font-bold text-[#0f172a] dark:text-slate-100">
       {label}
-      <div className="mt-2 flex overflow-hidden rounded-md border border-[#b8c8be] bg-white focus-within:border-[#10aee8] focus-within:ring-2 focus-within:ring-[#10aee8]/10 dark:border-slate-700 dark:bg-slate-900">
+      <div className="mt-2 flex overflow-hidden rounded-md border border-[#cbd5e1] bg-white focus-within:border-[#2563eb] focus-within:ring-2 focus-within:ring-[#2563eb]/10 dark:border-slate-700 dark:bg-slate-900">
         <input
           type="number"
           min={min}
@@ -146,7 +146,7 @@ function NumberField({
           className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm font-semibold text-slate-800 outline-none dark:text-slate-100"
           required
         />
-        <span className="flex h-11 items-center border-l border-[#d8ded5] px-3 text-xs font-bold text-[#52615d] dark:border-slate-700 dark:text-slate-400">
+        <span className="flex h-11 items-center border-l border-[#e2e8f0] px-3 text-xs font-bold text-[#64748b] dark:border-slate-700 dark:text-slate-400">
           {suffix}
         </span>
       </div>
@@ -166,16 +166,16 @@ function StatusTile({
   icon: typeof Settings2;
 }) {
   return (
-    <div className="rounded-lg border border-[#d8ded5] bg-white p-4 shadow-[0_1px_8px_rgba(23,32,29,0.035)] dark:border-slate-800 dark:bg-[#101820]">
+    <div className="rounded-lg border border-[#e2e8f0] bg-white p-4 shadow-[0_1px_8px_rgba(23,32,29,0.035)] dark:border-slate-800 dark:bg-[#101820]">
       <div className="flex items-center justify-between gap-3">
-        <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${active ? "bg-[#dff4fc] text-[#10aee8]" : "bg-red-50 text-red-600"}`}>
+        <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${active ? "bg-[#dbeafe] text-[#2563eb]" : "bg-red-50 text-red-600"}`}>
           <Icon size={18} />
         </span>
-        <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ${active ? "bg-[#dff4fc] text-[#10aee8]" : "bg-red-50 text-red-600"}`}>
+        <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ${active ? "bg-[#dbeafe] text-[#2563eb]" : "bg-red-50 text-red-600"}`}>
           {value}
         </span>
       </div>
-      <p className="mt-3 text-sm font-bold text-[#17201d] dark:text-slate-100">{label}</p>
+      <p className="mt-3 text-sm font-bold text-[#0f172a] dark:text-slate-100">{label}</p>
     </div>
   );
 }
@@ -228,7 +228,7 @@ export default function AdminSettingsPage() {
             type="submit"
             form="admin-settings-form"
             disabled={disabled}
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#10aee8] px-4 text-sm font-semibold text-white shadow-md disabled:opacity-60"
+            className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#2563eb] px-4 text-sm font-semibold text-white shadow-md disabled:opacity-60"
           >
             {saveSettings.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
             {saveSettings.isPending ? "Đang lưu..." : "Lưu thay đổi"}
@@ -237,7 +237,7 @@ export default function AdminSettingsPage() {
       />
 
       {message && (
-        <p className="fixed bottom-6 right-6 z-50 rounded-lg bg-[#242c42] px-6 py-4 text-sm font-semibold text-white shadow-2xl">
+        <p className="fixed bottom-6 right-6 z-50 rounded-lg bg-[#0f172a] px-6 py-4 text-sm font-semibold text-white shadow-2xl">
           {message}
         </p>
       )}
@@ -264,7 +264,7 @@ export default function AdminSettingsPage() {
             description="Thông tin nhận diện và kênh hỗ trợ hiển thị cho đội vận hành."
           >
             <div className="grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-bold text-[#17201d] dark:text-slate-100">
+              <label className="text-sm font-bold text-[#0f172a] dark:text-slate-100">
                 Tên hệ thống
                 <input
                   value={form.siteName}
@@ -274,7 +274,7 @@ export default function AdminSettingsPage() {
                   required
                 />
               </label>
-              <label className="text-sm font-bold text-[#17201d] dark:text-slate-100">
+              <label className="text-sm font-bold text-[#0f172a] dark:text-slate-100">
                 Email hỗ trợ
                 <input
                   type="email"
@@ -285,7 +285,7 @@ export default function AdminSettingsPage() {
                   required
                 />
               </label>
-              <label className="text-sm font-bold text-[#17201d] dark:text-slate-100">
+              <label className="text-sm font-bold text-[#0f172a] dark:text-slate-100">
                 Số điện thoại hỗ trợ
                 <input
                   value={form.contactPhone}
@@ -295,7 +295,7 @@ export default function AdminSettingsPage() {
                   placeholder="Ví dụ: 0900 000 000"
                 />
               </label>
-              <label className="text-sm font-bold text-[#17201d] dark:text-slate-100">
+              <label className="text-sm font-bold text-[#0f172a] dark:text-slate-100">
                 Thông báo ngắn
                 <input
                   value={form.announcement}
@@ -374,20 +374,20 @@ export default function AdminSettingsPage() {
                 <Gauge size={20} />
               </span>
               <div>
-                <h2 className="text-[17px] font-black text-[#17201d] dark:text-slate-50">Trạng thái lưu trữ</h2>
-                <p className="mt-1 text-sm leading-5 text-[#52615d] dark:text-slate-400">
+                <h2 className="text-[17px] font-black text-[#0f172a] dark:text-slate-50">Trạng thái lưu trữ</h2>
+                <p className="mt-1 text-sm leading-5 text-[#64748b] dark:text-slate-400">
                   API đọc và ghi trực tiếp vào bảng admin_settings trong database.
                 </p>
               </div>
             </div>
             <div className="mt-5 grid gap-3 text-sm">
               <div className="flex items-center justify-between gap-3 rounded-lg bg-[#f7fbfd] px-4 py-3 dark:bg-slate-900">
-                <span className="inline-flex items-center gap-2 text-[#52615d] dark:text-slate-400"><Mail size={16} /> Email hỗ trợ</span>
-                <span className="max-w-[190px] truncate font-bold text-[#17201d] dark:text-slate-100">{form.supportEmail}</span>
+                <span className="inline-flex items-center gap-2 text-[#64748b] dark:text-slate-400"><Mail size={16} /> Email hỗ trợ</span>
+                <span className="max-w-[190px] truncate font-bold text-[#0f172a] dark:text-slate-100">{form.supportEmail}</span>
               </div>
               <div className="flex items-center justify-between gap-3 rounded-lg bg-[#f7fbfd] px-4 py-3 dark:bg-slate-900">
-                <span className="inline-flex items-center gap-2 text-[#52615d] dark:text-slate-400"><Megaphone size={16} /> Thông báo</span>
-                <span className="max-w-[190px] truncate font-bold text-[#17201d] dark:text-slate-100">{form.announcement || "Chưa có"}</span>
+                <span className="inline-flex items-center gap-2 text-[#64748b] dark:text-slate-400"><Megaphone size={16} /> Thông báo</span>
+                <span className="max-w-[190px] truncate font-bold text-[#0f172a] dark:text-slate-100">{form.announcement || "Chưa có"}</span>
               </div>
             </div>
           </section>

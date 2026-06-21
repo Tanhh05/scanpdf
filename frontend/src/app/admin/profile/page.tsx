@@ -104,13 +104,13 @@ export default function AdminProfilePage() {
         description="Chỉnh sửa thông tin tài khoản quản trị đang đăng nhập. Phần này tách riêng với Cài đặt hệ thống."
       />
 
-      {message && <p className="fixed bottom-6 right-6 z-50 rounded-lg bg-[#242c42] px-6 py-4 text-sm font-semibold text-white shadow-2xl">{message}</p>}
+      {message && <p className="fixed bottom-6 right-6 z-50 rounded-lg bg-[#0f172a] px-6 py-4 text-sm font-semibold text-white shadow-2xl">{message}</p>}
       {profile.isError && <p className="mt-6 rounded-lg bg-red-50 p-4 text-sm font-bold text-red-700">Không thể tải hồ sơ admin.</p>}
 
       <div className="mt-7 grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
         <aside className={`${adminPanelClass} overflow-hidden`}>
-          <div className="bg-[#17201d] p-6 text-white dark:bg-slate-950">
-            <div className="flex h-20 w-20 items-center justify-center rounded-lg border-2 border-[#10aee8] bg-[#dff4fc] text-2xl font-black text-[#10aee8]">
+          <div className="bg-[#0f172a] p-6 text-white dark:bg-slate-950">
+            <div className="flex h-20 w-20 items-center justify-center rounded-lg border-2 border-[#2563eb] bg-[#dbeafe] text-2xl font-black text-[#2563eb]">
               {profile.isLoading ? "..." : initials || "A"}
             </div>
             <h2 className="mt-5 text-2xl font-black">{fullName || "Quản trị viên"}</h2>
@@ -118,16 +118,16 @@ export default function AdminProfilePage() {
           </div>
           <div className="grid gap-3 p-5 text-sm">
             <div className="flex items-center justify-between gap-3 rounded-lg bg-[#f7fbfd] p-3 dark:bg-slate-900">
-              <span className="inline-flex items-center gap-2 text-[#52615d] dark:text-slate-400"><ShieldCheck size={16} /> Vai trò</span>
-              <span className="rounded-md bg-[#dff4fc] px-2.5 py-1 text-xs font-bold text-[#10aee8]">{profile.data?.role ?? "ADMIN"}</span>
+              <span className="inline-flex items-center gap-2 text-[#64748b] dark:text-slate-400"><ShieldCheck size={16} /> Vai trò</span>
+              <span className="rounded-md bg-[#dbeafe] px-2.5 py-1 text-xs font-bold text-[#2563eb]">{profile.data?.role ?? "ADMIN"}</span>
             </div>
             <div className="flex items-center justify-between gap-3 rounded-lg bg-[#f7fbfd] p-3 dark:bg-slate-900">
-              <span className="inline-flex items-center gap-2 text-[#52615d] dark:text-slate-400"><IdCard size={16} /> Trạng thái</span>
-              <span className="font-bold text-[#10aee8]">{profile.data?.status === "ACTIVE" ? "Hoạt động" : profile.data?.status ?? "--"}</span>
+              <span className="inline-flex items-center gap-2 text-[#64748b] dark:text-slate-400"><IdCard size={16} /> Trạng thái</span>
+              <span className="font-bold text-[#2563eb]">{profile.data?.status === "ACTIVE" ? "Hoạt động" : profile.data?.status ?? "--"}</span>
             </div>
             <div className="flex items-center justify-between gap-3 rounded-lg bg-[#f7fbfd] p-3 dark:bg-slate-900">
-              <span className="inline-flex items-center gap-2 text-[#52615d] dark:text-slate-400"><CalendarDays size={16} /> Ngày tạo</span>
-              <span className="font-bold text-[#17201d] dark:text-slate-100">{joinedDate}</span>
+              <span className="inline-flex items-center gap-2 text-[#64748b] dark:text-slate-400"><CalendarDays size={16} /> Ngày tạo</span>
+              <span className="font-bold text-[#0f172a] dark:text-slate-100">{joinedDate}</span>
             </div>
           </div>
         </aside>
@@ -135,20 +135,20 @@ export default function AdminProfilePage() {
         <div className="grid gap-5">
           <form onSubmit={submitProfile} className={`${adminPanelClass} p-5`}>
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#dff4fc] text-[#10aee8]">
+              <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-[#dbeafe] text-[#2563eb]">
                 <UserRound size={21} />
               </span>
               <div>
-                <h2 className="text-lg font-black text-[#17201d] dark:text-slate-50">Thông tin cá nhân</h2>
-                <p className="text-sm text-[#52615d] dark:text-slate-400">Tên và email dùng cho phiên quản trị.</p>
+                <h2 className="text-lg font-black text-[#0f172a] dark:text-slate-50">Thông tin cá nhân</h2>
+                <p className="text-sm text-[#64748b] dark:text-slate-400">Tên và email dùng cho phiên quản trị.</p>
               </div>
             </div>
 
             <div className="mt-5 grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-bold text-[#17201d] dark:text-slate-100">
+              <label className="text-sm font-bold text-[#0f172a] dark:text-slate-100">
                 Họ tên admin
                 <span className="relative mt-2 block">
-                  <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 text-[#52615d]" size={17} />
+                  <UserRound className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" size={17} />
                   <input
                     value={fullName}
                     onChange={(event) => setFullName(event.target.value)}
@@ -159,10 +159,10 @@ export default function AdminProfilePage() {
                   />
                 </span>
               </label>
-              <label className="text-sm font-bold text-[#17201d] dark:text-slate-100">
+              <label className="text-sm font-bold text-[#0f172a] dark:text-slate-100">
                 Email đăng nhập
                 <span className="relative mt-2 block">
-                  <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 text-[#52615d]" size={17} />
+                  <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748b]" size={17} />
                   <input
                     type="email"
                     value={email}
@@ -177,7 +177,7 @@ export default function AdminProfilePage() {
             <div className="mt-5 flex justify-end">
               <button
                 disabled={profile.isLoading || isSavingProfile}
-                className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#10aee8] px-4 text-sm font-semibold text-white shadow-md disabled:opacity-60"
+                className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#2563eb] px-4 text-sm font-semibold text-white shadow-md disabled:opacity-60"
               >
                 {isSavingProfile ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                 {isSavingProfile ? "Đang lưu..." : "Lưu hồ sơ"}
@@ -191,13 +191,13 @@ export default function AdminProfilePage() {
                 <KeyRound size={21} />
               </span>
               <div>
-                <h2 className="text-lg font-black text-[#17201d] dark:text-slate-50">Bảo mật đăng nhập</h2>
-                <p className="text-sm text-[#52615d] dark:text-slate-400">Đổi mật khẩu admin để bảo vệ quyền quản trị.</p>
+                <h2 className="text-lg font-black text-[#0f172a] dark:text-slate-50">Bảo mật đăng nhập</h2>
+                <p className="text-sm text-[#64748b] dark:text-slate-400">Đổi mật khẩu admin để bảo vệ quyền quản trị.</p>
               </div>
             </div>
 
             <div className="mt-5 grid gap-4 md:grid-cols-3">
-              <label className="text-sm font-bold text-[#17201d] dark:text-slate-100">
+              <label className="text-sm font-bold text-[#0f172a] dark:text-slate-100">
                 Mật khẩu hiện tại
                 <input
                   type="password"
@@ -208,7 +208,7 @@ export default function AdminProfilePage() {
                   required
                 />
               </label>
-              <label className="text-sm font-bold text-[#17201d] dark:text-slate-100">
+              <label className="text-sm font-bold text-[#0f172a] dark:text-slate-100">
                 Mật khẩu mới
                 <input
                   type="password"
@@ -220,7 +220,7 @@ export default function AdminProfilePage() {
                   required
                 />
               </label>
-              <label className="text-sm font-bold text-[#17201d] dark:text-slate-100">
+              <label className="text-sm font-bold text-[#0f172a] dark:text-slate-100">
                 Nhập lại mật khẩu mới
                 <input
                   type="password"
@@ -235,13 +235,13 @@ export default function AdminProfilePage() {
             </div>
 
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="inline-flex items-center gap-2 text-sm text-[#52615d] dark:text-slate-400">
+              <p className="inline-flex items-center gap-2 text-sm text-[#64748b] dark:text-slate-400">
                 <Mail size={16} />
                 Sau khi đổi email, lần đăng nhập tiếp theo sẽ dùng email mới.
               </p>
               <button
                 disabled={isChangingPassword}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#17201d] px-4 text-sm font-semibold text-white shadow-md disabled:opacity-60 dark:bg-slate-800"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#0f172a] px-4 text-sm font-semibold text-white shadow-md disabled:opacity-60 dark:bg-slate-800"
               >
                 {isChangingPassword ? <Loader2 className="animate-spin" size={18} /> : <KeyRound size={18} />}
                 {isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}

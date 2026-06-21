@@ -9,6 +9,7 @@ export type Profile = {
     createdAt?: string;
     hasPassword?: boolean;
     twoFactorEnabled?: boolean;
+    oauthAccounts?: { provider: "GOOGLE" | "GITHUB"; createdAt: string }[];
   };
   plan: { name: string; dailyLimit: number; maxFileSizeMb?: number; storageDays?: number };
   usedToday: number;

@@ -97,8 +97,6 @@ export async function removeImageWatermark(
   const form = new FormData();
   form.append("model", env.OPENAI_IMAGE_MODEL);
   form.append("prompt", buildImagePrompt((options.mode as ImageMode | undefined) ?? "auto", options.details));
-  form.append("size", "1536x1536");
-  form.append("response_format", "b64_json");
   form.append("image", new Blob([fileBuffer], { type: mimeType }), path.basename(inputPath));
 
   const response = await fetch("https://api.openai.com/v1/images/edits", {

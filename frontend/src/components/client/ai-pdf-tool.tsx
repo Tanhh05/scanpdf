@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { Bot, FileText, LoaderCircle, Send, Sparkles, UploadCloud, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { DragEvent, useState } from "react";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -49,6 +49,7 @@ export function AiPdfTool({
   const router = useRouter();
   const token = useAuthStore((state) => state.token);
   const [file, setFile] = useState<File | null>(null);
+  const [dragActive, setDragActive] = useState(false);
   const [question, setQuestion] = useState("");
 
   const request = useMutation({
@@ -79,6 +80,26 @@ export function AiPdfTool({
       : request.error.message
     : "";
 
+  function setPickedFile(nextFile: File | null) {
+    setFile(nextFile);
+    request.reset();
+  }
+
+  function handleDrag(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.type === "dragenter" || event.type === "dragover") setDragActive(true);
+    if (event.type === "dragleave") setDragActive(false);
+  }
+
+  function handleDrop(event: DragEvent<HTMLLabelElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(false);
+    const droppedFile = Array.from(event.dataTransfer.files ?? []).find((item) => item.type === "application/pdf" || item.name.toLowerCase().endsWith(".pdf"));
+    if (droppedFile) setPickedFile(droppedFile);
+  }
+
   return (
     <section className="mx-auto max-w-6xl">
       <div className="grid gap-5 lg:grid-cols-2">
@@ -89,19 +110,28 @@ export function AiPdfTool({
           <h1 className="mt-5 font-[var(--font-display)] text-3xl font-black tracking-normal text-[#17201d] dark:text-slate-50">{title}</h1>
           <p className="mt-3 text-sm leading-6 text-slate-600">{description}</p>
 
-          <label className="mt-7 flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-[#10aee8] bg-[#f8faf7] p-6 text-center transition hover:border-sky-500 hover:bg-[#e8f7fd]/45 dark:bg-slate-950">
+          <label
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            className={`mt-7 flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center transition dark:bg-slate-950 ${
+              dragActive
+                ? "border-sky-500 bg-[#e8f7fd] ring-4 ring-[#10aee8]/10"
+                : "border-[#10aee8] bg-[#f8faf7] hover:border-sky-500 hover:bg-[#e8f7fd]/45"
+            }`}
+          >
             <span className="flex h-12 w-12 items-center justify-center rounded-md bg-[#10aee8] text-white shadow-md shadow-sky-200">
               <UploadCloud size={23} />
             </span>
             <strong className="mt-4 text-sm font-black text-[#17201d] dark:text-slate-50">{file ? file.name : "Chọn file PDF"}</strong>
-            <span className="mt-1 text-xs font-semibold text-slate-500">PDF có văn bản sẽ cho kết quả tốt nhất</span>
+            <span className="mt-1 text-xs font-semibold text-slate-500">Kéo thả PDF vào đây hoặc chọn từ thiết bị</span>
             <input
               type="file"
               accept=".pdf"
               className="hidden"
               onChange={(event) => {
-                setFile(event.target.files?.[0] ?? null);
-                request.reset();
+                setPickedFile(event.target.files?.[0] ?? null);
               }}
             />
           </label>

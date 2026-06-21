@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Braces, CreditCard, History, LayoutDashboard, Users, UserRound } from "lucide-react";
+import { ArrowRight, Bell, Braces, CreditCard, History, LayoutDashboard, Link2, ShieldCheck, Users, UserRound } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
@@ -12,9 +12,12 @@ import { useAuthStore } from "@/stores/auth.store";
 const navigation = [
   { label: "Tổng quan", href: "/dashboard", icon: LayoutDashboard },
   { label: "Hồ sơ", href: "/dashboard/profile", icon: UserRound },
+  { label: "Bảo mật", href: "/dashboard/security", icon: ShieldCheck },
   { label: "Lịch sử", href: "/dashboard/history", icon: History },
-  { label: "Thanh toán", href: "/dashboard/payments", icon: CreditCard },
+  { label: "Thanh toán", href: "/dashboard/billing", icon: CreditCard },
   { label: "Team", href: "/dashboard/teams", icon: Users },
+  { label: "Link chia sẻ", href: "/dashboard/share-links", icon: Link2 },
+  { label: "Thông báo", href: "/dashboard/notifications", icon: Bell },
   { label: "Public API", href: "/dashboard/api-keys", icon: Braces },
 ];
 
@@ -66,7 +69,7 @@ export function AccountLayout({ children }: { children: ReactNode }) {
           </div>
           <nav className="mt-3 space-y-1 text-sm font-bold">
             {navigation.map((item) => {
-              const active = pathname === item.href;
+              const active = pathname === item.href || (item.href === "/dashboard/billing" && pathname === "/dashboard/payments");
               return (
                 <Link
                   key={item.href}

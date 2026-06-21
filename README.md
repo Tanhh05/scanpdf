@@ -39,6 +39,129 @@ Nền tảng SaaS chuyển đổi tài liệu dùng Next.js, Express, PostgreSQL
 - Desktop App Electron cho macOS/Windows/Linux với token mã hóa và hộp thoại file native.
 - Docker Compose và GitHub Actions.
 
+## Kiến trúc route và module
+
+ScanPDF nên giữ cấu trúc route theo nhóm chức năng để tách rõ marketing, ứng dụng người dùng, công cụ xử lý tài liệu và quản trị. Với Next.js App Router, các nhóm layout nên được tổ chức theo route group:
+
+```text
+frontend/src/app
+├── (marketing)
+│   ├── page.tsx
+│   ├── pricing
+│   ├── features
+│   ├── tools
+│   ├── blog
+│   ├── contact
+│   └── privacy
+├── (auth)
+│   ├── login
+│   ├── register
+│   ├── forgot-password
+│   ├── reset-password
+│   └── verify-email
+├── (dashboard)
+│   └── dashboard
+├── (admin)
+│   └── admin
+└── api
+```
+
+Mỗi nhóm có layout riêng:
+
+- `MarketingLayout`: trang giới thiệu, SEO, pricing, danh sách công cụ.
+- `AuthLayout`: đăng nhập, đăng ký, quên mật khẩu, xác thực email.
+- `DashboardLayout`: khu vực người dùng sau đăng nhập.
+- `AdminLayout`: khu vực quản trị nội bộ.
+
+Route người dùng nên tập trung trong `/dashboard`:
+
+```text
+/dashboard
+/dashboard/history
+/dashboard/profile
+/dashboard/security
+/dashboard/billing
+/dashboard/api-keys
+/dashboard/teams
+/dashboard/share-links
+/dashboard/notifications
+```
+
+Các công cụ chuyển đổi nên tách thành route public riêng thay vì đặt dưới dashboard:
+
+```text
+/tools/word-to-pdf
+/tools/pdf-to-word
+/tools/merge-pdf
+/tools/compress-pdf
+/tools/split-pdf
+/tools/rotate-pdf
+/tools/watermark
+/tools/ocr
+/tools/chat-pdf
+/tools/summary
+/tools/extract
+```
+
+Cách này giúp SEO tốt hơn, mỗi công cụ có mô tả riêng, có thể chia sẻ link trực tiếp và dễ quảng bá trên Google giống các dịch vụ như Smallpdf hoặc iLovePDF.
+
+Khu vực admin nên mở rộng theo các route rõ ràng:
+
+```text
+/admin/login
+/admin/dashboard
+/admin/users
+/admin/users/:id
+/admin/plans
+/admin/subscriptions
+/admin/payments
+/admin/statistics
+/admin/files
+/admin/jobs
+/admin/logs
+/admin/settings
+/admin/system
+/admin/monitoring
+```
+
+Backend API nên tách theo domain:
+
+```text
+/api/auth
+/api/users
+/api/documents
+/api/payments
+/api/subscriptions
+/api/teams
+/api/api-keys
+/api/notifications
+/api/admin/users
+/api/admin/plans
+/api/admin/payments
+/api/admin/statistics
+/api/admin/audit-logs
+/api/admin/cleanup
+/api/admin/settings
+/api/v1/convert
+```
+
+Business API giữ ổn định ở namespace `/api/v1`:
+
+```text
+/api/v1/convert/compress-pdf
+/api/v1/convert/merge-pdf
+/api/v1/convert/pdf-to-word
+```
+
+Khi dự án lớn hơn, có thể tách theo subdomain:
+
+- `scanpdf.vn`: marketing website.
+- `app.scanpdf.vn`: dashboard người dùng.
+- `admin.scanpdf.vn`: trang quản trị.
+- `api.scanpdf.vn`: Express API.
+
+Cấu trúc này giúp tách biệt marketing, ứng dụng và quản trị, dễ mở rộng deploy độc lập, đồng thời hỗ trợ phân quyền và bảo mật rõ hơn.
+
 ## Chạy local bằng npm
 
 Yêu cầu: Node.js 20+, PostgreSQL, Redis, LibreOffice, Poppler và qpdf.
