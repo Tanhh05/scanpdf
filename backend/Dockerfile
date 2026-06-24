@@ -26,4 +26,4 @@ COPY src ./src
 COPY scripts ./scripts
 RUN npm run build
 
-CMD ["sh", "scripts/render-start.sh"]
+CMD ["node", "dist/src/server.js"]

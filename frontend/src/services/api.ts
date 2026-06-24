@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const API_BASE_URL = process.env.NODE_ENV === "production"
-  ? process.env.NEXT_PUBLIC_API_URL?.trim() || "https://scanpdf-backend.onrender.com/api"
+  ? process.env.NEXT_PUBLIC_API_URL?.trim() || "https://scanpdf.id.vn/api"
   : process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:4000/api";
 
 export const api = axios.create({ baseURL: API_BASE_URL });
