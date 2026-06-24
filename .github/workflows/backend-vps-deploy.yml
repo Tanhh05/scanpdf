@@ -1,20 +1,35 @@
-name: Backend VPS Deploy
+name: VPS Deploy
+
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["backend/**", "docker-compose.yml"]
+
 jobs:
   deploy:
-    if: ${{ vars.ENABLE_VPS_DEPLOY == 'true' }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: vps-deploy-main
+      cancel-in-progress: true
     steps:
-      - uses: appleboy/ssh-action@v1
+      - name: Deploy latest main to VPS
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /opt/scanpdf
-            git pull origin main
-            docker compose up -d --build api worker
+            set -euo pipefail
+
+            cd /var/www/scanpdf
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            docker compose up -d --build --remove-orphans
+            docker compose ps
+
+            curl --fail --silent --show-error http://127.0.0.1:4000/health
+            curl --fail --silent --show-error --head http://127.0.0.1:3000
+
+            docker image prune -f

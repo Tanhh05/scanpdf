@@ -296,7 +296,7 @@ POST /api/payments/webhook/confirm
 Authorization: Bearer <admin-jwt>
 Content-Type: application/json
 
-{"webhookUrl":"https://api.scanpdf.vn/api/payments/webhook"}
+{"webhookUrl":"https://scanpdf.id.vn/api/payments/webhook"}
 ```
 
 ## Google và GitHub OAuth
@@ -313,16 +313,42 @@ http://localhost:4000/api/auth/github/callback
 Callback production:
 
 ```text
-https://api.scanpdf.vn/api/auth/google/callback
-https://api.scanpdf.vn/api/auth/github/callback
+https://scanpdf.id.vn/api/auth/google/callback
+https://scanpdf.id.vn/api/auth/github/callback
 ```
 
 ## Production
 
-- Frontend: import repository vào Vercel, root directory `frontend`.
-- Backend/worker: deploy hai process từ cùng Dockerfile; command lần lượt là `node dist/src/server.js` và `node dist/src/workers/conversion.worker.js`.
+- VPS Docker Compose: ứng dụng chạy tại `/var/www/scanpdf`.
+- Frontend: container `web`, bind nội bộ `127.0.0.1:3000`, Nginx proxy từ `https://scanpdf.id.vn`.
+- Backend API: container `api`, bind nội bộ `127.0.0.1:4000`, Nginx proxy `/api`.
+- Worker: container `worker`.
+- PostgreSQL và Redis chạy nội bộ trong Docker network, không publish ra internet.
 - Không chạy LibreOffice trực tiếp trên Vercel/serverless.
 - Đổi `JWT_SECRET`, CORS URL và giữ Supabase service-role key chỉ ở backend.
+
+### Auto Deploy VPS
+
+Workflow `.github/workflows/backend-vps-deploy.yml` tự động deploy khi có push lên `main`.
+
+Cần cấu hình GitHub repository secrets:
+
+```text
+VPS_HOST=159.65.1.19
+VPS_USER=root
+VPS_SSH_KEY=<private key co quyen SSH vao VPS>
+```
+
+Khi workflow chạy, VPS sẽ:
+
+```bash
+cd /var/www/scanpdf
+git fetch origin main
+git reset --hard origin/main
+docker compose up -d --build --remove-orphans
+```
+
+File `.env` production và thư mục `storage` không được commit vào Git; chúng nằm trực tiếp trên VPS.
 
 ## Mobile App
 
