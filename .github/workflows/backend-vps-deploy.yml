@@ -32,7 +32,26 @@ jobs:
             docker compose up -d --build --remove-orphans
             docker compose ps
 
-            curl --fail --silent --show-error http://127.0.0.1:4000/health
-            curl --fail --silent --show-error --head http://127.0.0.1:3000
+            for i in $(seq 1 60); do
+              if curl --fail --silent --show-error http://127.0.0.1:4000/health; then
+                break
+              fi
+              if [ "$i" -eq 60 ]; then
+                docker compose logs --tail=120 api
+                exit 1
+              fi
+              sleep 2
+            done
+
+            for i in $(seq 1 60); do
+              if curl --fail --silent --show-error --head http://127.0.0.1:3000; then
+                break
+              fi
+              if [ "$i" -eq 60 ]; then
+                docker compose logs --tail=120 web
+                exit 1
+              fi
+              sleep 2
+            done
 
             docker image prune -f
