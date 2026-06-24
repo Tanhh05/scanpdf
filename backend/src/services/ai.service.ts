@@ -29,6 +29,14 @@ type GeminiResponse = {
   }>;
   error?: { message?: string };
 };
+type GroqResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string;
+    };
+  }>;
+  error?: { message?: string };
+};
 
 function requireProviderKey() {
   if (env.AI_PROVIDER === "gemini" && !env.GEMINI_API_KEY) {
@@ -36,6 +44,9 @@ function requireProviderKey() {
   }
   if (env.AI_PROVIDER === "openai" && !env.OPENAI_API_KEY) {
     throw new HttpError(503, "Chưa cấu hình OPENAI_API_KEY cho chức năng AI");
+  }
+  if (env.AI_PROVIDER === "groq" && !env.GROQ_API_KEY) {
+    throw new HttpError(503, "Chưa cấu hình GROQ_API_KEY cho chức năng AI");
   }
 }
 
@@ -48,9 +59,20 @@ export async function extractPdfText(buffer: Buffer) {
   const inputPath = path.join(dir, `${nanoid()}.pdf`);
   try {
     await writeFile(inputPath, buffer);
-    const { stdout } = await execFileAsync("pdftotext", ["-layout", inputPath, "-"], {
-      maxBuffer: 12 * 1024 * 1024,
-    });
+    let stdout = "";
+    try {
+      const result = await execFileAsync("pdftotext", ["-layout", inputPath, "-"], {
+        maxBuffer: 12 * 1024 * 1024,
+      });
+      stdout = result.stdout;
+    } catch (error) {
+      const details = error as NodeJS.ErrnoException & { stderr?: string };
+      if (details.code === "ENOENT") {
+        throw new HttpError(503, "Máy chủ chưa cài Poppler/pdftotext. Local macOS chạy: brew install poppler");
+      }
+      const message = details.stderr?.trim() || details.message || "Không thể đọc nội dung PDF";
+      throw new HttpError(422, `Không thể trích xuất văn bản từ PDF: ${message.slice(0, 300)}`);
+    }
     const text = normalizeText(stdout);
     if (!text) {
       throw new HttpError(422, "Không đọc được văn bản trong PDF. Hãy thử OCR PDF trước rồi dùng AI.");
@@ -94,12 +116,26 @@ Câu hỏi của người dùng: ${question ?? ""}
 Hãy trả lời ngắn gọn, rõ ràng bằng tiếng Việt. Nếu tài liệu không có thông tin để trả lời, nói rõ là không tìm thấy trong tài liệu.`;
 }
 
+function limitDocumentTextForProvider(documentText: string) {
+  if (env.AI_PROVIDER !== "groq" || documentText.length <= env.GROQ_MAX_DOCUMENT_CHARS) {
+    return documentText;
+  }
+
+  return `${documentText.slice(0, env.GROQ_MAX_DOCUMENT_CHARS)}
+
+[Ghi chú hệ thống: Nội dung PDF đã được rút gọn để phù hợp quota Groq free tier. Nếu câu hỏi cần phần bị cắt, hãy yêu cầu người dùng OCR/chia nhỏ tài liệu hoặc dùng provider có quota lớn hơn.]`;
+}
+
 export async function runPdfAi(mode: AiMode, documentText: string, question?: string) {
   requireProviderKey();
+  const limitedDocumentText = limitDocumentTextForProvider(documentText);
   if (env.AI_PROVIDER === "gemini") {
-    return runGeminiAi(mode, documentText, question);
+    return runGeminiAi(mode, limitedDocumentText, question);
   }
-  return runOpenAi(mode, documentText, question);
+  if (env.AI_PROVIDER === "groq") {
+    return runGroqAi(mode, limitedDocumentText, question);
+  }
+  return runOpenAi(mode, limitedDocumentText, question);
 }
 
 async function runOpenAi(mode: AiMode, documentText: string, question?: string) {
@@ -132,7 +168,8 @@ async function runOpenAi(mode: AiMode, documentText: string, question?: string) 
 }
 
 async function runGeminiAi(mode: AiMode, documentText: string, question?: string) {
-  const url = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL}:generateContent`);
+  const model = env.AI_MODEL ?? env.GEMINI_MODEL;
+  const url = new URL(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`);
   url.searchParams.set("key", env.GEMINI_API_KEY!);
 
   const response = await fetch(url, {
@@ -164,6 +201,42 @@ async function runGeminiAi(mode: AiMode, documentText: string, question?: string
     .filter(Boolean)
     .join("\n");
 
+  if (!outputText?.trim()) {
+    throw new HttpError(502, "AI không trả về nội dung");
+  }
+  return outputText.trim();
+}
+
+async function runGroqAi(mode: AiMode, documentText: string, question?: string) {
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${env.GROQ_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: env.AI_MODEL ?? env.GROQ_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: "Bạn là trợ lý AI cho ScanPDF. Trả lời bằng tiếng Việt, chính xác, có cấu trúc, không suy đoán ngoài tài liệu.",
+        },
+        {
+          role: "user",
+          content: buildPrompt(mode, documentText, question),
+        },
+      ],
+      max_tokens: mode === "chat" ? 450 : 650,
+      temperature: 0.2,
+    }),
+  });
+
+  const data = await response.json() as GroqResponse;
+  if (!response.ok) {
+    throw new HttpError(response.status >= 500 ? 502 : 400, data.error?.message ?? "Groq API trả về lỗi");
+  }
+
+  const outputText = data.choices?.[0]?.message?.content;
   if (!outputText?.trim()) {
     throw new HttpError(502, "AI không trả về nội dung");
   }

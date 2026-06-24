@@ -222,10 +222,21 @@ Workflow `.github/workflows/backup.yml` chạy theo lịch khi repository variab
 `ENABLE_BACKUP=true`. Đặt thêm `ENABLE_SUPABASE_STORAGE_BACKUP=true`, các
 secret Supabase và variable `SUPABASE_BUCKET` để sao lưu cả bucket Storage.
 
-## OpenAI AI PDF
+## AI PDF
 
-Điền `OPENAI_API_KEY` để bật Chat PDF, tóm tắt PDF và trích xuất thông tin. Có thể đổi model bằng `OPENAI_MODEL`.
+Điền API key và chọn `AI_PROVIDER` để bật Chat PDF, tóm tắt PDF và trích xuất thông tin.
+Hỗ trợ `openai`, `gemini` và `groq`. Có thể dùng `AI_MODEL` để override model chung,
+hoặc dùng biến riêng như `OPENAI_MODEL`, `GEMINI_MODEL`, `GROQ_MODEL`.
 PDF scan nên chạy OCR trước để AI đọc được nội dung tốt hơn.
+
+Với Video AI khi dùng Groq, đặt `AI_PROVIDER=groq`, `GROQ_API_KEY` và có thể đổi
+model speech-to-text bằng `GROQ_TRANSCRIBE_MODEL`.
+
+Chat PDF cần Poppler để đọc text từ PDF. Local macOS cài bằng:
+
+```bash
+brew install poppler
+```
 
 ## Email quên mật khẩu
 

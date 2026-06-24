@@ -2,7 +2,7 @@ FROM node:22-bookworm-slim AS base
 LABEL org.opencontainers.image.title="scanpdf-backend"
 WORKDIR /app
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates curl libreoffice-writer poppler-utils ghostscript qpdf tesseract-ocr tesseract-ocr-vie fonts-dejavu ffmpeg \
+  && apt-get install -y --no-install-recommends ca-certificates curl libreoffice-writer poppler-utils ghostscript qpdf tesseract-ocr tesseract-ocr-vie fonts-dejavu ffmpeg python3 python3-numpy python3-opencv \
   && architecture="$(dpkg --print-architecture)" \
   && case "$architecture" in \
        amd64) yt_dlp_asset="yt-dlp_linux" ;; \

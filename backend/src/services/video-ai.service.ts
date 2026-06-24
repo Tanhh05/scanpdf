@@ -24,12 +24,35 @@ type DiarizedTranscriptionResponse = {
   };
 };
 
+type GroqTranscriptionResponse = {
+  text?: string;
+  segments?: Array<{
+    start?: number;
+    end?: number;
+    text?: string;
+  }>;
+  error?: {
+    message?: string;
+  };
+};
+
 type OpenAiResponse = {
   output_text?: string;
   output?: Array<{
     content?: Array<{
       text?: string;
     }>;
+  }>;
+  error?: {
+    message?: string;
+  };
+};
+
+type GroqChatResponse = {
+  choices?: Array<{
+    message?: {
+      content?: string;
+    };
   }>;
   error?: {
     message?: string;
@@ -46,10 +69,21 @@ type HighlightResponse = {
   clips?: Highlight[];
 };
 
-function requireOpenAiKey(feature: string) {
-  if (!env.OPENAI_API_KEY) {
-    throw new HttpError(503, `Chưa cấu hình OPENAI_API_KEY cho chức năng ${feature}`);
-  }
+function isAiProviderUnavailable(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /OPENAI_API_KEY|billing|quota|rate limit|hard limit|insufficient/i.test(message);
+}
+
+function isGroqProvider() {
+  return env.AI_PROVIDER === "groq";
+}
+
+function hasConfiguredVideoAiProvider() {
+  return isGroqProvider() ? Boolean(env.GROQ_API_KEY) : Boolean(env.OPENAI_API_KEY);
+}
+
+function missingVideoAiProviderReason() {
+  return isGroqProvider() ? "chưa cấu hình GROQ_API_KEY" : "chưa cấu hình OPENAI_API_KEY";
 }
 
 function normalizeText(value: string) {
@@ -86,6 +120,30 @@ async function extractSpeechAudio(inputPath: string, outputPath: string) {
   });
 }
 
+async function getVideoDuration(inputPath: string) {
+  try {
+    const { stdout } = await runBinary("ffprobe", [
+      "-v", "error",
+      "-show_entries", "format=duration",
+      "-of", "default=noprint_wrappers=1:nokey=1",
+      inputPath,
+    ], { timeout: 120_000 });
+    const duration = Number(stdout.trim());
+    return Number.isFinite(duration) && duration > 0 ? duration : 1;
+  } catch {
+    return 1;
+  }
+}
+
+async function fallbackTranscript(inputPath: string, reason: string) {
+  const duration = await getVideoDuration(inputPath);
+  const text = `Không thể tạo transcript bằng AI vì ${reason}. File này được xử lý bằng chế độ fallback local.`;
+  return {
+    transcript: text,
+    segments: [{ start: 0, end: Math.max(1, duration), text }],
+  };
+}
+
 async function runOpenAiText(prompt: string) {
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
@@ -115,11 +173,96 @@ async function runOpenAiText(prompt: string) {
   return outputText.trim();
 }
 
+async function runGroqText(prompt: string) {
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.GROQ_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: env.AI_MODEL ?? env.GROQ_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: "Bạn là trợ lý xử lý video cho ScanPDF. Trả lời ngắn gọn, chính xác, không thêm lời mở đầu dư thừa.",
+        },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: 900,
+      temperature: 0.2,
+    }),
+  });
+
+  const data = await response.json() as GroqChatResponse;
+  if (!response.ok) {
+    throw new HttpError(response.status >= 500 ? 502 : 400, data.error?.message ?? "Groq API trả về lỗi");
+  }
+
+  const outputText = data.choices?.[0]?.message?.content;
+  if (!outputText?.trim()) {
+    throw new HttpError(502, "AI không trả về nội dung");
+  }
+  return outputText.trim();
+}
+
+async function runVideoAiText(prompt: string) {
+  return isGroqProvider() ? runGroqText(prompt) : runOpenAiText(prompt);
+}
+
 export async function transcribeVideoWithSpeakers(inputPath: string) {
-  requireOpenAiKey("AI video");
+  if (!hasConfiguredVideoAiProvider()) {
+    return fallbackTranscript(inputPath, missingVideoAiProviderReason());
+  }
   const audioPath = `${inputPath}.speech.mp3`;
   await extractSpeechAudio(inputPath, audioPath);
   const audioBuffer = await readFile(audioPath);
+
+  if (isGroqProvider()) {
+    const form = new FormData();
+    form.append("model", env.GROQ_TRANSCRIBE_MODEL);
+    form.append("response_format", "verbose_json");
+    form.append("timestamp_granularities[]", "segment");
+    form.append("temperature", "0");
+    form.append("file", new Blob([audioBuffer], { type: "audio/mpeg" }), path.basename(audioPath));
+
+    const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${env.GROQ_API_KEY}` },
+      body: form,
+    });
+    const data = await response.json() as GroqTranscriptionResponse;
+    if (!response.ok) {
+      const message = data.error?.message ?? "Groq transcription trả về lỗi";
+      if (isAiProviderUnavailable(message)) {
+        return fallbackTranscript(inputPath, message);
+      }
+      throw new HttpError(response.status >= 500 ? 502 : 400, message);
+    }
+
+    const segments = (data.segments ?? [])
+      .map((segment) => ({
+        start: typeof segment.start === "number" ? segment.start : 0,
+        end: typeof segment.end === "number" ? segment.end : 0,
+        text: normalizeText(segment.text ?? ""),
+      }))
+      .filter((segment) => segment.text && segment.end > segment.start);
+
+    if (!segments.length && data.text?.trim()) {
+      return {
+        transcript: data.text.trim(),
+        segments: [{ start: 0, end: Math.max(1, data.text.trim().split(/\s+/).length / 2), text: data.text.trim() }],
+      };
+    }
+    if (!segments.length) {
+      throw new HttpError(502, "Không nhận được transcript từ video");
+    }
+    return {
+      transcript: segments.map((segment) => segment.text).join(" ").trim(),
+      segments,
+    };
+  }
+
   const form = new FormData();
   form.append("model", env.OPENAI_TRANSCRIBE_MODEL);
   form.append("response_format", "diarized_json");
@@ -133,7 +276,11 @@ export async function transcribeVideoWithSpeakers(inputPath: string) {
   });
   const data = await response.json() as DiarizedTranscriptionResponse;
   if (!response.ok) {
-    throw new HttpError(response.status >= 500 ? 502 : 400, data.error?.message ?? "OpenAI transcription trả về lỗi");
+    const message = data.error?.message ?? "OpenAI transcription trả về lỗi";
+    if (isAiProviderUnavailable(message)) {
+      return fallbackTranscript(inputPath, message);
+    }
+    throw new HttpError(response.status >= 500 ? 502 : 400, message);
   }
 
   const segments = (data.segments ?? [])
@@ -162,7 +309,7 @@ export async function transcribeVideoWithSpeakers(inputPath: string) {
 }
 
 export async function translateTranscriptSegments(segments: TranscriptSegment[], targetLanguage: "vi" | "en") {
-  requireOpenAiKey("dịch subtitle video");
+  if (!hasConfiguredVideoAiProvider()) return segments;
   const payload = segments.map((segment, index) => ({
     i: index,
     start: segment.start,
@@ -170,12 +317,18 @@ export async function translateTranscriptSegments(segments: TranscriptSegment[],
     text: segment.text,
   }));
 
-  const translatedText = await runOpenAiText(
-    `Translate the following subtitle segments to ${targetLanguage === "vi" ? "Vietnamese" : "English"}.\n`
-    + "Keep the array length and ordering exactly the same. Return JSON only in the shape "
-    + "{\"segments\":[{\"i\":0,\"text\":\"...\"}]}\n"
-    + JSON.stringify({ segments: payload }),
-  );
+  let translatedText: string;
+  try {
+    translatedText = await runVideoAiText(
+      `Translate the following subtitle segments to ${targetLanguage === "vi" ? "Vietnamese" : "English"}.\n`
+      + "Keep the array length and ordering exactly the same. Return JSON only in the shape "
+      + "{\"segments\":[{\"i\":0,\"text\":\"...\"}]}\n"
+      + JSON.stringify({ segments: payload }),
+    );
+  } catch (error) {
+    if (isAiProviderUnavailable(error)) return segments;
+    throw error;
+  }
 
   let parsed: { segments?: Array<{ i?: number; text?: string }> };
   try {
@@ -212,27 +365,55 @@ function chunkTranscript(segments: TranscriptSegment[], maxChars = 12000) {
 }
 
 export async function summarizeVideoTranscript(segments: TranscriptSegment[]) {
-  requireOpenAiKey("tóm tắt video");
+  if (!hasConfiguredVideoAiProvider()) {
+    return [
+      "1. Tóm tắt ngắn",
+      "Không thể tạo tóm tắt AI vì chưa cấu hình OPENAI_API_KEY. File được xử lý bằng fallback local.",
+      "",
+      "2. Các ý chính",
+      ...segments.slice(0, 8).map((segment) => `- ${segment.text}`),
+      "",
+      "3. Mốc thời gian đáng chú ý",
+      ...segments.slice(0, 8).map((segment) => `- ${secondsToSrtTime(segment.start).replace(",", ".")}: ${segment.text}`),
+    ].join("\n");
+  }
   const chunks = chunkTranscript(segments);
   const partials: string[] = [];
-  for (const chunk of chunks) {
-    partials.push(await runOpenAiText(
-      "Đây là transcript video có mốc thời gian.\n"
-      + "Hãy tóm tắt phần transcript này bằng tiếng Việt, giữ lại ý chính, mốc quan trọng, hành động hoặc phát biểu đáng chú ý.\n\n"
-      + chunk,
-    ));
-  }
+  try {
+    for (const chunk of chunks) {
+      partials.push(await runVideoAiText(
+        "Đây là transcript video có mốc thời gian.\n"
+        + "Hãy tóm tắt phần transcript này bằng tiếng Việt, giữ lại ý chính, mốc quan trọng, hành động hoặc phát biểu đáng chú ý.\n\n"
+        + chunk,
+      ));
+    }
 
-  return runOpenAiText(
-    "Tổng hợp các bản tóm tắt video sau thành một kết quả cuối cùng bằng tiếng Việt.\n"
-    + "Trả về theo cấu trúc:\n"
-    + "1. Tóm tắt ngắn\n2. Các ý chính dạng bullet\n3. Mốc thời gian đáng chú ý\n\n"
-    + partials.map((item, index) => `Phần ${index + 1}:\n${item}`).join("\n\n"),
-  );
+    return await runVideoAiText(
+      "Tổng hợp các bản tóm tắt video sau thành một kết quả cuối cùng bằng tiếng Việt.\n"
+      + "Trả về theo cấu trúc:\n"
+      + "1. Tóm tắt ngắn\n2. Các ý chính dạng bullet\n3. Mốc thời gian đáng chú ý\n\n"
+      + partials.map((item, index) => `Phần ${index + 1}:\n${item}`).join("\n\n"),
+    );
+  } catch (error) {
+    if (!isAiProviderUnavailable(error)) throw error;
+    return [
+      "1. Tóm tắt ngắn",
+      "Không thể tạo tóm tắt AI vì nhà cung cấp AI đang hết quota hoặc bị giới hạn billing. File được xử lý bằng fallback local.",
+      "",
+      "2. Các ý chính",
+      ...segments.slice(0, 8).map((segment) => `- ${segment.text}`),
+      "",
+      "3. Mốc thời gian đáng chú ý",
+      ...segments.slice(0, 8).map((segment) => `- ${secondsToSrtTime(segment.start).replace(",", ".")}: ${segment.text}`),
+    ].join("\n");
+  }
 }
 
 export async function selectVideoHighlights(segments: TranscriptSegment[]) {
-  requireOpenAiKey("generate shorts");
+  if (!hasConfiguredVideoAiProvider()) {
+    const first = segments[0];
+    return [{ start: first?.start ?? 0, end: Math.max(first?.end ?? 1, 1), title: "fallback-short" }];
+  }
   const prompt = [
     "Dưới đây là transcript video có timestamps.",
     "Hãy chọn tối đa 3 highlight tốt nhất để cắt thành short.",
@@ -243,7 +424,14 @@ export async function selectVideoHighlights(segments: TranscriptSegment[]) {
     ...chunkTranscript(segments, 14000),
   ].join("\n\n");
 
-  const result = await runOpenAiText(prompt);
+  let result: string;
+  try {
+    result = await runVideoAiText(prompt);
+  } catch (error) {
+    if (!isAiProviderUnavailable(error)) throw error;
+    const first = segments[0];
+    return [{ start: first?.start ?? 0, end: Math.max(first?.end ?? 1, 1), title: "fallback-short" }];
+  }
   let parsed: HighlightResponse;
   try {
     parsed = JSON.parse(result);

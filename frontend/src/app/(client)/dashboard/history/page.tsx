@@ -10,6 +10,7 @@ import { Pagination } from "@/components/common/pagination";
 import { type Conversion, type ConversionList, toolNames } from "@/lib/account";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth.store";
+import { filenameFromContentDisposition } from "@/utils/download-filename";
 
 const statuses = [
   { value: "", label: "Tất cả trạng thái" },
@@ -92,7 +93,9 @@ export default function HistoryPage() {
     const url = URL.createObjectURL(response.data);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = conversion.outputFile?.originalName ?? "scanpdf-output";
+    anchor.download = filenameFromContentDisposition(response.headers["content-disposition"])
+      ?? conversion.outputFile?.originalName
+      ?? "scanpdf-output";
     anchor.click();
     URL.revokeObjectURL(url);
   }

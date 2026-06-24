@@ -37,7 +37,8 @@ const toolCategories = [
     panelTitle: "PDF Converter",
     items: [
       { label: "Batch convert", icon: Boxes, color: "bg-[#10aee8]", href: "/tools/batch-convert" },
-      { label: "PDF ↔ Word", icon: FileText, color: "bg-[#0b8fc7]", href: "/tools/pdf-to-word" },
+      { label: "PDF sang Word", icon: FileText, color: "bg-[#0b8fc7]", href: "/tools/pdf-to-word" },
+      { label: "Word sang PDF", icon: FileText, color: "bg-[#10aee8]", href: "/tools/word-to-pdf" },
       { label: "JPG → PDF", icon: FileImage, color: "bg-[#f3263e]", href: "/tools/jpg-to-pdf" },
       { label: "PDF → JPG", icon: FileImage, color: "bg-[#a15c25]", href: "/tools/pdf-to-jpg" },
       { label: "Đổi định dạng video", icon: FileVideo, color: "bg-[#0b8fc7]", href: "/tools/video-convert" },
@@ -251,21 +252,32 @@ export function ToolWorkspace({
             </div>
 
             <div className="space-y-2">
-              {openCategoryData.items.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={closeDesktopMenu}
-                  className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition ${
-                    pathname === item.href ? "bg-white text-[#17201d]" : "hover:bg-white/10"
-                  }`}
-                >
-                  <span className={`rounded-lg p-1.5 ${item.color}`}>
-                    <item.icon size={15} />
-                  </span>
-                  <span>{item.label}</span>
-                </Link>
-              ))}
+              {openCategoryData.items.map((item) => {
+                const itemActive = pathname === item.href;
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={closeDesktopMenu}
+                    aria-current={itemActive ? "page" : undefined}
+                    className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition ${
+                      itemActive
+                        ? "bg-[#10aee8] text-white shadow-sm ring-1 ring-white/20"
+                        : "text-slate-100 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${
+                      itemActive ? "bg-white text-[#0b8fc7]" : `${item.color} text-white`
+                    }`}>
+                      <item.icon size={15} />
+                    </span>
+                    <span className={itemActive ? "min-w-0 flex-1 truncate font-semibold text-white" : "min-w-0 flex-1 truncate font-semibold text-slate-100"}>
+                      {item.label}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { env } from "../config/env.js";
 import { HttpError } from "../utils/http-error.js";
 import { runBinary } from "../utils/process.js";
@@ -44,6 +45,11 @@ type OpenAiImageResponse = {
   };
 };
 
+const imageWatermarkScript = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../scripts/remove-watermark-image.py",
+);
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -82,6 +88,117 @@ function getContentTypeFromExt(filename: string) {
   }
 }
 
+function isQuotaOrBillingError(message: string) {
+  return /billing|quota|rate limit|hard limit|insufficient/i.test(message);
+}
+
+async function probeMediaSize(inputPath: string, mediaType: "image" | "video") {
+  const args = mediaType === "video"
+    ? [
+        "-v", "error",
+        "-select_streams", "v:0",
+        "-show_entries", "stream=width,height,codec_type",
+        "-of", "json",
+        inputPath,
+      ]
+    : [
+        "-v", "error",
+        "-show_entries", "stream=width,height,codec_type",
+        "-of", "json",
+        inputPath,
+      ];
+  const { stdout } = await runBinary("ffprobe", args, { timeout: 120_000 });
+  const data = JSON.parse(stdout) as ProbeResult;
+  const stream = data.streams?.find((item) => item.width && item.height);
+  if (!stream?.width || !stream.height) {
+    throw new Error(mediaType === "video" ? "Không đọc được kích thước video" : "Không đọc được kích thước ảnh");
+  }
+  return { width: stream.width, height: stream.height };
+}
+
+function resolveImageRegions(width: number, height: number, options: Record<string, unknown> = {}) {
+  const mode = (typeof options.mode === "string" ? options.mode : "auto") as ImageMode;
+  const margin = Math.max(8, Math.round(Math.min(width, height) * 0.018));
+  const cornerWidth = clamp(Math.round(width * 0.2), 52, width);
+  const cornerHeight = clamp(Math.round(height * 0.11), 36, height);
+  const regions: Region[] = [];
+
+  const addRegion = (region: Region) => {
+    const key = `${region.x}:${region.y}:${region.width}:${region.height}`;
+    if (!regions.some((item) => `${item.x}:${item.y}:${item.width}:${item.height}` === key)) {
+      regions.push(region);
+    }
+  };
+
+  if (mode === "auto" || mode === "logo") {
+    addRegion({ x: margin, y: margin, width: cornerWidth, height: cornerHeight });
+    addRegion({
+      x: clamp(width - cornerWidth - margin, 0, width),
+      y: clamp(height - cornerHeight - margin, 0, height),
+      width: cornerWidth,
+      height: cornerHeight,
+    });
+  }
+
+  if (mode === "auto" || mode === "text" || mode === "watermark") {
+    const stripHeight = clamp(Math.round(height * 0.07), 36, 96);
+    addRegion({
+      x: margin,
+      y: clamp(Math.round(height * 0.51), 0, Math.max(0, height - stripHeight)),
+      width: clamp(width - margin * 2, 48, width),
+      height: stripHeight,
+    });
+  }
+
+  return regions;
+}
+
+async function removeImageWatermarkLocal(
+  inputPath: string,
+  outputDir: string,
+  baseName: string,
+  options: Record<string, unknown> = {},
+) {
+  const outputPath = path.join(outputDir, `${baseName}-watermark-removed.png`);
+
+  try {
+    await runBinary("python3", [imageWatermarkScript, inputPath, outputPath], {
+      timeout: 180_000,
+      maxBuffer: 8 * 1024 * 1024,
+    });
+    return {
+      path: outputPath,
+      name: `${baseName}-watermark-removed.png`,
+      contentType: "image/png",
+    };
+  } catch (error) {
+    console.warn("OpenCV watermark removal failed, falling back to ffmpeg delogo", error);
+  }
+
+  const { width, height } = await probeMediaSize(inputPath, "image");
+  const filter = resolveImageRegions(width, height, options)
+    .map((region) => `delogo=x=${region.x}:y=${region.y}:w=${region.width}:h=${region.height}:show=0`)
+    .join(",");
+  if (!filter) throw new Error("Chưa có vùng watermark ảnh để xử lý");
+
+  await runBinary("ffmpeg", [
+    "-y",
+    "-i", inputPath,
+    "-vf", filter,
+    "-frames:v", "1",
+    outputPath,
+  ], {
+    timeout: 180_000,
+    maxBuffer: 8 * 1024 * 1024,
+  });
+
+  return {
+    path: outputPath,
+    name: `${baseName}-watermark-removed.png`,
+    contentType: "image/png",
+  };
+}
+
 export async function removeImageWatermark(
   inputPath: string,
   outputDir: string,
@@ -89,7 +206,7 @@ export async function removeImageWatermark(
   options: Record<string, unknown> = {},
 ) {
   if (!env.OPENAI_API_KEY) {
-    throw new HttpError(503, "Chưa cấu hình OPENAI_API_KEY cho chức năng xóa watermark ảnh");
+    return removeImageWatermarkLocal(inputPath, outputDir, baseName, options);
   }
 
   const fileBuffer = await readFile(inputPath);
@@ -107,7 +224,11 @@ export async function removeImageWatermark(
 
   const data = await response.json() as OpenAiImageResponse;
   if (!response.ok) {
-    throw new HttpError(response.status >= 500 ? 502 : 400, data.error?.message ?? "OpenAI image edit trả về lỗi");
+    const message = data.error?.message ?? "OpenAI image edit trả về lỗi";
+    if (isQuotaOrBillingError(message)) {
+      return removeImageWatermarkLocal(inputPath, outputDir, baseName, options);
+    }
+    throw new HttpError(response.status >= 500 ? 502 : 400, message);
   }
 
   const base64 = data.data?.[0]?.b64_json;
@@ -182,19 +303,7 @@ export function buildVideoFilter(width: number, height: number, options: VideoOp
 }
 
 async function probeVideoSize(inputPath: string) {
-  const { stdout } = await runBinary("ffprobe", [
-    "-v", "error",
-    "-select_streams", "v:0",
-    "-show_entries", "stream=width,height,codec_type",
-    "-of", "json",
-    inputPath,
-  ], { timeout: 120_000 });
-  const data = JSON.parse(stdout) as ProbeResult;
-  const stream = data.streams?.find((item) => item.codec_type === "video" && item.width && item.height);
-  if (!stream?.width || !stream.height) {
-    throw new Error("Không đọc được kích thước video");
-  }
-  return { width: stream.width, height: stream.height };
+  return probeMediaSize(inputPath, "video");
 }
 
 export async function removeVideoWatermark(

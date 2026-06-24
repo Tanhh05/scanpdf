@@ -12,6 +12,7 @@ import { storage } from "../services/storage.service.js";
 import { addDays } from "../utils/date.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { HttpError } from "../utils/http-error.js";
+import { normalizeUploadedFilename } from "../utils/filename.js";
 
 const router = Router();
 const upload = multer({
@@ -157,22 +158,26 @@ router.post("/batch/:tool", requireAuthOrApiKey, upload.array("files", 20), asyn
   }
   const files = (req.files as Express.Multer.File[] | undefined) ?? [];
   if (!files.length) throw new HttpError(400, "Vui lòng chọn file");
-  const invalidFile = files.find((file) => !config.extensions.includes(path.extname(file.originalname).toLowerCase()));
-  if (invalidFile) throw new HttpError(400, `Định dạng file không hợp lệ: ${invalidFile.originalname}`);
+  const normalizedFiles = files.map((file) => ({
+    file,
+    originalName: normalizeUploadedFilename(file.originalname),
+  }));
+  const invalidFile = normalizedFiles.find((item) => !config.extensions.includes(path.extname(item.originalName).toLowerCase()));
+  if (invalidFile) throw new HttpError(400, `Định dạng file không hợp lệ: ${invalidFile.originalName}`);
 
   const { plan, used, teamId, priorityPlanName } = await getBillingContext(req.user!.id, req.body);
   if (used + files.length > plan.dailyLimit) {
     throw new HttpError(429, `Bạn chỉ còn ${Math.max(0, plan.dailyLimit - used)} lượt chuyển đổi hôm nay`);
   }
-  if (files.some((file) => file.size > plan.maxFileSizeMb * 1024 * 1024)) {
+  if (normalizedFiles.some((item) => item.file.size > plan.maxFileSizeMb * 1024 * 1024)) {
     throw new HttpError(413, `Có file vượt quá giới hạn ${plan.maxFileSizeMb}MB`);
   }
 
-  const storedFiles = await Promise.all(files.map(async (file) => {
-    const extension = path.extname(file.originalname).toLowerCase();
+  const storedFiles = await Promise.all(normalizedFiles.map(async (item) => {
+    const extension = path.extname(item.originalName).toLowerCase();
     const storageKey = `input/${req.user!.id}/${nanoid()}${extension}`;
-    await storage.put(storageKey, file.buffer, file.mimetype);
-    return { file, storageKey };
+    await storage.put(storageKey, item.file.buffer, item.file.mimetype);
+    return { ...item, storageKey };
   }));
   const conversions = await prisma.$transaction(async (tx) => {
     const created = [];
@@ -181,7 +186,7 @@ router.post("/batch/:tool", requireAuthOrApiKey, upload.array("files", 20), asyn
         data: {
           userId: req.user!.id,
           teamId,
-          originalName: item.file.originalname,
+          originalName: item.originalName,
           storageKey: item.storageKey,
           fileType: item.file.mimetype,
           fileSize: item.file.size,
@@ -223,7 +228,11 @@ router.post("/:tool", requireAuthOrApiKey, upload.fields([
     throw new HttpError(400, "Ghép video cần ít nhất hai file");
   }
 
-  const invalidFile = files.find((file) => !config.extensions.includes(path.extname(file.originalname).toLowerCase()));
+  const normalizedFiles = files.map((file) => ({
+    file,
+    originalName: normalizeUploadedFilename(file.originalname),
+  }));
+  const invalidFile = normalizedFiles.find((item) => !config.extensions.includes(path.extname(item.originalName).toLowerCase()));
   if (invalidFile) {
     throw new HttpError(400, `Định dạng file không hợp lệ. Hỗ trợ: ${config.extensions.join(", ")}`);
   }
@@ -231,15 +240,15 @@ router.post("/:tool", requireAuthOrApiKey, upload.fields([
 
   const { plan, used, teamId, priorityPlanName } = await getBillingContext(req.user!.id, req.body);
   if (used >= plan.dailyLimit) throw new HttpError(429, "Bạn đã hết lượt chuyển đổi hôm nay");
-  if (files.some((file) => file.size > plan.maxFileSizeMb * 1024 * 1024)) {
+  if (normalizedFiles.some((item) => item.file.size > plan.maxFileSizeMb * 1024 * 1024)) {
     throw new HttpError(413, `File vượt quá giới hạn ${plan.maxFileSizeMb}MB`);
   }
 
-  const storedFiles = await Promise.all(files.map(async (file) => {
-    const extension = path.extname(file.originalname).toLowerCase();
+  const storedFiles = await Promise.all(normalizedFiles.map(async (item) => {
+    const extension = path.extname(item.originalName).toLowerCase();
     const storageKey = `input/${req.user!.id}/${nanoid()}${extension}`;
-    await storage.put(storageKey, file.buffer, file.mimetype);
-    return { file, storageKey };
+    await storage.put(storageKey, item.file.buffer, item.file.mimetype);
+    return { ...item, storageKey };
   }));
 
   const conversion = await prisma.$transaction(async (tx) => {
@@ -249,7 +258,7 @@ router.post("/:tool", requireAuthOrApiKey, upload.fields([
         data: {
           userId: req.user!.id,
           teamId,
-          originalName: item.file.originalname,
+          originalName: item.originalName,
           storageKey: item.storageKey,
           fileType: item.file.mimetype,
           fileSize: item.file.size,

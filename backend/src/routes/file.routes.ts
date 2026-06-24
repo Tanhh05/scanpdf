@@ -6,6 +6,7 @@ import { requireAuth } from "../middleware/auth.js";
 import { storage } from "../services/storage.service.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { HttpError } from "../utils/http-error.js";
+import { contentDispositionAttachment } from "../utils/filename.js";
 
 const router = Router();
 
@@ -50,7 +51,7 @@ router.get("/share/:token/download", asyncHandler(async (req, res) => {
   }
   const content = await storage.get(share.file.storageKey);
   res.setHeader("Content-Type", share.file.fileType);
-  res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodeURIComponent(share.file.originalName)}`);
+  res.setHeader("Content-Disposition", contentDispositionAttachment(share.file.originalName));
   res.send(content);
 }));
 
@@ -65,7 +66,7 @@ router.get("/download", requireAuth, asyncHandler(async (req, res) => {
   if (file.expiredAt < new Date()) throw new HttpError(410, "File đã hết hạn");
   const content = await storage.get(key);
   res.setHeader("Content-Type", file.fileType);
-  res.setHeader("Content-Disposition", `attachment; filename*=UTF-8''${encodeURIComponent(file.originalName)}`);
+  res.setHeader("Content-Disposition", contentDispositionAttachment(file.originalName));
   res.send(content);
 }));
 

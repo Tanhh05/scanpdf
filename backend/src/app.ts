@@ -42,6 +42,7 @@ app.use(cors({
     callback(new Error("Origin không được phép"));
   },
   credentials: true,
+  exposedHeaders: ["Content-Disposition"],
 }));
 app.use(express.json({ limit: "1mb" }));
 app.use(requestLogger);

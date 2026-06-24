@@ -6,6 +6,7 @@ import { CheckCircle2, Download, Files, LoaderCircle } from "lucide-react";
 import { DragEvent, useState } from "react";
 import { Pagination } from "@/components/common/pagination";
 import { api } from "@/services/api";
+import { filenameFromContentDisposition } from "@/utils/download-filename";
 
 type Conversion = {
   id: string;
@@ -61,7 +62,9 @@ export function BatchConverter() {
     const url = URL.createObjectURL(response.data);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = item.outputFile?.originalName ?? "scanpdf-output";
+    anchor.download = filenameFromContentDisposition(response.headers["content-disposition"])
+      ?? item.outputFile?.originalName
+      ?? "scanpdf-output";
     anchor.click();
     URL.revokeObjectURL(url);
   }

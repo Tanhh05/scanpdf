@@ -5,6 +5,7 @@ import { Download, FileText, LockKeyhole } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "@/services/api";
+import { filenameFromContentDisposition } from "@/utils/download-filename";
 
 type ShareInfo = {
   originalName: string;
@@ -54,7 +55,9 @@ export default function SharedFilePage() {
       const url = URL.createObjectURL(response.data);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = info?.originalName ?? "scanpdf-shared-file";
+      anchor.download = filenameFromContentDisposition(response.headers["content-disposition"])
+        ?? info?.originalName
+        ?? "scanpdf-shared-file";
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { DragEvent, useState } from "react";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth.store";
+import { filenameFromContentDisposition } from "@/utils/download-filename";
 
 type Conversion = {
   id: string;
@@ -80,7 +81,9 @@ export function ToolUploader({
     const url = URL.createObjectURL(response.data);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = conversion.data.outputFile?.originalName ?? "scanpdf-output";
+    anchor.download = filenameFromContentDisposition(response.headers["content-disposition"])
+      ?? conversion.data.outputFile?.originalName
+      ?? "scanpdf-output";
     anchor.click();
     URL.revokeObjectURL(url);
   }
