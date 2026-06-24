@@ -50,12 +50,12 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const isRegister = mode === "register";
   return (
     <section className="container-page grid min-h-[75vh] items-center gap-8 py-16 lg:grid-cols-[0.9fr_1.1fr]">
-      <div className="hidden lg:block">
+      <div className="auth-hero-copy hidden lg:block">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-[#10aee8]">ScanPDF Workspace</p>
-        <h1 className="mt-4 max-w-lg font-[var(--font-display)] text-5xl font-black leading-tight text-[#17201d] dark:text-slate-50">
+        <h1 className="auth-hero-title mt-4 max-w-lg font-[var(--font-display)] text-5xl font-black leading-tight">
           Vào hệ thống xử lý tài liệu của bạn
         </h1>
-        <p className="mt-5 max-w-md leading-7 text-slate-500 dark:text-slate-400">
+        <p className="auth-hero-description mt-5 max-w-md leading-7">
           Quản lý lịch sử, gói dịch vụ, API key và các luồng chuyển đổi PDF trong một bảng điều khiển thống nhất.
         </p>
       </div>

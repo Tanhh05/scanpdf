@@ -1,11 +1,15 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { config } from "dotenv";
+import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const backendEnvPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../.env");
-config({ path: backendEnvPath });
+const envPaths = [
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(process.cwd(), "../.env"),
+];
+const envPath = envPaths.find((candidate) => fs.existsSync(candidate));
+if (envPath) config({ path: envPath });
 
 const prisma = new PrismaClient();
 const defaultAdminPassword = "Admin@123456";
