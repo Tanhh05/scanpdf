@@ -321,6 +321,7 @@ https://scanpdf.id.vn/api/auth/github/callback
 
 - VPS Docker Compose: ứng dụng chạy tại `/var/www/scanpdf`.
 - Frontend: container `web`, bind nội bộ `127.0.0.1:3000`, Nginx proxy từ `https://scanpdf.id.vn`.
+- Admin console: cùng container `web`, host `https://admin.scanpdf.id.vn`, route sạch `/login`, `/dashboard`, `/users`, ...
 - Backend API: container `api`, bind nội bộ `127.0.0.1:4000`, Nginx proxy `/api`.
 - Worker: container `worker`.
 - PostgreSQL và Redis chạy nội bộ trong Docker network, không publish ra internet.
@@ -349,6 +350,28 @@ docker compose up -d --build --remove-orphans
 ```
 
 File `.env` production và thư mục `storage` không được commit vào Git; chúng nằm trực tiếp trên VPS.
+
+### Admin Subdomain
+
+Admin chạy tách khỏi site public bằng host riêng:
+
+```text
+https://admin.scanpdf.id.vn
+```
+
+DNS Cloudflare cần thêm:
+
+```text
+A  admin  159.65.1.19  Proxied
+```
+
+Backend production `.env` cần cho phép admin origin gọi API:
+
+```env
+CORS_ORIGINS=https://admin.scanpdf.id.vn
+```
+
+Nginx cần proxy cả `admin.scanpdf.id.vn` về frontend `127.0.0.1:3000`. Frontend sẽ tự rewrite host admin vào route nội bộ `/admin/*`, đồng thời redirect `https://scanpdf.id.vn/admin/*` sang `https://admin.scanpdf.id.vn/*`.
 
 ## Mobile App
 

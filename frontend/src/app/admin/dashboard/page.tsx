@@ -179,14 +179,14 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           </div>
-          <Link href="/admin/logs" className="block bg-[#eff6ff] px-6 py-4 text-center text-sm font-semibold text-[#2563eb] dark:bg-slate-800 dark:text-sky-300">Xem tất cả hoạt động</Link>
+          <Link href="/logs" className="block bg-[#eff6ff] px-6 py-4 text-center text-sm font-semibold text-[#2563eb] dark:bg-slate-800 dark:text-sky-300">Xem tất cả hoạt động</Link>
         </article>
       </div>
 
       <article className={`${adminPanelClass} mt-6 overflow-hidden`}>
         <div className="flex items-center justify-between border-b border-[#e2e8f0] px-5 py-4 dark:border-slate-800">
           <h2 className="text-lg font-bold">Người dùng mới nhất</h2>
-          <Link href="/admin/users" className="text-sm font-semibold text-[#2563eb]">Quản lý tất cả →</Link>
+          <Link href="/users" className="text-sm font-semibold text-[#2563eb]">Quản lý tất cả →</Link>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-left">
@@ -237,7 +237,7 @@ export default function AdminDashboardPage() {
                 <Eye size={17} />
                 Sao chép email
               </button>
-              <Link href="/admin/users" className="inline-flex h-10 items-center rounded-lg bg-[#2563eb] px-4 text-sm font-semibold text-white">
+              <Link href="/users" className="inline-flex h-10 items-center rounded-lg bg-[#2563eb] px-4 text-sm font-semibold text-white">
                 Mở trang người dùng
               </Link>
             </div>

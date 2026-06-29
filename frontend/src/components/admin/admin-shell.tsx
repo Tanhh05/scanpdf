@@ -25,21 +25,35 @@ import { ThemeToggle } from "@/components/common/theme-toggle";
 import { BrandLogo } from "@/components/common/brand-logo";
 
 const navigation = [
-  { label: "Tổng quan", href: "/admin/dashboard", icon: LayoutGrid },
-  { label: "Người dùng", href: "/admin/users", icon: Users },
-  { label: "Gói dịch vụ", href: "/admin/plans", icon: SlidersHorizontal },
-  { label: "Thanh toán", href: "/admin/payments", icon: CreditCard },
-  { label: "Đăng ký", href: "/admin/subscriptions", icon: CreditCard },
-  { label: "Thống kê", href: "/admin/statistics", icon: BarChart3 },
-  { label: "Tệp tin", href: "/admin/files", icon: FolderOpen },
-  { label: "Hàng đợi", href: "/admin/jobs", icon: DatabaseZap },
-  { label: "Audit logs", href: "/admin/audit-logs", icon: FileClock },
-  { label: "Hệ thống", href: "/admin/system", icon: ServerCog },
-  { label: "Cài đặt", href: "/admin/settings", icon: Settings },
-  { label: "Giám sát", href: "/admin/monitoring", icon: MonitorCog },
+  { label: "Tổng quan", href: "/dashboard", icon: LayoutGrid },
+  { label: "Người dùng", href: "/users", icon: Users },
+  { label: "Gói dịch vụ", href: "/plans", icon: SlidersHorizontal },
+  { label: "Thanh toán", href: "/payments", icon: CreditCard },
+  { label: "Đăng ký", href: "/subscriptions", icon: CreditCard },
+  { label: "Thống kê", href: "/statistics", icon: BarChart3 },
+  { label: "Tệp tin", href: "/files", icon: FolderOpen },
+  { label: "Hàng đợi", href: "/jobs", icon: DatabaseZap },
+  { label: "Audit logs", href: "/audit-logs", icon: FileClock },
+  { label: "Hệ thống", href: "/system", icon: ServerCog },
+  { label: "Cài đặt", href: "/settings", icon: Settings },
+  { label: "Giám sát", href: "/monitoring", icon: MonitorCog },
 ];
 
 const pageTitles: Record<string, string> = {
+  "/dashboard": "Tổng quan",
+  "/users": "Quản lý người dùng",
+  "/plans": "Cấu hình Gói dịch vụ",
+  "/payments": "Thanh toán",
+  "/subscriptions": "Quản lý đăng ký",
+  "/statistics": "Thống kê 30 ngày qua",
+  "/logs": "Nhật ký hệ thống",
+  "/audit-logs": "Nhật ký hệ thống",
+  "/files": "Quản lý tệp tin",
+  "/jobs": "Hàng đợi xử lý",
+  "/system": "Trạng thái hệ thống",
+  "/monitoring": "Giám sát",
+  "/profile": "Hồ sơ admin",
+  "/settings": "Cài đặt hệ thống",
   "/admin/dashboard": "Tổng quan",
   "/admin/users": "Quản lý người dùng",
   "/admin/plans": "Cấu hình Gói dịch vụ",
@@ -61,11 +75,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, token, hasHydrated, logout } = useAdminAuthStore();
-  const isLoginPage = pathname === "/admin/login";
+  const isLoginPage = pathname === "/login" || pathname === "/admin/login";
 
   useEffect(() => {
     if (hasHydrated && !token && !isLoginPage) {
-      router.replace("/admin/login");
+      router.replace("/login");
     }
   }, [hasHydrated, isLoginPage, router, token]);
 
@@ -89,12 +103,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   function handleLogout() {
     logout();
-    router.replace("/admin/login");
+    router.replace("/login");
   }
 
   function isNavActive(href: string) {
     if (pathname === href) return true;
-    if (href === "/admin/audit-logs" && pathname === "/admin/logs") return true;
+    if (pathname === `/admin${href}`) return true;
+    if (href === "/audit-logs" && (pathname === "/logs" || pathname === "/admin/logs")) return true;
     return false;
   }
 
@@ -127,10 +142,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
       <div className="border-t border-white/10 px-3 pb-4 pt-3 dark:border-slate-800">
         <Link
-          href="/admin/profile"
+          href="/profile"
           onClick={() => setMobileOpen(false)}
           className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
-            pathname === "/admin/profile"
+            pathname === "/profile" || pathname === "/admin/profile"
               ? "!bg-white !text-[#0f172a] shadow-sm [&_svg]:!text-[#2563eb]"
               : "text-slate-300 hover:bg-white/10 hover:text-white dark:hover:bg-slate-900"
           }`}
@@ -138,10 +153,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <CircleUserRound size={19} /> Hồ sơ
         </Link>
         <Link
-          href="/admin/settings"
+          href="/settings"
           onClick={() => setMobileOpen(false)}
           className={`mt-1 flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium transition ${
-            pathname === "/admin/settings"
+            pathname === "/settings" || pathname === "/admin/settings"
               ? "!bg-white !text-[#0f172a] shadow-sm [&_svg]:!text-[#2563eb]"
               : "text-slate-300 hover:bg-white/10 hover:text-white dark:hover:bg-slate-900"
           }`}

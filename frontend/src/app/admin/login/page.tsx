@@ -29,13 +29,13 @@ export default function AdminLoginPage() {
     },
     onSuccess: (data) => {
       setSession(data.token, data.user);
-      router.replace("/admin/dashboard");
+      router.replace("/dashboard");
     },
   });
 
   useEffect(() => {
     if (hasHydrated && token && adminUser?.role === "ADMIN") {
-      router.replace("/admin/dashboard");
+      router.replace("/dashboard");
     }
   }, [adminUser?.role, hasHydrated, router, token]);
 

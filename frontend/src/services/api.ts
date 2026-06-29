@@ -34,8 +34,8 @@ adminApi.interceptors.response.use(
   (error) => {
     if (typeof window !== "undefined" && error.response?.status === 401) {
       localStorage.removeItem("scanpdf-admin-auth");
-      if (window.location.pathname !== "/admin/login") {
-        window.location.replace("/admin/login?expired=1");
+      if (!["/login", "/admin/login"].includes(window.location.pathname)) {
+        window.location.replace("/login?expired=1");
       }
     }
     return Promise.reject(error);
