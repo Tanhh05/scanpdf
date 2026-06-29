@@ -1,8 +1,24 @@
 import axios from "axios";
 
-export const API_BASE_URL = process.env.NODE_ENV === "production"
-  ? process.env.NEXT_PUBLIC_API_URL?.trim() || "https://scanpdf.id.vn/api"
-  : process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:4000/api";
+function resolveApiBaseUrl() {
+  const configuredUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+
+  if (
+    typeof window !== "undefined"
+    && process.env.NODE_ENV === "production"
+    && ["scanpdf.id.vn", "www.scanpdf.id.vn", "admin.scanpdf.id.vn"].includes(window.location.hostname)
+  ) {
+    return "/api";
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    return configuredUrl || "https://scanpdf.id.vn/api";
+  }
+
+  return configuredUrl || "http://localhost:4000/api";
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 
 export const api = axios.create({ baseURL: API_BASE_URL });
 export const adminApi = axios.create({ baseURL: API_BASE_URL });
