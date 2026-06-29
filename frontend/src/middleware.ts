@@ -27,6 +27,12 @@ function adminInternalPath(pathname: string) {
   return pathname.startsWith("/admin") ? pathname : `/admin${pathname}`;
 }
 
+function adminRedirectUrl(pathname: string, search: string) {
+  const url = new URL(`https://${ADMIN_HOST}${pathname}`);
+  url.search = search;
+  return url;
+}
+
 export function middleware(request: NextRequest) {
   const host = cleanHost(request.headers.get("host"));
   const { pathname, search } = request.nextUrl;
@@ -35,9 +41,7 @@ export function middleware(request: NextRequest) {
 
   if (host === ADMIN_HOST) {
     if (pathname.startsWith("/admin")) {
-      const url = request.nextUrl.clone();
-      url.pathname = adminVisiblePath(pathname);
-      return NextResponse.redirect(url);
+      return NextResponse.redirect(adminRedirectUrl(adminVisiblePath(pathname), search));
     }
 
     const url = request.nextUrl.clone();
@@ -47,10 +51,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (PUBLIC_HOSTS.has(host) && pathname.startsWith("/admin")) {
-    const url = request.nextUrl.clone();
-    url.hostname = ADMIN_HOST;
-    url.pathname = adminVisiblePath(pathname);
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(adminRedirectUrl(adminVisiblePath(pathname), search));
   }
 
   return NextResponse.next();
